@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -52,6 +53,19 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+                purple: {
+                    50: '#f3f1fe',
+                    100: '#e9e4fd',
+                    200: '#d5cdfb',
+                    300: '#b7a9f8',
+                    400: '#9b87f5',
+                    500: '#7E69AB',
+                    600: '#6E59A5',
+                    700: '#5e4593',
+                    800: '#4b3875',
+                    900: '#3d305e',
+                    950: '#251b39',
+                },
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -69,6 +83,20 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
+                'fade-in': {
+                    '0%': {
+                        opacity: '0',
+                        transform: 'translateY(10px)'
+                    },
+                    '100%': {
+                        opacity: '1',
+                        transform: 'translateY(0)'
+                    }
+                },
+                'slide-in': {
+                    '0%': { transform: 'translateX(-100%)' },
+                    '100%': { transform: 'translateX(0)' }
+                },
 				'accordion-down': {
 					from: {
 						height: '0'
@@ -87,9 +115,15 @@ export default {
 				}
 			},
 			animation: {
+                'fade-in': 'fade-in 0.3s ease-out',
+                'slide-in': 'slide-in 0.3s ease-out',
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+			},
+            backdropFilter: {
+                'none': 'none',
+                'blur': 'blur(20px)',
+            },
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
