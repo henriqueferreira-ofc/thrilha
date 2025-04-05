@@ -7,16 +7,20 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { TaskForm } from '@/components/task-form';
 import { TaskFormData } from '@/types/task';
 import { PlusCircle, LayoutDashboard, Calendar, Settings, Info } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 interface TaskSidebarProps {
-  onCreateTask: (data: TaskFormData) => void;
+  onCreateTask?: (data: TaskFormData) => void;
 }
 
 export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const location = useLocation();
 
   const handleCreateTask = (data: TaskFormData) => {
-    onCreateTask(data);
+    if (onCreateTask) {
+      onCreateTask(data);
+    }
     setIsCreateDialogOpen(false);
   };
 
@@ -40,18 +44,39 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
           </Dialog>
         </SidebarHeader>
         <SidebarContent className="flex flex-col gap-4">
-          <Button variant="ghost" className="justify-start">
-            <LayoutDashboard className="mr-2 h-4 w-4" />
-            Dashboard
+          <Button 
+            variant="ghost" 
+            className="justify-start" 
+            asChild
+          >
+            <Link to="/">
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              Dashboard
+            </Link>
           </Button>
-          <Button variant="ghost" className="justify-start">
-            <Calendar className="mr-2 h-4 w-4" />
-            Calendário
+          
+          <Button 
+            variant="ghost" 
+            className="justify-start" 
+            asChild
+          >
+            <Link to="/calendar">
+              <Calendar className="mr-2 h-4 w-4" />
+              Calendário
+            </Link>
           </Button>
-          <Button variant="ghost" className="justify-start">
-            <Settings className="mr-2 h-4 w-4" />
-            Configurações
+          
+          <Button 
+            variant="ghost" 
+            className="justify-start" 
+            asChild
+          >
+            <Link to="/settings">
+              <Settings className="mr-2 h-4 w-4" />
+              Configurações
+            </Link>
           </Button>
+          
           <Button variant="ghost" className="justify-start">
             <Info className="mr-2 h-4 w-4" />
             Sobre
