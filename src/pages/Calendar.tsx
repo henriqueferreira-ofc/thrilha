@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { format, parse, isValid } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +27,6 @@ const Calendar = () => {
   const tasksForSelectedDate = tasks.filter((task) => {
     if (!selectedDate || !task.dueDate) return false;
     
-    // Converter a string de data para um objeto Date
     const taskDate = new Date(task.dueDate);
     return (
       taskDate.getDate() === selectedDate.getDate() &&
@@ -82,7 +81,7 @@ const Calendar = () => {
                     highlighted: getDaysWithTasks,
                   }}
                   modifiersClassNames={{
-                    highlighted: "bg-purple-900/30 text-white",
+                    highlighted: "bg-purple-900/50 text-white font-bold animate-pulse border-2 border-purple-500 rounded-full",
                   }}
                   locale={ptBR}
                 />
@@ -133,3 +132,4 @@ const Calendar = () => {
 };
 
 export default Calendar;
+
