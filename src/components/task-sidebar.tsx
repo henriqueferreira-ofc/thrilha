@@ -29,7 +29,7 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
       <SidebarTrigger className="absolute top-4 left-4 z-40 md:hidden" />
       <Sidebar className="border-r border-white/10">
         <SidebarHeader className="flex flex-col items-center gap-2 py-6">
-          <h1 className="text-xl font-bold text-gradient">VO</h1>
+          <h1 className="text-xl font-bold text-gradient">Trilha</h1>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button className="w-full" size="sm">
