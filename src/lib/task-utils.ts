@@ -1,6 +1,9 @@
 
 import { Task, TaskStatus } from "../types/task";
 
+// Chave usada para armazenar as tarefas no localStorage
+const TASKS_STORAGE_KEY = 'vo-tasks';
+
 // Generate a unique ID for tasks
 export const generateId = (): string => {
   return Math.random().toString(36).substring(2, 9);
@@ -10,15 +13,24 @@ export const generateId = (): string => {
 export const getStoredTasks = (): Task[] => {
   if (typeof window === 'undefined') return [];
   
-  const storedTasks = localStorage.getItem('vo-tasks');
-  return storedTasks ? JSON.parse(storedTasks) : [];
+  try {
+    const storedTasks = localStorage.getItem(TASKS_STORAGE_KEY);
+    return storedTasks ? JSON.parse(storedTasks) : [];
+  } catch (error) {
+    console.error('Erro ao recuperar tarefas do localStorage:', error);
+    return [];
+  }
 };
 
 // Save tasks to local storage
 export const saveTasks = (tasks: Task[]): void => {
   if (typeof window === 'undefined') return;
   
-  localStorage.setItem('vo-tasks', JSON.stringify(tasks));
+  try {
+    localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+  } catch (error) {
+    console.error('Erro ao salvar tarefas no localStorage:', error);
+  }
 };
 
 // Format date to display

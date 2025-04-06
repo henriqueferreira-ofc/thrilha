@@ -21,6 +21,7 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -31,9 +32,28 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
     setIsEditing(false);
   };
 
+  // Determinando a cor de fundo com base no status da tarefa
+  const getBackgroundStyle = () => {
+    switch (task.status) {
+      case 'todo':
+        return 'bg-white/10 hover:bg-white/15';
+      case 'inProgress': 
+        return 'bg-blue-500/20 hover:bg-blue-500/30 border-l-4 border-blue-500';
+      case 'done':
+        return 'bg-green-500/20 hover:bg-green-500/30 border-l-4 border-green-500';
+      default:
+        return 'bg-white/10 hover:bg-white/15';
+    }
+  };
+
   return (
     <>
-      <Card className="glass-card mb-3 p-4 cursor-grab animate-fade-in" draggable>
+      <Card 
+        className={`glass-card mb-3 p-4 cursor-grab animate-fade-in transition-all duration-300 ${getBackgroundStyle()} ${isHovered ? 'scale-105 shadow-lg' : ''}`} 
+        draggable
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <div className="flex justify-between items-start">
           <h3 className="font-medium truncate mr-2">{task.title}</h3>
           <DropdownMenu>

@@ -10,13 +10,18 @@ export function useTasks() {
 
   // Load tasks from storage on initial render
   useEffect(() => {
-    setTasks(getStoredTasks());
+    const storedTasks = getStoredTasks();
+    if (storedTasks.length > 0) {
+      setTasks(storedTasks);
+      console.log('Tarefas carregadas do localStorage:', storedTasks);
+    }
   }, []);
 
   // Save tasks to storage whenever they change
   useEffect(() => {
     if (tasks.length > 0) {
       saveTasks(tasks);
+      console.log('Tarefas salvas no localStorage:', tasks);
     }
   }, [tasks]);
 
@@ -72,10 +77,26 @@ export function useTasks() {
   // Change task status (for drag and drop)
   const changeTaskStatus = (taskId: string, newStatus: TaskStatus) => {
     setTasks(prev => 
-      prev.map(task => 
-        task.id === taskId ? { ...task, status: newStatus } : task
-      )
+      prev.map(task => {
+        if (task.id === taskId) {
+          const updatedTask = { ...task, status: newStatus };
+          console.log(`Tarefa ${taskId} atualizada para ${newStatus}`);
+          return updatedTask;
+        }
+        return task;
+      })
     );
+    toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
+  };
+
+  // Helper function to get readable status name
+  const getStatusName = (status: TaskStatus): string => {
+    switch (status) {
+      case 'todo': return 'A Fazer';
+      case 'inProgress': return 'Em Progresso';
+      case 'done': return 'Concluída';
+      default: return status;
+    }
   };
 
   return {

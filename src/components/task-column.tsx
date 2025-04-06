@@ -22,11 +22,25 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
     }),
   });
 
+  // Estilo específico para cada tipo de coluna
+  const getColumnStyle = () => {
+    switch (column.id) {
+      case 'todo':
+        return 'border-t-4 border-t-purple-500/70';
+      case 'inProgress':
+        return 'border-t-4 border-t-blue-500/70';
+      case 'done':
+        return 'border-t-4 border-t-green-500/70';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div 
       ref={drop}
-      className={`flex flex-col h-full p-4 rounded-lg glass-panel transition-colors ${
-        isOver ? 'bg-purple-900/20' : ''
+      className={`flex flex-col h-full p-4 rounded-lg glass-panel transition-all duration-300 ${getColumnStyle()} ${
+        isOver ? 'scale-105 bg-purple-900/20 shadow-lg' : ''
       }`}
     >
       <h2 className="text-lg font-semibold mb-4 flex items-center justify-between">
