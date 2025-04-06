@@ -15,6 +15,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
   const [{ isOver }, drop] = useDrop({
     accept: 'task',
     drop: (item: { id: string }) => {
+      console.log(`Tarefa ${item.id} sendo movida para ${column.id}`);
       onDrop(item.id, column.id);
     },
     collect: (monitor) => ({

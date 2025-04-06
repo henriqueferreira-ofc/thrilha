@@ -76,9 +76,10 @@ export function useTasks() {
 
   // Change task status (for drag and drop)
   const changeTaskStatus = (taskId: string, newStatus: TaskStatus) => {
+    console.log(`Alterando status da tarefa ${taskId} para ${newStatus}`);
     setTasks(prev => 
       prev.map(task => {
-        if (task.id === taskId) {
+        if (task.id === taskId && task.status !== newStatus) {
           const updatedTask = { ...task, status: newStatus };
           console.log(`Tarefa ${taskId} atualizada para ${newStatus}`);
           return updatedTask;

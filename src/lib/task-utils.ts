@@ -28,6 +28,7 @@ export const saveTasks = (tasks: Task[]): void => {
   
   try {
     localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+    console.log('Tarefas salvas no localStorage:', tasks);
   } catch (error) {
     console.error('Erro ao salvar tarefas no localStorage:', error);
   }

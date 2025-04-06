@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Task } from '@/types/task';
 import { formatDate } from '@/lib/task-utils';
 import { TaskForm } from '@/components/task-form';
+import { useDrag } from 'react-dnd';
 
 interface TaskCardProps {
   task: Task;
@@ -22,6 +23,15 @@ interface TaskCardProps {
 export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+
+  // Configuração do drag and drop
+  const [{ isDragging }, drag] = useDrag({
+    type: 'task',
+    item: { id: task.id },
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  });
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -49,8 +59,8 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
   return (
     <>
       <Card 
-        className={`glass-card mb-3 p-4 cursor-grab animate-fade-in transition-all duration-300 ${getBackgroundStyle()} ${isHovered ? 'scale-105 shadow-lg' : ''}`} 
-        draggable
+        ref={drag}
+        className={`glass-card mb-3 p-4 cursor-grab animate-fade-in transition-all duration-300 ${getBackgroundStyle()} ${isHovered ? 'scale-105 shadow-lg' : ''} ${isDragging ? 'opacity-50' : ''}`} 
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
