@@ -4,6 +4,11 @@ import { toast } from 'sonner';
 import { Task, TaskStatus, TaskFormData } from '../types/task';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { Database } from '@/integrations/supabase/types';
+
+// Definindo tipos para as tabelas do Supabase
+type Tables = Database['public']['Tables'];
+type TaskRow = Tables['tasks']['Row'];
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -25,7 +30,18 @@ export function useTasks() {
         if (error) throw error;
         
         console.log('Tarefas carregadas do Supabase:', data);
-        setTasks(data || []);
+        
+        // Convertendo do formato do banco para o formato usado na aplicação
+        const formattedTasks: Task[] = data?.map((task: TaskRow) => ({
+          id: task.id,
+          title: task.title,
+          description: task.description || '',
+          status: task.status as TaskStatus,
+          createdAt: task.created_at,
+          dueDate: task.due_date
+        })) || [];
+        
+        setTasks(formattedTasks);
       } catch (error: any) {
         console.error('Erro ao buscar tarefas:', error.message);
         toast.error('Erro ao carregar tarefas');
@@ -49,13 +65,31 @@ export function useTasks() {
         
         // Atualizar o estado das tarefas com base no evento
         if (payload.eventType === 'INSERT') {
-          setTasks(prev => [payload.new as Task, ...prev]);
+          const newTask = payload.new as TaskRow;
+          const formattedTask: Task = {
+            id: newTask.id,
+            title: newTask.title,
+            description: newTask.description || '',
+            status: newTask.status as TaskStatus,
+            createdAt: newTask.created_at,
+            dueDate: newTask.due_date
+          };
+          setTasks(prev => [formattedTask, ...prev]);
         } else if (payload.eventType === 'UPDATE') {
+          const updatedTask = payload.new as TaskRow;
           setTasks(prev => 
-            prev.map(task => task.id === payload.new.id ? payload.new as Task : task)
+            prev.map(task => task.id === updatedTask.id ? {
+              id: updatedTask.id,
+              title: updatedTask.title,
+              description: updatedTask.description || '',
+              status: updatedTask.status as TaskStatus,
+              createdAt: updatedTask.created_at,
+              dueDate: updatedTask.due_date
+            } : task)
           );
         } else if (payload.eventType === 'DELETE') {
-          setTasks(prev => prev.filter(task => task.id !== payload.old.id));
+          const deletedTaskId = payload.old.id;
+          setTasks(prev => prev.filter(task => task.id !== deletedTaskId));
         }
       })
       .subscribe();
@@ -90,7 +124,18 @@ export function useTasks() {
       if (error) throw error;
 
       toast.success('Tarefa criada com sucesso!');
-      return data as Task;
+      
+      // Convertendo para o formato usado na aplicação
+      const formattedTask: Task = {
+        id: data.id,
+        title: data.title,
+        description: data.description || '',
+        status: data.status as TaskStatus,
+        createdAt: data.created_at,
+        dueDate: data.due_date
+      };
+      
+      return formattedTask;
     } catch (error: any) {
       console.error('Erro ao criar tarefa:', error);
       toast.error('Erro ao criar tarefa');
@@ -106,9 +151,17 @@ export function useTasks() {
     }
 
     try {
+      // Converter de volta para o formato do banco de dados
+      const dbData: Partial<TaskRow> = {
+        title: updatedData.title,
+        description: updatedData.description,
+        status: updatedData.status,
+        due_date: updatedData.dueDate
+      };
+
       const { error } = await supabase
         .from('tasks')
-        .update(updatedData)
+        .update(dbData)
         .eq('id', id)
         .eq('user_id', user.id);
 
