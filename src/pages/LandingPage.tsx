@@ -17,8 +17,11 @@ const LandingPage = () => {
           <span className="text-xl font-bold purple-gradient-text">Trilha</span>
         </div>
         <Link to={user ? "/tasks" : "/auth"}>
-          <Button className="bg-transparent hover:bg-white/10 border border-white/20">
-            {user ? 'Minhas Tarefas' : 'Login'}
+          <Button 
+            variant="outline" 
+            className="border-purple-300 text-purple-300 hover:bg-purple-300/10"
+          >
+            Login
           </Button>
         </Link>
       </nav>
