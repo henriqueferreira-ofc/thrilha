@@ -13,8 +13,8 @@ const Index = () => {
   const { tasks, addTask, updateTask, deleteTask, changeTaskStatus } = useTasks();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  const handleCreateTask = (data) => {
-    addTask(data);
+  const handleCreateTask = async (data) => {
+    await addTask(data);
     setIsCreateDialogOpen(false);
   };
 
