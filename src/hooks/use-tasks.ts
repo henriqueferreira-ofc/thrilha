@@ -2,95 +2,172 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Task, TaskStatus, TaskFormData } from '../types/task';
-import { generateId, getStoredTasks, saveTasks } from '../lib/task-utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [deletedTask, setDeletedTask] = useState<Task | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  // Load tasks from storage on initial render
+  // Carregar tarefas do Supabase quando o componente for montado
   useEffect(() => {
-    const storedTasks = getStoredTasks();
-    if (storedTasks.length > 0) {
-      setTasks(storedTasks);
-      console.log('Tarefas carregadas do localStorage:', storedTasks);
-    }
-  }, []);
+    if (!user) return;
 
-  // Save tasks to storage whenever they change
-  useEffect(() => {
-    if (tasks.length > 0) {
-      saveTasks(tasks);
-      console.log('Tarefas salvas no localStorage:', tasks);
-    }
-  }, [tasks]);
+    const fetchTasks = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-  // Add a new task
-  const addTask = (taskData: TaskFormData) => {
-    const newTask: Task = {
-      id: generateId(),
-      title: taskData.title,
-      description: taskData.description || '',
-      status: 'todo',
-      createdAt: new Date().toISOString(),
-      dueDate: taskData.dueDate
+        if (error) throw error;
+        
+        console.log('Tarefas carregadas do Supabase:', data);
+        setTasks(data || []);
+      } catch (error: any) {
+        console.error('Erro ao buscar tarefas:', error.message);
+        toast.error('Erro ao carregar tarefas');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setTasks(prev => [...prev, newTask]);
-    toast.success('Tarefa criada com sucesso!');
-    return newTask;
-  };
-
-  // Update a task
-  const updateTask = (id: string, updatedData: Partial<Task>) => {
-    setTasks(prev => 
-      prev.map(task => 
-        task.id === id ? { ...task, ...updatedData } : task
-      )
-    );
-    toast.success('Tarefa atualizada com sucesso!');
-  };
-
-  // Delete a task with undo capability
-  const deleteTask = (id: string) => {
-    const taskToDelete = tasks.find(task => task.id === id);
-    if (!taskToDelete) return;
-
-    setDeletedTask(taskToDelete);
-    setTasks(prev => prev.filter(task => task.id !== id));
+    fetchTasks();
     
-    toast('Tarefa removida', {
-      description: 'A tarefa foi removida com sucesso.',
-      action: {
-        label: 'Desfazer',
-        onClick: () => {
-          if (deletedTask) {
-            setTasks(prev => [...prev, taskToDelete]);
-            setDeletedTask(null);
-            toast.success('Tarefa restaurada!');
-          }
+    // Configurar listener para atualizações em tempo real
+    const tasksSubscription = supabase
+      .channel('public:tasks')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public',
+        table: 'tasks',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        console.log('Alteração em tempo real recebida:', payload);
+        
+        // Atualizar o estado das tarefas com base no evento
+        if (payload.eventType === 'INSERT') {
+          setTasks(prev => [payload.new as Task, ...prev]);
+        } else if (payload.eventType === 'UPDATE') {
+          setTasks(prev => 
+            prev.map(task => task.id === payload.new.id ? payload.new as Task : task)
+          );
+        } else if (payload.eventType === 'DELETE') {
+          setTasks(prev => prev.filter(task => task.id !== payload.old.id));
         }
-      }
-    });
-  };
-
-  // Change task status (for drag and drop)
-  const changeTaskStatus = (taskId: string, newStatus: TaskStatus) => {
-    console.log(`Alterando status da tarefa ${taskId} para ${newStatus}`);
-    setTasks(prev => 
-      prev.map(task => {
-        if (task.id === taskId && task.status !== newStatus) {
-          const updatedTask = { ...task, status: newStatus };
-          console.log(`Tarefa ${taskId} atualizada para ${newStatus}`);
-          return updatedTask;
-        }
-        return task;
       })
-    );
-    toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tasksSubscription);
+    };
+  }, [user]);
+
+  // Adicionar uma nova tarefa
+  const addTask = async (taskData: TaskFormData) => {
+    if (!user) {
+      toast.error('Você precisa estar logado para criar tarefas');
+      return null;
+    }
+
+    try {
+      const newTask = {
+        title: taskData.title,
+        description: taskData.description || '',
+        status: 'todo' as TaskStatus,
+        user_id: user.id,
+        due_date: taskData.dueDate
+      };
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert(newTask)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success('Tarefa criada com sucesso!');
+      return data as Task;
+    } catch (error: any) {
+      console.error('Erro ao criar tarefa:', error);
+      toast.error('Erro ao criar tarefa');
+      return null;
+    }
   };
 
-  // Helper function to get readable status name
+  // Atualizar uma tarefa
+  const updateTask = async (id: string, updatedData: Partial<Task>) => {
+    if (!user) {
+      toast.error('Você precisa estar logado para atualizar tarefas');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update(updatedData)
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast.success('Tarefa atualizada com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao atualizar tarefa:', error);
+      toast.error('Erro ao atualizar tarefa');
+    }
+  };
+
+  // Excluir uma tarefa
+  const deleteTask = async (id: string) => {
+    if (!user) {
+      toast.error('Você precisa estar logado para excluir tarefas');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast.success('Tarefa removida com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao excluir tarefa:', error);
+      toast.error('Erro ao excluir tarefa');
+    }
+  };
+
+  // Alterar o status de uma tarefa
+  const changeTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
+    if (!user) {
+      toast.error('Você precisa estar logado para atualizar tarefas');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: newStatus })
+        .eq('id', taskId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
+    } catch (error: any) {
+      console.error('Erro ao atualizar status da tarefa:', error);
+      toast.error('Erro ao atualizar status da tarefa');
+    }
+  };
+
+  // Função auxiliar para obter o nome legível do status
   const getStatusName = (status: TaskStatus): string => {
     switch (status) {
       case 'todo': return 'A Fazer';
@@ -102,6 +179,7 @@ export function useTasks() {
 
   return {
     tasks,
+    loading,
     addTask,
     updateTask,
     deleteTask,

@@ -1,1 +1,5 @@
+
 project_id = "yieihrvcbshzmxieflsv"
+
+[realtime]
+enabled = true

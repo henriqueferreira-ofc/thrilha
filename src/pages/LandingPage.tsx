@@ -1,9 +1,13 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Mountain } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const LandingPage = () => {
+  const { user } = useAuth();
+  
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       {/* Navigation */}
@@ -12,9 +16,9 @@ const LandingPage = () => {
           <Mountain className="h-6 w-6 text-purple-300" />
           <span className="text-xl font-bold purple-gradient-text">Trilha</span>
         </div>
-        <Link to="/tasks">
+        <Link to={user ? "/tasks" : "/auth"}>
           <Button className="bg-transparent hover:bg-white/10 border border-white/20">
-            Login
+            {user ? 'Minhas Tarefas' : 'Login'}
           </Button>
         </Link>
       </nav>
@@ -30,9 +34,9 @@ const LandingPage = () => {
             Aumente sua produtividade com o Trilha.
           </p>
           <div className="flex gap-4 pt-4">
-            <Link to="/tasks">
+            <Link to={user ? "/tasks" : "/auth"}>
               <Button className="purple-gradient-bg text-white px-8 py-6 text-lg">
-                Começar Grátis
+                {user ? 'Minhas Tarefas' : 'Começar Grátis'}
               </Button>
             </Link>
             <a href="#features">
@@ -76,8 +80,8 @@ const LandingPage = () => {
             </div>
             
             <div className="glass-panel p-6 rounded-xl">
-              <h3 className="text-xl font-semibold mb-3">Totalmente Gratuito</h3>
-              <p className="text-white/70">Acesse todas as funcionalidades sem custo. Comece a usar agora mesmo!</p>
+              <h3 className="text-xl font-semibold mb-3">Sincronização em Nuvem</h3>
+              <p className="text-white/70">Acesse suas tarefas de qualquer dispositivo com sincronização em tempo real.</p>
             </div>
           </div>
         </div>
