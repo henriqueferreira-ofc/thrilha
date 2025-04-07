@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 
@@ -14,7 +13,7 @@ const Settings = () => {
           </header>
           
           <main className="flex-1 p-6">
-            <div className="glass-panel p-6 rounded-lg">
+            <div className="bg-black p-6 rounded-lg border border-white/10">
               <h2 className="text-lg font-medium mb-4">Preferências do Usuário</h2>
               <p className="text-muted-foreground">
                 Esta página permitirá configurar suas preferências pessoais do aplicativo.

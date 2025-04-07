@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -44,16 +43,12 @@ const LandingPage = () => {
           </div>
         </div>
 
-        <div className="flex justify-center items-center">
+        <div className="flex justify-center items-end">
           <div className="relative">
-            {/* Glow effect behind the phone */}
-            <div className="absolute inset-0 bg-purple-500/20 blur-3xl rounded-full"></div>
-            
-            {/* Phone image */}
             <img 
-              src="/phone-mockup.png" 
+              src="/trilha1.png" 
               alt="Trilha App" 
-              className="relative z-10 max-h-[600px] object-contain"
+              className="relative z-10 max-h-[500px] object-contain -mb-16"
               onError={(e) => {
                 e.currentTarget.src = "https://placehold.co/300x600/3a1c71/ffffff?text=Trilha+App";
               }}

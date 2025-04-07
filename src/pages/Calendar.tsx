@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
@@ -71,7 +70,7 @@ const Calendar = () => {
           
           <main className="flex-1 p-6 overflow-auto">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="glass-panel p-4 rounded-lg lg:col-span-1">
+              <div className="bg-black p-4 rounded-lg border border-white/10 lg:col-span-1">
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
@@ -87,7 +86,7 @@ const Calendar = () => {
                 />
               </div>
 
-              <div className="glass-panel p-4 rounded-lg lg:col-span-2">
+              <div className="bg-black p-4 rounded-lg border border-white/10 lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CalendarIcon className="h-5 w-5" />

@@ -1,4 +1,3 @@
-
 import { useDrop } from 'react-dnd';
 import { Task, Column, TaskStatus } from '@/types/task';
 import { TaskCard } from '@/components/task-card';
@@ -27,21 +26,21 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
   const getColumnStyle = () => {
     switch (column.id) {
       case 'todo':
-        return 'border-t-4 border-t-purple-500/70';
+        return 'border-t-4 border-t-purple-500/70 bg-black';
       case 'inProgress':
-        return 'border-t-4 border-t-blue-500/70';
+        return 'border-t-4 border-t-blue-500/70 bg-black';
       case 'done':
-        return 'border-t-4 border-t-green-500/70';
+        return 'border-t-4 border-t-green-500/70 bg-black';
       default:
-        return '';
+        return 'bg-black';
     }
   };
 
   return (
     <div 
       ref={drop}
-      className={`flex flex-col h-full p-4 rounded-lg glass-panel transition-all duration-300 ${getColumnStyle()} ${
-        isOver ? 'scale-105 bg-purple-900/20 shadow-lg' : ''
+      className={`flex flex-col h-full p-4 rounded-lg border border-white/10 ${getColumnStyle()} ${
+        isOver ? 'scale-105 shadow-lg' : ''
       }`}
     >
       <h2 className="text-lg font-semibold mb-4 flex items-center justify-between">

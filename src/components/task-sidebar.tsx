@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -15,6 +14,7 @@ interface TaskSidebarProps {
 
 export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const location = useLocation();
 
   const handleCreateTask = (data: TaskFormData) => {
@@ -82,9 +82,15 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
             </Link>
           </Button>
           
-          <Button variant="ghost" className="justify-start hover:bg-white/5">
-            <Info className="mr-2 h-4 w-4 text-purple-300" />
-            Sobre
+          <Button 
+            variant="ghost" 
+            className="justify-start hover:bg-white/5" 
+            asChild
+          >
+            <Link to="/about">
+              <Info className="mr-2 h-4 w-4 text-purple-300" />
+              Sobre
+            </Link>
           </Button>
         </SidebarContent>
       </Sidebar>

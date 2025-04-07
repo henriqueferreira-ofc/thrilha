@@ -1,12 +1,11 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: #000000;
+    --foreground: #ffffff;
 
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -34,12 +33,12 @@
     --ring: 240 4.9% 83.9%;
 
     --radius: 0.75rem;
-    
+
     --sidebar-background: 240 10% 3.9%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 262 84% 75%;
     --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 3.7% 15.9%; 
+    --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 262 84% 75%;
@@ -54,8 +53,18 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
-    background-image: radial-gradient(circle at 15% 50%, rgba(100, 70, 150, 0.08) 0%, transparent 25%),
-                     radial-gradient(circle at 85% 30%, rgba(140, 90, 190, 0.08) 0%, transparent 25%);
+    background-color: var(--background);
+    color: var(--foreground);
+    background-image: radial-gradient(
+        circle at 15% 50%,
+        rgba(100, 70, 150, 0.08) 0%,
+        transparent 25%
+      ),
+      radial-gradient(
+        circle at 85% 30%,
+        rgba(140, 90, 190, 0.08) 0%,
+        transparent 25%
+      );
     background-attachment: fixed;
   }
 
@@ -68,11 +77,11 @@
   .glass-card {
     @apply backdrop-blur-lg bg-white/10 border border-white/20 shadow-lg;
   }
-  
+
   .glass-panel {
     @apply backdrop-blur-xl bg-black/40 border border-white/10;
   }
-  
+
   .text-gradient {
     @apply bg-gradient-to-br from-white via-white/90 to-white/70 bg-clip-text text-transparent;
   }
@@ -88,22 +97,28 @@
   .card-glow {
     @apply relative after:absolute after:-inset-[1px] after:rounded-lg after:bg-gradient-to-r after:from-purple-500/30 after:via-purple-400/30 after:to-purple-500/30 after:opacity-0 after:transition after:hover:opacity-100 after:-z-10;
   }
-  
+
   .mountain-pattern {
     background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239b87f5' fill-opacity='0.05'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
-  
+
   /* Animações para a landing page */
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
-  
+
   @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-    100% { transform: translateY(0px); }
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
   }
-  
+
   /* Responsividade para textos */
   @media (max-width: 640px) {
     h1 {
@@ -116,4 +131,12 @@
       @apply text-base;
     }
   }
+}
+
+.bg-background {
+  background-color: var(--background);
+}
+
+.text-foreground {
+  color: var(--foreground);
 }

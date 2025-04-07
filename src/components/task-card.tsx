@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Calendar, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -46,13 +45,13 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
   const getBackgroundStyle = () => {
     switch (task.status) {
       case 'todo':
-        return 'bg-white/10 hover:bg-white/15';
+        return 'bg-purple-500/20 hover:bg-purple-500/30 border-l-4 border-purple-500';
       case 'inProgress': 
         return 'bg-blue-500/20 hover:bg-blue-500/30 border-l-4 border-blue-500';
       case 'done':
         return 'bg-green-500/20 hover:bg-green-500/30 border-l-4 border-green-500';
       default:
-        return 'bg-white/10 hover:bg-white/15';
+        return 'bg-purple-500/20 hover:bg-purple-500/30';
     }
   };
 
@@ -60,7 +59,7 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
     <>
       <Card 
         ref={drag}
-        className={`glass-card mb-3 p-4 cursor-grab animate-fade-in transition-all duration-300 ${getBackgroundStyle()} ${isHovered ? 'scale-105 shadow-lg' : ''} ${isDragging ? 'opacity-50' : ''}`} 
+        className={`mb-3 p-4 cursor-grab animate-fade-in transition-all duration-300 ${getBackgroundStyle()} ${isHovered ? 'scale-105 shadow-lg' : ''} ${isDragging ? 'opacity-50' : ''}`} 
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
