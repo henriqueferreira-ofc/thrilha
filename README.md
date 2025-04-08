@@ -18,7 +18,7 @@ Meu Projeto ainda está sendo desenvolvido e logo teremos boas novas<br/>
 
 <br>
 
-![ProjetoDev](https://github.com/henriquearaujooficial/ProjetoDev/blob/main/assets/.github/Telaprincipal.png)
+![ProjetoDev](https://github.com/henriqueferreira-ofc/trilha/blob/main/public/trilhacapas.jpg)
 ## 🚀 Tecnologias
 
 Esse projeto foi desenvolvido com as seguintes tecnologias:
