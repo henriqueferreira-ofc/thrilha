@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+
+import { useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { Button } from '@/components/ui/button';
@@ -7,54 +8,17 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, Moon, User, Save, Upload } from 'lucide-react';
+import { Bell, Moon, User, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAuth } from '@/context/AuthContext';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const Settings = () => {
-  const { user, updateProfile, uploadAvatar } = useAuth();
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState(user?.email || '');
+  const [email, setEmail] = useState('');
   const [darkMode, setDarkMode] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validar o tipo do arquivo
-    if (!file.type.startsWith('image/')) {
-      toast.error('Por favor, selecione uma imagem válida');
-      return;
-    }
-
-    // Validar o tamanho do arquivo (máximo 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('A imagem deve ter no máximo 5MB');
-      return;
-    }
-
-    try {
-      setIsUploading(true);
-      const avatarUrl = await uploadAvatar(file);
-      await updateProfile({ avatar_url: avatarUrl });
-      toast.success('Foto de perfil atualizada com sucesso!');
-    } catch (error) {
-      console.error('Erro ao atualizar foto de perfil:', error);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const handleSaveProfile = () => {
     toast.success("Perfil salvo com sucesso!");
   };
@@ -103,32 +67,6 @@ const Settings = () => {
                     <CardDescription>Atualize suas informações pessoais aqui.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex flex-col items-center space-y-4">
-                      <Avatar 
-                        className="h-24 w-24 cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={handleAvatarClick}
-                      >
-                        <AvatarImage src={user?.user_metadata?.avatar_url} />
-                        <AvatarFallback>
-                          {user?.email?.[0].toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                      />
-                      <Button 
-                        variant="outline" 
-                        onClick={handleAvatarClick}
-                        disabled={isUploading}
-                      >
-                        <Upload className="mr-2 h-4 w-4" />
-                        {isUploading ? 'Enviando...' : 'Alterar foto'}
-                      </Button>
-                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="username">Nome de usuário</Label>
                       <Input 

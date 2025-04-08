@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,8 +11,6 @@ interface AuthContextType {
   signUp: (email: string, password: string, username?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  updateProfile: (data: { avatar_url?: string }) => Promise<void>;
-  uploadAvatar: (file: File) => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -83,61 +82,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const uploadAvatar = async (file: File) => {
-    try {
-      if (!user) throw new Error('Usuário não autenticado');
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (error: any) {
-      toast.error('Erro ao fazer upload da imagem');
-      throw error;
-    }
-  };
-
-  const updateProfile = async (data: { avatar_url?: string }) => {
-    try {
-      if (!user) throw new Error('Usuário não autenticado');
-
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          avatar_url: data.avatar_url,
-          updated_at: new Date().toISOString(),
-        });
-
-      if (error) throw error;
-
-      toast.success('Perfil atualizado com sucesso!');
-    } catch (error: any) {
-      toast.error('Erro ao atualizar perfil');
-      throw error;
-    }
-  };
-
   const value = {
     user,
     session,
     loading,
     signUp,
     signIn,
-    signOut,
-    updateProfile,
-    uploadAvatar,
+    signOut
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
