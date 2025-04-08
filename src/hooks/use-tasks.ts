@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Task, TaskStatus, TaskFormData } from '../types/task';
+import { Task, TaskStatus, TaskFormData, TaskCollaborator } from '../types/task';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Database } from '@/integrations/supabase/types';
@@ -99,8 +99,71 @@ export function useTasks() {
       })
       .subscribe();
 
+    // Configurar listener para atualizações em tempo real da tabela task_collaborators
+    const collaboratorSubscription = supabase
+      .channel('public:task_collaborators')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public',
+        table: 'task_collaborators'
+      }, async (payload) => {
+        console.log('Alteração em colaboradores recebida:', payload);
+        
+        // Se foi adicionado como colaborador em uma nova tarefa, buscar a tarefa
+        if (payload.eventType === 'INSERT') {
+          const newCollaborator = payload.new as any;
+          if (newCollaborator.user_id === user.id) {
+            // Buscar a tarefa onde foi adicionado como colaborador
+            const { data, error } = await supabase
+              .from('tasks')
+              .select('*')
+              .eq('id', newCollaborator.task_id)
+              .single();
+            
+            if (!error && data) {
+              const collaboratedTask: Task = {
+                id: data.id,
+                title: data.title,
+                description: data.description || '',
+                status: data.status as TaskStatus,
+                createdAt: data.created_at,
+                dueDate: data.due_date
+              };
+              
+              // Adicionar à lista de tarefas apenas se ainda não existir
+              setTasks(prev => {
+                if (!prev.some(task => task.id === collaboratedTask.id)) {
+                  return [collaboratedTask, ...prev];
+                }
+                return prev;
+              });
+            }
+          }
+        } 
+        // Se foi removido como colaborador, verificar se precisa remover a tarefa da lista
+        else if (payload.eventType === 'DELETE') {
+          const oldCollaborator = payload.old as any;
+          if (oldCollaborator.user_id === user.id) {
+            // Verificar se ainda tem acesso à tarefa como dono
+            const { data, error } = await supabase
+              .from('tasks')
+              .select('*')
+              .eq('id', oldCollaborator.task_id)
+              .eq('user_id', user.id)
+              .single();
+            
+            // Se não for o dono da tarefa, remover da lista
+            if (error) {
+              setTasks(prev => prev.filter(task => task.id !== oldCollaborator.task_id));
+            }
+          }
+        }
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(tasksSubscription);
+      supabase.removeChannel(collaboratorSubscription);
     };
   }, [user]);
 
@@ -267,6 +330,150 @@ export function useTasks() {
     }
   };
 
+  // Adicionar um colaborador a uma tarefa
+  const addCollaborator = async (taskId: string, userEmail: string): Promise<boolean> => {
+    if (!user) {
+      toast.error('Você precisa estar logado para adicionar colaboradores');
+      return false;
+    }
+
+    try {
+      // Buscar o ID do usuário pelo email
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', userEmail.split('@')[0])
+        .single();
+
+      if (userError || !userData) {
+        toast.error('Usuário não encontrado');
+        return false;
+      }
+
+      const collaboratorId = userData.id;
+
+      // Verificar se o usuário já é colaborador
+      const { data: existingCollaborator, error: checkError } = await supabase
+        .from('task_collaborators')
+        .select('*')
+        .eq('task_id', taskId)
+        .eq('user_id', collaboratorId)
+        .single();
+
+      if (existingCollaborator) {
+        toast.info('Este usuário já é colaborador desta tarefa');
+        return false;
+      }
+
+      // Adicionar o colaborador
+      const { error } = await supabase
+        .from('task_collaborators')
+        .insert({
+          task_id: taskId,
+          user_id: collaboratorId,
+          added_by: user.id
+        });
+
+      if (error) throw error;
+
+      toast.success('Colaborador adicionado com sucesso!');
+      return true;
+    } catch (error: ErrorType) {
+      console.error('Erro ao adicionar colaborador:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao adicionar colaborador');
+      return false;
+    }
+  };
+
+  // Remover um colaborador de uma tarefa
+  const removeCollaborator = async (collaboratorId: string): Promise<boolean> => {
+    if (!user) {
+      toast.error('Você precisa estar logado para remover colaboradores');
+      return false;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('task_collaborators')
+        .delete()
+        .eq('id', collaboratorId);
+
+      if (error) throw error;
+
+      toast.success('Colaborador removido com sucesso!');
+      return true;
+    } catch (error: ErrorType) {
+      console.error('Erro ao remover colaborador:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao remover colaborador');
+      return false;
+    }
+  };
+
+  // Buscar colaboradores de uma tarefa
+  const getTaskCollaborators = async (taskId: string): Promise<TaskCollaborator[]> => {
+    if (!user) {
+      toast.error('Você precisa estar logado para ver colaboradores');
+      return [];
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('task_collaborators')
+        .select('*')
+        .eq('task_id', taskId);
+
+      if (error) throw error;
+
+      // Buscar informações adicionais dos usuários
+      const collaborators = await Promise.all((data || []).map(async (collab) => {
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', collab.user_id)
+          .single();
+
+        if (userError || !userData) {
+          return {
+            ...collab,
+            userEmail: 'Usuário desconhecido',
+            userName: 'Desconhecido'
+          };
+        }
+
+        return {
+          ...collab,
+          userEmail: `${userData.username}@example.com`, // Simulando email a partir do username
+          userName: userData.username || 'Sem nome'
+        };
+      }));
+
+      return collaborators;
+    } catch (error: ErrorType) {
+      console.error('Erro ao buscar colaboradores:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao buscar colaboradores');
+      return [];
+    }
+  };
+
+  // Verificar se o usuário atual é dono de uma tarefa
+  const isTaskOwner = async (taskId: string): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('user_id')
+        .eq('id', taskId)
+        .single();
+
+      if (error || !data) return false;
+      return data.user_id === user.id;
+    } catch (error) {
+      console.error('Erro ao verificar propriedade da tarefa:', error);
+      return false;
+    }
+  };
+
   // Função auxiliar para obter o nome legível do status
   const getStatusName = (status: TaskStatus): string => {
     switch (status) {
@@ -283,6 +490,10 @@ export function useTasks() {
     addTask,
     updateTask,
     deleteTask,
-    changeTaskStatus
+    changeTaskStatus,
+    addCollaborator,
+    removeCollaborator,
+    getTaskCollaborators,
+    isTaskOwner
   };
 }

@@ -1,17 +1,21 @@
+
 import { useState } from 'react';
-import { Calendar, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { Calendar, MoreHorizontal, Edit, Trash2, Users } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Task } from '@/types/task';
 import { formatDate } from '@/lib/task-utils';
 import { TaskForm } from '@/components/task-form';
+import { TaskCollaborators } from '@/components/task-collaborators';
 import { useDrag } from 'react-dnd';
+import { Badge } from '@/components/ui/badge';
 
 interface TaskCardProps {
   task: Task;
@@ -21,6 +25,7 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isManagingCollaborators, setIsManagingCollaborators] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   // Configuração do drag and drop
@@ -34,6 +39,10 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
 
   const handleEdit = () => {
     setIsEditing(true);
+  };
+
+  const handleManageCollaborators = () => {
+    setIsManagingCollaborators(true);
   };
 
   const handleUpdate = (updatedData: Partial<Task>) => {
@@ -77,6 +86,11 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
                 <Edit className="mr-2 h-4 w-4" />
                 Editar
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleManageCollaborators}>
+                <Users className="mr-2 h-4 w-4" />
+                Colaboradores
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onDelete(task.id)} className="text-destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Excluir
@@ -89,12 +103,19 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
           <p className="text-sm mt-2 text-muted-foreground line-clamp-3">{task.description}</p>
         )}
 
-        {task.dueDate && (
-          <div className="mt-3 flex items-center text-xs text-muted-foreground">
-            <Calendar size={14} className="mr-1" />
-            {formatDate(task.dueDate)}
-          </div>
-        )}
+        <div className="mt-3 flex items-center justify-between">
+          {task.dueDate && (
+            <div className="flex items-center text-xs text-muted-foreground">
+              <Calendar size={14} className="mr-1" />
+              {formatDate(task.dueDate)}
+            </div>
+          )}
+          
+          <Badge variant="outline" className="ml-auto bg-purple-500/10 text-purple-300 hover:bg-purple-500/20">
+            <Users size={12} className="mr-1" />
+            Equipe
+          </Badge>
+        </div>
       </Card>
 
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
@@ -108,6 +129,13 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
             }}
             onSubmit={handleUpdate}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isManagingCollaborators} onOpenChange={setIsManagingCollaborators}>
+        <DialogContent className="glass-panel sm:max-w-[500px]">
+          <DialogTitle>Gerenciar Colaboradores</DialogTitle>
+          <TaskCollaborators taskId={task.id} />
         </DialogContent>
       </Dialog>
     </>

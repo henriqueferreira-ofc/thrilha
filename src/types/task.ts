@@ -21,3 +21,13 @@ export interface TaskFormData {
   description?: string;
   dueDate?: string;
 }
+
+export interface TaskCollaborator {
+  id: string;
+  task_id: string;
+  user_id: string;
+  added_at: string;
+  added_by: string;
+  userEmail?: string; // Campo adicional para exibição
+  userName?: string;  // Campo adicional para exibição
+}
