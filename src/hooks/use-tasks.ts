@@ -1,14 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Task, TaskStatus, TaskFormData, TaskCollaborator } from '../types/task';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Database } from '@/integrations/supabase/types';
-import { ErrorType } from '@/types/common';
-
-// Definindo tipos para as tabelas do Supabase
-type Tables = Database['public']['Tables'];
-type TaskRow = Tables['tasks']['Row'];
+import { TaskRow, TaskCollaboratorRow } from '@/types/supabase';
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -42,8 +38,8 @@ export function useTasks() {
         })) || [];
         
         setTasks(formattedTasks);
-      } catch (error: any) {
-        console.error('Erro ao buscar tarefas:', error.message);
+      } catch (error) {
+        console.error('Erro ao buscar tarefas:', error);
         toast.error('Erro ao carregar tarefas');
       } finally {
         setLoading(false);
@@ -226,7 +222,7 @@ export function useTasks() {
 
       toast.success('Tarefa criada com sucesso!');
       return formattedTask;
-    } catch (error: ErrorType) {
+    } catch (error: unknown) {
       console.error('Erro ao criar tarefa:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao criar tarefa');
       return null;
@@ -258,7 +254,7 @@ export function useTasks() {
       if (error) throw error;
 
       toast.success('Tarefa atualizada com sucesso!');
-    } catch (error: ErrorType) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar tarefa:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao atualizar tarefa');
     }
@@ -281,7 +277,7 @@ export function useTasks() {
       if (error) throw error;
 
       toast.success('Tarefa removida com sucesso!');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao excluir tarefa:', error);
       toast.error('Erro ao excluir tarefa');
     }
@@ -324,7 +320,7 @@ export function useTasks() {
       }
 
       toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao atualizar status da tarefa:', error);
       toast.error('Erro ao atualizar status da tarefa');
     }
@@ -353,32 +349,28 @@ export function useTasks() {
       const collaboratorId = userData.id;
 
       // Verificar se o usuário já é colaborador
-      const { data: existingCollaborator, error: checkError } = await supabase
-        .from('task_collaborators')
-        .select('*')
-        .eq('task_id', taskId)
-        .eq('user_id', collaboratorId)
-        .single();
+      const { data: existingCollaborator } = await supabase.rpc('is_task_collaborator', {
+        p_task_id: taskId,
+        p_user_id: collaboratorId
+      });
 
       if (existingCollaborator) {
         toast.info('Este usuário já é colaborador desta tarefa');
         return false;
       }
 
-      // Adicionar o colaborador
-      const { error } = await supabase
-        .from('task_collaborators')
-        .insert({
-          task_id: taskId,
-          user_id: collaboratorId,
-          added_by: user.id
-        });
+      // Adicionar o colaborador usando RPC para evitar problemas de tipo
+      const { error } = await supabase.rpc('add_task_collaborator', {
+        p_task_id: taskId,
+        p_user_id: collaboratorId,
+        p_added_by: user.id
+      });
 
       if (error) throw error;
 
       toast.success('Colaborador adicionado com sucesso!');
       return true;
-    } catch (error: ErrorType) {
+    } catch (error: unknown) {
       console.error('Erro ao adicionar colaborador:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao adicionar colaborador');
       return false;
@@ -393,16 +385,15 @@ export function useTasks() {
     }
 
     try {
-      const { error } = await supabase
-        .from('task_collaborators')
-        .delete()
-        .eq('id', collaboratorId);
+      const { error } = await supabase.rpc('remove_task_collaborator', {
+        p_collaborator_id: collaboratorId
+      });
 
       if (error) throw error;
 
       toast.success('Colaborador removido com sucesso!');
       return true;
-    } catch (error: ErrorType) {
+    } catch (error: unknown) {
       console.error('Erro ao remover colaborador:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao remover colaborador');
       return false;
@@ -417,38 +408,25 @@ export function useTasks() {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('task_collaborators')
-        .select('*')
-        .eq('task_id', taskId);
+      const { data, error } = await supabase.rpc('get_task_collaborators', {
+        p_task_id: taskId
+      });
 
       if (error) throw error;
 
-      // Buscar informações adicionais dos usuários
-      const collaborators = await Promise.all((data || []).map(async (collab) => {
-        const { data: userData, error: userError } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', collab.user_id)
-          .single();
-
-        if (userError || !userData) {
-          return {
-            ...collab,
-            userEmail: 'Usuário desconhecido',
-            userName: 'Desconhecido'
-          };
-        }
-
-        return {
-          ...collab,
-          userEmail: `${userData.username}@example.com`, // Simulando email a partir do username
-          userName: userData.username || 'Sem nome'
-        };
+      // Formatar os dados para o formato da aplicação
+      const collaborators: TaskCollaborator[] = (data || []).map((collab: any) => ({
+        id: collab.id,
+        task_id: collab.task_id,
+        user_id: collab.user_id,
+        added_at: collab.added_at,
+        added_by: collab.added_by,
+        userEmail: collab.user_email || `${collab.username}@example.com`,
+        userName: collab.username || 'Sem nome'
       }));
 
       return collaborators;
-    } catch (error: ErrorType) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar colaboradores:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao buscar colaboradores');
       return [];
