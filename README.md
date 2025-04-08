@@ -1,4 +1,4 @@
-# Welcome to your Trilha
+# Seja bem vindo ao Trilha!!
 
 ## Project info
 
