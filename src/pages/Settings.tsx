@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,12 +53,12 @@ const Settings = () => {
       // Caso contrário, use as preferências padrão
       if (data) {
         // Aqui está a correção do tipo
-        const userPrefs = data.preferences as Record<string, unknown>;
+        const userPrefs = data.preferences ? JSON.parse(JSON.stringify(data.preferences)) : defaultPreferences;
         
         // Combinamos com as preferências padrão para garantir que todos os campos existam
         setPreferences({
           ...defaultPreferences,
-          ...(userPrefs as unknown as UserPreferences)
+          ...userPrefs
         });
         
         setUsername(data.username || '');
