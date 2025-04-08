@@ -4,6 +4,7 @@ import { Task, TaskStatus, TaskFormData } from '../types/task';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Database } from '@/integrations/supabase/types';
+import { ErrorType } from '@/types/common';
 
 // Definindo tipos para as tabelas do Supabase
 type Tables = Database['public']['Tables'];
@@ -104,7 +105,7 @@ export function useTasks() {
   }, [user]);
 
   // Adicionar uma nova tarefa
-  const addTask = async (taskData: TaskFormData) => {
+  const addTask = async (taskData: TaskFormData): Promise<Task | null> => {
     if (!user) {
       toast.error('Você precisa estar logado para criar tarefas');
       return null;
@@ -162,15 +163,15 @@ export function useTasks() {
 
       toast.success('Tarefa criada com sucesso!');
       return formattedTask;
-    } catch (error: any) {
+    } catch (error: ErrorType) {
       console.error('Erro ao criar tarefa:', error);
-      toast.error('Erro ao criar tarefa');
+      toast.error(error instanceof Error ? error.message : 'Erro ao criar tarefa');
       return null;
     }
   };
 
   // Atualizar uma tarefa
-  const updateTask = async (id: string, updatedData: Partial<Task>) => {
+  const updateTask = async (id: string, updatedData: Partial<Task>): Promise<void> => {
     if (!user) {
       toast.error('Você precisa estar logado para atualizar tarefas');
       return;
@@ -194,9 +195,9 @@ export function useTasks() {
       if (error) throw error;
 
       toast.success('Tarefa atualizada com sucesso!');
-    } catch (error: any) {
+    } catch (error: ErrorType) {
       console.error('Erro ao atualizar tarefa:', error);
-      toast.error('Erro ao atualizar tarefa');
+      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar tarefa');
     }
   };
 

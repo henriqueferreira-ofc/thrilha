@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ErrorType } from '@/types/common';
 
 interface AuthContextType {
   user: User | null;
@@ -42,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, username?: string) => {
+  const signUp = async (email: string, password: string, username?: string): Promise<void> => {
     try {
       const { error } = await supabase.auth.signUp({ 
         email, 
@@ -56,19 +57,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       toast.success('Cadastro realizado! Verifique seu email para confirmar sua conta.');
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao criar conta');
+    } catch (error: ErrorType) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao criar conta');
       throw error;
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<void> => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success('Login realizado com sucesso!');
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao fazer login');
+    } catch (error: ErrorType) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao fazer login');
       throw error;
     }
   };
@@ -78,8 +79,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success('Logout realizado com sucesso!');
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao fazer logout');
+    } catch (error: ErrorType) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao fazer logout');
     }
   };
 
@@ -102,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .getPublicUrl(filePath);
 
       return publicUrl;
-    } catch (error: any) {
+    } catch (error: ErrorType) {
       toast.error('Erro ao fazer upload da imagem');
       throw error;
     }
@@ -123,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       toast.success('Perfil atualizado com sucesso!');
-    } catch (error: any) {
+    } catch (error: ErrorType) {
       toast.error('Erro ao atualizar perfil');
       throw error;
     }
