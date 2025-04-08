@@ -14,6 +14,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           id: string
+          preferences: Json | null
           updated_at: string
           username: string | null
         }
@@ -21,6 +22,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           id: string
+          preferences?: Json | null
           updated_at?: string
           username?: string | null
         }
@@ -28,10 +30,43 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           id?: string
+          preferences?: Json | null
           updated_at?: string
           username?: string | null
         }
         Relationships: []
+      }
+      task_collaborators: {
+        Row: {
+          added_at: string
+          added_by: string
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by: string
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_collaborators_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
@@ -71,7 +106,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_task_collaborator: {
+        Args: { p_task_id: string; p_user_id: string; p_added_by: string }
+        Returns: string
+      }
+      get_task_collaborators: {
+        Args: { p_task_id: string }
+        Returns: {
+          id: string
+          task_id: string
+          user_id: string
+          added_at: string
+          added_by: string
+          username: string
+          user_email: string
+        }[]
+      }
+      is_task_collaborator: {
+        Args: { p_task_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      remove_task_collaborator: {
+        Args: { p_collaborator_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

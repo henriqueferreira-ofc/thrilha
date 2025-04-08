@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       toast.success('Cadastro realizado! Verifique seu email para confirmar sua conta.');
-    } catch (error: ErrorType) {
+    } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Erro ao criar conta');
       throw error;
     }
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success('Login realizado com sucesso!');
-    } catch (error: ErrorType) {
+    } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Erro ao fazer login');
       throw error;
     }
@@ -79,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success('Logout realizado com sucesso!');
-    } catch (error: ErrorType) {
+    } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Erro ao fazer logout');
     }
   };
@@ -103,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .getPublicUrl(filePath);
 
       return publicUrl;
-    } catch (error: ErrorType) {
+    } catch (error: unknown) {
       toast.error('Erro ao fazer upload da imagem');
       throw error;
     }
@@ -124,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       toast.success('Perfil atualizado com sucesso!');
-    } catch (error: ErrorType) {
+    } catch (error: unknown) {
       toast.error('Erro ao atualizar perfil');
       throw error;
     }
