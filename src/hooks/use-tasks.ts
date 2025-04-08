@@ -209,33 +209,13 @@ export function useTasks() {
     }
 
     try {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      toast.success('Tarefa removida com sucesso!');
-    } catch (error: any) {
       console.error('Erro ao excluir tarefa:', error);
       toast.error('Erro ao excluir tarefa');
     }
   };
 
   // Alterar o status de uma tarefa
-  const changeTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
-    if (!user) {
-      toast.error('Você precisa estar logado para atualizar tarefas');
-      return;
-    }
-
-    try {
-      // Atualizar o estado local imediatamente
-      setTasks(prev => 
-        prev.map(task => 
-          task.id === taskId 
+      if (error) throw error;
             ? { ...task, status: newStatus }
             : task
         )
