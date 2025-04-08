@@ -2,12 +2,12 @@
 
 <p align="center">
 Meu Projeto ainda está sendo desenvolvido e logo teremos boas novas<br/>
-<a href="https://github.com/henriquearaujooficial/ProjetoDev">Veja meu Projeto Clicando aqui</a>
+<a href="https://github.com/henriqueferreira-ofc/trilha">Veja meu Projeto Clicando aqui</a>
 </p>
 
 <p align="center">
   <a href="#-tecnologias">Tecnologias</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#-layout">Banco</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#-banco">Banco</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#-projeto">Projeto</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#-layout">Layout</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#memo-licença">Licença</a>
