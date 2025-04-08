@@ -1,5 +1,6 @@
 
 import { PostgrestError } from '@supabase/supabase-js';
+import { Json } from '@/integrations/supabase/types';
 
 // Tipo para erros genéricos
 export type ErrorType = Error | PostgrestError | unknown;
@@ -21,5 +22,5 @@ export interface UserPreferences {
   pushNotifications: boolean;
   soundEnabled: boolean;
   taskReminders: boolean;
-  [key: string]: boolean | string | number | null | undefined;
+  [key: string]: boolean | string | number | null | undefined | Json;
 }
