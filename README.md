@@ -30,6 +30,11 @@ Esse projeto foi desenvolvido com as seguintes tecnologias:
 - shadcn-ui
 - Tailwind CSS
 
+## 🚀 Banco
+
+Esse projeto foi desenvolvido usando:
+- Supabase
+
 ## 💻 Projeto
 
 O Projeto Trilha está sendo desenvolvido por [@henriqueFerreira.ofc](https://github.com/henriqueferreira-ofc), Teremos muitas novidades em breve.
