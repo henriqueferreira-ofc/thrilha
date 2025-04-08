@@ -12,26 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { Switch } from '@/components/ui/switch';
-import { ErrorType } from '@/types/common';
-
-// Definindo a interface para as preferências
-interface UserPreferences {
-  darkMode: boolean;
-  compactMode: boolean;
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  soundEnabled: boolean;
-  taskReminders: boolean;
-}
-
-// Definindo a interface para o perfil
-interface Profile {
-  id: string;
-  username?: string;
-  avatar_url?: string;
-  preferences?: UserPreferences;
-  updated_at?: string;
-}
+import { ErrorType, UserPreferences } from '@/types/common';
 
 const Settings = () => {
   const { user } = useAuth();
@@ -79,7 +60,8 @@ const Settings = () => {
           .single();
 
         if (data?.preferences) {
-          const prefs = data.preferences as UserPreferences;
+          // Primeiro convertemos para unknown e depois para UserPreferences
+          const prefs = data.preferences as unknown as UserPreferences;
           setDarkMode(prefs.darkMode ?? true);
           setCompactMode(prefs.compactMode ?? false);
           setEmailNotifications(prefs.emailNotifications ?? true);
@@ -119,7 +101,7 @@ const Settings = () => {
       if (userError) throw userError;
 
       toast.success('Perfil atualizado com sucesso!');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
       toast.error('Erro ao atualizar perfil');
     } finally {
@@ -178,7 +160,7 @@ const Settings = () => {
       toast.success('Foto de perfil atualizada com sucesso!');
       window.location.reload();
 
-    } catch (error: ErrorType) {
+    } catch (error) {
       console.error('Erro:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao atualizar foto de perfil');
     } finally {
@@ -192,14 +174,14 @@ const Settings = () => {
 
     try {
       setIsSaving(true);
-      const preferences: UserPreferences = {
+      const preferences = {
         darkMode,
         compactMode,
         emailNotifications,
         pushNotifications,
         soundEnabled,
         taskReminders
-      };
+      } as unknown as Record<string, unknown>;
 
       const { error } = await supabase
         .from('profiles')
@@ -211,7 +193,7 @@ const Settings = () => {
 
       if (error) throw error;
       toast.success('Preferências de aparência salvas!');
-    } catch (error: ErrorType) {
+    } catch (error) {
       console.error('Erro ao salvar preferências:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao salvar preferências');
     } finally {
@@ -225,14 +207,14 @@ const Settings = () => {
 
     try {
       setIsSaving(true);
-      const preferences: UserPreferences = {
+      const preferences = {
         darkMode,
         compactMode,
         emailNotifications,
         pushNotifications,
         soundEnabled,
         taskReminders
-      };
+      } as unknown as Record<string, unknown>;
 
       const { error } = await supabase
         .from('profiles')

@@ -38,7 +38,7 @@ export function useTasks() {
         })) || [];
         
         setTasks(formattedTasks);
-      } catch (error: unknown) {
+      } catch (error) {
         console.error('Erro ao buscar tarefas:', error);
         toast.error('Erro ao carregar tarefas');
       } finally {
@@ -222,7 +222,7 @@ export function useTasks() {
 
       toast.success('Tarefa criada com sucesso!');
       return formattedTask;
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Erro ao criar tarefa:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao criar tarefa');
       return null;
@@ -253,7 +253,7 @@ export function useTasks() {
       if (error) throw error;
 
       toast.success('Tarefa atualizada com sucesso!');
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Erro ao atualizar tarefa:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao atualizar tarefa');
     }
@@ -275,7 +275,7 @@ export function useTasks() {
       if (error) throw error;
 
       toast.success('Tarefa removida com sucesso!');
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Erro ao excluir tarefa:', error);
       toast.error('Erro ao excluir tarefa');
     }
@@ -317,7 +317,7 @@ export function useTasks() {
       }
 
       toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Erro ao atualizar status da tarefa:', error);
       toast.error('Erro ao atualizar status da tarefa');
     }
@@ -375,7 +375,7 @@ export function useTasks() {
 
       toast.success('Colaborador adicionado com sucesso!');
       return true;
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Erro ao adicionar colaborador:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao adicionar colaborador');
       return false;
@@ -402,7 +402,7 @@ export function useTasks() {
 
       toast.success('Colaborador removido com sucesso!');
       return true;
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Erro ao remover colaborador:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao remover colaborador');
       return false;
@@ -439,7 +439,7 @@ export function useTasks() {
       }));
 
       return collaborators;
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Erro ao buscar colaboradores:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao buscar colaboradores');
       return [];
@@ -459,7 +459,7 @@ export function useTasks() {
 
       if (error || !data) return false;
       return data.user_id === user.id;
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Erro ao verificar propriedade da tarefa:', error);
       return false;
     }
