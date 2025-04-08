@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Task, TaskStatus, TaskFormData, TaskCollaborator } from '../types/task';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { TaskRow, TaskCollaboratorRow } from '@/types/supabase';
+import { TaskRow } from '@/types/supabase';
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -38,7 +38,7 @@ export function useTasks() {
         })) || [];
         
         setTasks(formattedTasks);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao buscar tarefas:', error);
         toast.error('Erro ao carregar tarefas');
       } finally {
@@ -248,8 +248,7 @@ export function useTasks() {
       const { error } = await supabase
         .from('tasks')
         .update(dbData)
-        .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('id', id);
 
       if (error) throw error;
 
@@ -271,13 +270,12 @@ export function useTasks() {
       const { error } = await supabase
         .from('tasks')
         .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('id', id);
 
       if (error) throw error;
 
       toast.success('Tarefa removida com sucesso!');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao excluir tarefa:', error);
       toast.error('Erro ao excluir tarefa');
     }
@@ -304,8 +302,7 @@ export function useTasks() {
       const { error } = await supabase
         .from('tasks')
         .update({ status: newStatus })
-        .eq('id', taskId)
-        .eq('user_id', user.id);
+        .eq('id', taskId);
 
       if (error) {
         // Se houver erro, reverter a alteração local
@@ -320,13 +317,13 @@ export function useTasks() {
       }
 
       toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar status da tarefa:', error);
       toast.error('Erro ao atualizar status da tarefa');
     }
   };
 
-  // Adicionar um colaborador a uma tarefa
+  // Adicionar um colaborador a uma tarefa usando RPC
   const addCollaborator = async (taskId: string, userEmail: string): Promise<boolean> => {
     if (!user) {
       toast.error('Você precisa estar logado para adicionar colaboradores');
@@ -348,23 +345,31 @@ export function useTasks() {
 
       const collaboratorId = userData.id;
 
-      // Verificar se o usuário já é colaborador
-      const { data: existingCollaborator } = await supabase.rpc('is_task_collaborator', {
-        p_task_id: taskId,
-        p_user_id: collaboratorId
-      });
+      // Verificar se o usuário já é colaborador usando a RPC
+      const { data: existingCollaborator, error: checkError } = await supabase.rpc(
+        'is_task_collaborator',
+        {
+          p_task_id: taskId,
+          p_user_id: collaboratorId
+        }
+      );
+
+      if (checkError) throw checkError;
 
       if (existingCollaborator) {
         toast.info('Este usuário já é colaborador desta tarefa');
         return false;
       }
 
-      // Adicionar o colaborador usando RPC para evitar problemas de tipo
-      const { error } = await supabase.rpc('add_task_collaborator', {
-        p_task_id: taskId,
-        p_user_id: collaboratorId,
-        p_added_by: user.id
-      });
+      // Adicionar o colaborador usando a RPC
+      const { error } = await supabase.rpc(
+        'add_task_collaborator',
+        {
+          p_task_id: taskId,
+          p_user_id: collaboratorId,
+          p_added_by: user.id
+        }
+      );
 
       if (error) throw error;
 
@@ -377,7 +382,7 @@ export function useTasks() {
     }
   };
 
-  // Remover um colaborador de uma tarefa
+  // Remover um colaborador de uma tarefa usando RPC
   const removeCollaborator = async (collaboratorId: string): Promise<boolean> => {
     if (!user) {
       toast.error('Você precisa estar logado para remover colaboradores');
@@ -385,9 +390,13 @@ export function useTasks() {
     }
 
     try {
-      const { error } = await supabase.rpc('remove_task_collaborator', {
-        p_collaborator_id: collaboratorId
-      });
+      // Remover o colaborador usando a RPC
+      const { error } = await supabase.rpc(
+        'remove_task_collaborator',
+        {
+          p_collaborator_id: collaboratorId
+        }
+      );
 
       if (error) throw error;
 
@@ -400,7 +409,7 @@ export function useTasks() {
     }
   };
 
-  // Buscar colaboradores de uma tarefa
+  // Buscar colaboradores de uma tarefa usando RPC
   const getTaskCollaborators = async (taskId: string): Promise<TaskCollaborator[]> => {
     if (!user) {
       toast.error('Você precisa estar logado para ver colaboradores');
@@ -408,9 +417,13 @@ export function useTasks() {
     }
 
     try {
-      const { data, error } = await supabase.rpc('get_task_collaborators', {
-        p_task_id: taskId
-      });
+      // Buscar os colaboradores usando a RPC
+      const { data, error } = await supabase.rpc(
+        'get_task_collaborators',
+        {
+          p_task_id: taskId
+        }
+      );
 
       if (error) throw error;
 
@@ -446,7 +459,7 @@ export function useTasks() {
 
       if (error || !data) return false;
       return data.user_id === user.id;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao verificar propriedade da tarefa:', error);
       return false;
     }

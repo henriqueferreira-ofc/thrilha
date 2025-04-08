@@ -106,7 +106,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_task_collaborator: {
+        Args: { p_task_id: string; p_user_id: string; p_added_by: string }
+        Returns: string
+      }
+      get_task_collaborators: {
+        Args: { p_task_id: string }
+        Returns: {
+          id: string
+          task_id: string
+          user_id: string
+          added_at: string
+          added_by: string
+          username: string
+          user_email: string
+        }[]
+      }
+      is_task_collaborator: {
+        Args: { p_task_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      remove_task_collaborator: {
+        Args: { p_collaborator_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
