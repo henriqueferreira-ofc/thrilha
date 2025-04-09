@@ -36,13 +36,8 @@ export function useTaskCollaborators() {
       // Buscar o ID do usuário pelo username
       const { data: userData, error: userError } = await supabase
         .from('profiles')
-<<<<<<< HEAD
-        .select('id, username')
-        .eq('email', userEmail)
-=======
         .select('id')
         .eq('username', username)
->>>>>>> 0a88ce11de48e33ae54fa645d23a44fda7ebce21
         .single();
 
       if (userError) {
@@ -139,50 +134,6 @@ export function useTaskCollaborators() {
     setLoading(true);
 
     try {
-<<<<<<< HEAD
-      const { data, error } = await supabase
-        .from('task_collaborators')
-        .select(`
-          id,
-          user_id,
-          task_id,
-          created_at,
-          profiles:user_id (
-            username,
-            avatar_url,
-            email
-          )
-        `)
-        .eq('task_id', taskId);
-
-      if (error) {
-        console.error('Erro na consulta:', error);
-        throw error;
-      }
-
-      console.log('Dados brutos:', data);
-
-      if (!data) return [];
-
-      type SupabaseCollaborator = {
-        id: string;
-        user_id: string;
-        task_id: string;
-        created_at: string;
-        profiles: {
-          username: string;
-          avatar_url: string | null;
-          email: string;
-        }[];
-      };
-
-      const collaborators = data.map((collab: SupabaseCollaborator) => ({
-        id: collab.user_id,
-        email: collab.profiles[0]?.email || 'sem-email@example.com',
-        avatar_url: collab.profiles[0]?.avatar_url || null,
-        full_name: collab.profiles[0]?.username || 'Sem nome'
-      }));
-=======
       // Usar uma query simples para buscar os colaboradores e depois buscar os detalhes dos usuários
       const { data: collaboratorsData, error: collaboratorsError } = await supabase
         .from('task_collaborators')
@@ -213,25 +164,16 @@ export function useTaskCollaborators() {
       }
 
       // Combinar os dados para formar a lista de colaboradores
-      const collaborators: TaskCollaborator[] = collaboratorsData.map(collab => {
+      const collaborators = collaboratorsData.map(collab => {
         const userProfile = profilesData?.find(profile => profile.id === collab.user_id);
         
         return {
-          id: collab.id,
-          task_id: collab.task_id,
-          user_id: collab.user_id,
-          added_at: collab.created_at,
-          added_by: user.id,
-          userEmail: userProfile?.username ? `${userProfile.username}@example.com` : 'sem-email@example.com',
-          userName: userProfile?.username || 'Sem nome',
-          permissions: {
-            canEdit: true,
-            canDelete: true,
-            canManageCollaborators: false
-          }
+          id: collab.user_id,
+          email: userProfile?.username ? `${userProfile.username}@example.com` : 'sem-email@example.com',
+          avatar_url: userProfile?.avatar_url || null,
+          full_name: userProfile?.username || 'Sem nome'
         };
       });
->>>>>>> 0a88ce11de48e33ae54fa645d23a44fda7ebce21
 
       console.log('Colaboradores formatados:', collaborators);
       return collaborators;
