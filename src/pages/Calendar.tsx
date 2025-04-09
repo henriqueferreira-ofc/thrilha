@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { format, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +27,11 @@ const Calendar = () => {
     if (!selectedDate || !task.dueDate) return false;
     
     const taskDate = new Date(task.dueDate);
-    return isSameDay(taskDate, selectedDate);
+    return (
+      taskDate.getDate() === selectedDate.getDate() &&
+      taskDate.getMonth() === selectedDate.getMonth() &&
+      taskDate.getFullYear() === selectedDate.getFullYear()
+    );
   });
 
   // Função para determinar que dias devem ser destacados no calendário (dias com tarefas)
@@ -83,13 +87,13 @@ const Calendar = () => {
               </div>
 
               <div className="bg-black p-4 rounded-lg border border-white/10 lg:col-span-2">
-                <div className="mb-4">
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
                     <CalendarIcon className="h-5 w-5" />
                     {formattedDate}
-                  </h2>
-                </div>
-                <div className="mt-4">
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   {tasksForSelectedDate.length > 0 ? (
                     <Table>
                       <TableHeader>
@@ -116,7 +120,7 @@ const Calendar = () => {
                         : 'Selecione uma data para ver as tarefas'}
                     </div>
                   )}
-                </div>
+                </CardContent>
               </div>
             </div>
           </main>
