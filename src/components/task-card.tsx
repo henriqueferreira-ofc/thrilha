@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Calendar, MoreHorizontal, Edit, Trash2, Users } from 'lucide-react';
+import { Calendar, MoreHorizontal, Edit, Trash2, Users, CalendarClock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import {
   DropdownMenu,
@@ -16,6 +16,8 @@ import { TaskForm } from '@/components/task-form';
 import { TaskCollaborators } from '@/components/task-collaborators';
 import { useDrag } from 'react-dnd';
 import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface TaskCardProps {
   task: Task;
@@ -64,6 +66,31 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
     }
   };
 
+  // Verifica se a data de vencimento está próxima (menos de 3 dias)
+  const isDueSoon = () => {
+    if (!task.dueDate) return false;
+    const dueDate = new Date(task.dueDate);
+    const today = new Date();
+    const diffTime = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 && diffDays <= 3;
+  };
+
+  // Verifica se a tarefa está atrasada
+  const isOverdue = () => {
+    if (!task.dueDate) return false;
+    const dueDate = new Date(task.dueDate);
+    const today = new Date();
+    return dueDate < today && task.status !== 'done';
+  };
+
+  // Formata a data de vencimento 
+  const formatTaskDueDate = () => {
+    if (!task.dueDate) return null;
+    const dueDate = new Date(task.dueDate);
+    return format(dueDate, "dd 'de' MMM", { locale: ptBR });
+  };
+
   return (
     <>
       <Card 
@@ -105,9 +132,13 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
 
         <div className="mt-3 flex items-center justify-between">
           {task.dueDate && (
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Calendar size={14} className="mr-1" />
-              {formatDate(task.dueDate)}
+            <div className={`flex items-center text-xs ${isOverdue() ? 'text-red-400' : isDueSoon() ? 'text-amber-400' : 'text-muted-foreground'}`}>
+              {isOverdue() ? (
+                <CalendarClock size={14} className="mr-1 animate-pulse" />
+              ) : (
+                <Calendar size={14} className="mr-1" />
+              )}
+              {formatTaskDueDate()}
             </div>
           )}
           

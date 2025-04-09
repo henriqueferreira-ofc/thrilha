@@ -36,38 +36,6 @@ export type Database = {
         }
         Relationships: []
       }
-      task_collaborators: {
-        Row: {
-          added_at: string
-          added_by: string
-          id: string
-          task_id: string
-          user_id: string
-        }
-        Insert: {
-          added_at?: string
-          added_by: string
-          id?: string
-          task_id: string
-          user_id: string
-        }
-        Update: {
-          added_at?: string
-          added_by?: string
-          id?: string
-          task_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "task_collaborators_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       tasks: {
         Row: {
           created_at: string

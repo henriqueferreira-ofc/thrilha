@@ -1,5 +1,7 @@
 
 import { Task, TaskStatus } from "../types/task";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 // Chave usada para armazenar as tarefas no localStorage
 const TASKS_STORAGE_KEY = 'vo-tasks';
@@ -37,10 +39,7 @@ export const saveTasks = (tasks: Task[]): void => {
 // Format date to display
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('pt-BR', {
-    day: 'numeric',
-    month: 'short'
-  });
+  return format(date, "dd 'de' MMM", { locale: ptBR });
 };
 
 // Group tasks by status
@@ -68,4 +67,22 @@ export const groupTasksByStatus = (tasks: Task[]) => {
   });
 
   return [columns.todo, columns.inProgress, columns.done];
+};
+
+// Verificar se uma tarefa está próxima do prazo (3 dias ou menos)
+export const isTaskDueSoon = (task: Task): boolean => {
+  if (!task.dueDate) return false;
+  const dueDate = new Date(task.dueDate);
+  const today = new Date();
+  const diffTime = dueDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays >= 0 && diffDays <= 3;
+};
+
+// Verificar se uma tarefa está atrasada
+export const isTaskOverdue = (task: Task): boolean => {
+  if (!task.dueDate) return false;
+  const dueDate = new Date(task.dueDate);
+  const today = new Date();
+  return dueDate < today && task.status !== 'done';
 };

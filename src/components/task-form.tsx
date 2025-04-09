@@ -1,9 +1,20 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { TaskFormData } from '@/types/task';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface TaskFormProps {
   initialData?: {
@@ -17,7 +28,9 @@ interface TaskFormProps {
 export function TaskForm({ initialData = {}, onSubmit }: TaskFormProps) {
   const [title, setTitle] = useState(initialData.title || '');
   const [description, setDescription] = useState(initialData.description || '');
-  const [dueDate, setDueDate] = useState(initialData.dueDate || '');
+  const [date, setDate] = useState<Date | undefined>(
+    initialData.dueDate ? new Date(initialData.dueDate) : undefined
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,14 +40,14 @@ export function TaskForm({ initialData = {}, onSubmit }: TaskFormProps) {
     onSubmit({
       title: title.trim(),
       description: description.trim() || undefined,
-      dueDate: dueDate ? new Date(dueDate).toISOString() : undefined
+      dueDate: date ? date.toISOString() : undefined
     });
 
     // Reset form if it's a new task (no initialData)
     if (!initialData.title) {
       setTitle('');
       setDescription('');
-      setDueDate('');
+      setDate(undefined);
     }
   };
 
@@ -62,14 +75,34 @@ export function TaskForm({ initialData = {}, onSubmit }: TaskFormProps) {
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="due-date">Data (opcional)</Label>
-        <Input
-          id="due-date"
-          type="date"
-          value={dueDate ? dueDate.split('T')[0] : ''}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date ? format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : (
+                <span>Selecionar data</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              initialFocus
+              locale={ptBR}
+              className="pointer-events-auto"
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       <Button type="submit" className="w-full">
