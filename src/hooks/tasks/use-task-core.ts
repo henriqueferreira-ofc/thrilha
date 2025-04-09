@@ -34,7 +34,9 @@ export function useTaskCore() {
           description: task.description || '',
           status: task.status as TaskStatus,
           createdAt: task.created_at,
-          dueDate: task.due_date
+          dueDate: task.due_date,
+          user_id: task.user_id,
+          completed: task.status === 'done'
         })) || [];
         
         setTasks(formattedTasks);
@@ -68,7 +70,9 @@ export function useTaskCore() {
               description: newTask.description || '',
               status: newTask.status as TaskStatus,
               createdAt: newTask.created_at,
-              dueDate: newTask.due_date
+              dueDate: newTask.due_date,
+              user_id: newTask.user_id,
+              completed: newTask.status === 'done'
             };
             setTasks(prev => [formattedTask, ...prev]);
           }
@@ -82,7 +86,9 @@ export function useTaskCore() {
                 description: updatedTask.description || '',
                 status: updatedTask.status as TaskStatus,
                 createdAt: updatedTask.created_at,
-                dueDate: updatedTask.due_date
+                dueDate: updatedTask.due_date,
+                user_id: updatedTask.user_id,
+                completed: updatedTask.status === 'done'
               } : task)
             );
           }
@@ -123,7 +129,9 @@ export function useTaskCore() {
                 description: data.description || '',
                 status: data.status as TaskStatus,
                 createdAt: data.created_at,
-                dueDate: data.due_date
+                dueDate: data.due_date,
+                user_id: data.user_id,
+                completed: data.status === 'done'
               };
               
               // Adicionar à lista de tarefas apenas se ainda não existir

@@ -25,7 +25,9 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
         description: taskData.description || '',
         status: 'todo',
         createdAt: new Date().toISOString(),
-        dueDate: taskData.dueDate
+        dueDate: taskData.dueDate,
+        user_id: user.id,
+        completed: false
       };
 
       // Atualizar o estado local imediatamente
@@ -57,7 +59,9 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
         description: data.description || '',
         status: data.status as TaskStatus,
         createdAt: data.created_at,
-        dueDate: data.due_date
+        dueDate: data.due_date,
+        user_id: data.user_id,
+        completed: data.status === 'done'
       };
 
       setTasks(prev => prev.map(task => 
@@ -96,6 +100,11 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
 
       if (error) throw error;
 
+      // Atualizar o estado local
+      setTasks(prev => prev.map(task => 
+        task.id === id ? { ...task, ...updatedData, completed: updatedData.status === 'done' || task.completed } : task
+      ));
+
       toast.success('Tarefa atualizada com sucesso!');
     } catch (error: unknown) {
       console.error('Erro ao atualizar tarefa:', error);
@@ -118,6 +127,8 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
 
       if (error) throw error;
 
+      // Atualizar o estado local
+      setTasks(prev => prev.filter(task => task.id !== id));
       toast.success('Tarefa removida com sucesso!');
     } catch (error: unknown) {
       console.error('Erro ao excluir tarefa:', error);
@@ -137,7 +148,7 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
       setTasks(prev => 
         prev.map(task => 
           task.id === taskId 
-            ? { ...task, status: newStatus }
+            ? { ...task, status: newStatus, completed: newStatus === 'done' }
             : task
         )
       );

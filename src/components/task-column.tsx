@@ -1,3 +1,4 @@
+
 import { useDrop } from 'react-dnd';
 import { Task, Column, TaskStatus } from '@/types/task';
 import { TaskCard } from '@/components/task-card';
@@ -60,7 +61,8 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
               key={task.id} 
               task={task} 
               onDelete={onDelete} 
-              onUpdate={onUpdate} 
+              onUpdate={onUpdate}
+              onToggleComplete={() => onUpdate(task.id, { completed: !task.completed })}
             />
           ))
         )}

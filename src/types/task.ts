@@ -1,3 +1,4 @@
+
 export type TaskStatus = "todo" | "inProgress" | "done";
 
 export interface Task {
@@ -9,6 +10,7 @@ export interface Task {
   dueDate?: string;
   user_id: string;
   collaborators?: TaskCollaborator[];
+  completed?: boolean;
 }
 
 export interface Column {
@@ -31,7 +33,7 @@ export interface TaskCollaborator {
   added_by: string;
   userEmail?: string;
   userName?: string;
-  permissions: {
+  permissions?: {
     canEdit: boolean;
     canDelete: boolean;
     canManageCollaborators: boolean;

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Calendar, MoreHorizontal, Edit, Trash2, Users, CalendarClock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -35,6 +36,7 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
   const [isCollaboratorsDialogOpen, setIsCollaboratorsDialogOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const { isTaskOwner } = useTaskCollaborators();
+  const completed = task.completed || task.status === 'done';
 
   // Configuração do drag and drop
   const [{ isDragging }, drag] = useDrag({
@@ -110,10 +112,10 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
           <h3 className="font-medium truncate mr-2">
             <div className="flex items-center gap-2">
               <Checkbox
-                checked={task.completed}
+                checked={completed}
                 onCheckedChange={() => onToggleComplete(task.id)}
               />
-              <span className={task.completed ? 'line-through' : ''}>
+              <span className={completed ? 'line-through' : ''}>
                 {task.title}
               </span>
             </div>
@@ -139,7 +141,7 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
                   <Edit className="mr-2 h-4 w-4" />
                   Editar
                 </DropdownMenuItem>
-                {isTaskOwner(task.id) && (
+                {task && task.user_id && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => onDelete(task.id)} className="text-destructive">
@@ -185,11 +187,13 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
         </DialogContent>
       </Dialog>
 
-      <TaskCollaboratorsDialog
-        taskId={task.id}
-        isOpen={isCollaboratorsDialogOpen}
-        onClose={() => setIsCollaboratorsDialogOpen(false)}
-      />
+      {isCollaboratorsDialogOpen && (
+        <TaskCollaboratorsDialog
+          taskId={task.id}
+          isOpen={isCollaboratorsDialogOpen}
+          onClose={() => setIsCollaboratorsDialogOpen(false)}
+        />
+      )}
     </>
   );
 }
