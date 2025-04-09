@@ -78,7 +78,7 @@ const Calendar = () => {
                   modifiersClassNames={{
                     highlighted: "bg-purple-900/50 text-white font-bold animate-pulse border-2 border-purple-500 rounded-full",
                   }}
-                  locale={ptBR}
+                  locale={ptBR   }
                 />
               </div>
 
