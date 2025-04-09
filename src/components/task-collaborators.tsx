@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TaskCollaborator } from '@/types/task';
-import { useTasks } from '@/hooks/use-tasks';
+import { useTaskCollaborators } from '@/hooks/tasks/use-task-collaborators';
 import { UserPlus, X, Users } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
@@ -18,7 +18,7 @@ export function TaskCollaborators({ taskId }: TaskCollaboratorsProps) {
   const [collaborators, setCollaborators] = useState<TaskCollaborator[]>([]);
   const [loading, setLoading] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
-  const { addCollaborator, removeCollaborator, getTaskCollaborators, isTaskOwner } = useTasks();
+  const { addCollaborator, removeCollaborator, getTaskCollaborators, isTaskOwner } = useTaskCollaborators();
 
   // Carregar colaboradores e verificar se é dono da tarefa
   useEffect(() => {
