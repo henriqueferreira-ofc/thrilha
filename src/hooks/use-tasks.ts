@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase/client';
 import { useAuth } from './use-auth';
 import toast from 'react-hot-toast';
+import { Task, TaskStatus, TaskFormData } from '@/types/task';
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -23,13 +25,15 @@ export function useTasks() {
 
         if (error) throw error;
 
-        const formattedTasks: Task[] = data?.map((task: TaskRow) => ({
+        const formattedTasks: Task[] = data?.map((task: any) => ({
           id: task.id,
           title: task.title,
           description: task.description || '',
           status: task.status as TaskStatus,
           createdAt: task.created_at,
           dueDate: task.due_date,
+          user_id: task.user_id,
+          completed: task.status === 'done'
         })) || [];
 
         setTasks(formattedTasks);
@@ -74,6 +78,8 @@ export function useTasks() {
         status: data.status as TaskStatus,
         createdAt: data.created_at,
         dueDate: data.due_date,
+        user_id: data.user_id,
+        completed: false
       };
 
       setTasks((prev) => [formattedTask, ...prev]);
@@ -113,6 +119,7 @@ export function useTasks() {
             ? {
                 ...task,
                 ...updatedData,
+                completed: updatedData.status === 'done' || task.completed
               }
             : task
         )
@@ -167,7 +174,7 @@ export function useTasks() {
 
       setTasks((prev) =>
         prev.map((task) =>
-          task.id === taskId ? { ...task, status: newStatus } : task
+          task.id === taskId ? { ...task, status: newStatus, completed: newStatus === 'done' } : task
         )
       );
 
@@ -201,31 +208,3 @@ export function useTasks() {
     changeTaskStatus,
   };
 }
-
-// Type definitions
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: TaskStatus;
-  createdAt: string;
-  dueDate?: string;
-}
-
-interface TaskRow {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  created_at: string;
-  due_date?: string;
-  user_id: string;
-}
-
-interface TaskFormData {
-  title: string;
-  description?: string;
-  dueDate?: string;
-}
-
-type TaskStatus = 'todo' | 'inProgress' | 'done';

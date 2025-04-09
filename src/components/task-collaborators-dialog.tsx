@@ -26,6 +26,7 @@ export function TaskCollaboratorsDialog({ taskId, isOpen, onClose }: TaskCollabo
   }, [isOpen, taskId]);
 
   const loadCollaborators = async () => {
+<<<<<<< HEAD
     const data = await getTaskCollaborators(taskId);
     setCollaborators(data);
   };
@@ -33,6 +34,21 @@ export function TaskCollaboratorsDialog({ taskId, isOpen, onClose }: TaskCollabo
   const checkOwnership = async () => {
     const owner = await isTaskOwner(taskId);
     setIsOwner(owner);
+=======
+    if (!taskId) return;
+    setIsLoading(true);
+    try {
+      const data = await getTaskCollaborators(taskId);
+      setCollaborators(data || []);
+      setError(null);
+    } catch (err) {
+      console.error('Erro ao carregar colaboradores:', err);
+      setError('Falha ao carregar colaboradores');
+      setCollaborators([]);
+    } finally {
+      setIsLoading(false);
+    }
+>>>>>>> 0a88ce11de48e33ae54fa645d23a44fda7ebce21
   };
 
   const handleAddCollaborator = async () => {
@@ -41,10 +57,25 @@ export function TaskCollaboratorsDialog({ taskId, isOpen, onClose }: TaskCollabo
       return;
     }
 
+<<<<<<< HEAD
     const success = await addCollaborator(taskId, email);
     if (success) {
       setEmail('');
       await loadCollaborators();
+=======
+    try {
+      setIsLoading(true);
+      const success = await addCollaborator(taskId, email.trim());
+      if (success) {
+        setEmail('');
+        await loadCollaborators();
+      }
+    } catch (err) {
+      console.error('Erro ao adicionar colaborador:', err);
+      setError('Falha ao adicionar colaborador');
+    } finally {
+      setIsLoading(false);
+>>>>>>> 0a88ce11de48e33ae54fa645d23a44fda7ebce21
     }
   };
 
@@ -52,6 +83,14 @@ export function TaskCollaboratorsDialog({ taskId, isOpen, onClose }: TaskCollabo
     const success = await removeCollaborator(taskId, userId);
     if (success) {
       await loadCollaborators();
+<<<<<<< HEAD
+=======
+    } catch (err) {
+      console.error('Erro ao remover colaborador:', err);
+      setError('Falha ao remover colaborador');
+    } finally {
+      setIsLoading(false);
+>>>>>>> 0a88ce11de48e33ae54fa645d23a44fda7ebce21
     }
   };
 
