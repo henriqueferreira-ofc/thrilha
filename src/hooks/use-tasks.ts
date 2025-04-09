@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabase/client';
+import { supabase } from '../supabase/client'; // Ensure this points to the correct file
 import { useAuth } from './use-auth';
+import { useTaskCollaborators } from './tasks/use-task-collaborators';
 import toast from 'react-hot-toast';
 
 export function useTasks() {
@@ -18,10 +19,11 @@ export function useTasks() {
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
-          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
+
+        console.log('Tarefas carregadas do Supabase:', data);
 
         const formattedTasks: Task[] = data?.map((task: TaskRow) => ({
           id: task.id,
@@ -33,8 +35,8 @@ export function useTasks() {
         })) || [];
 
         setTasks(formattedTasks);
-      } catch (error) {
-        console.error('Erro ao buscar tarefas:', error);
+      } catch (error: any) {
+        console.error('Erro ao buscar tarefas:', error.message);
         toast.error('Erro ao carregar tarefas');
       } finally {
         setLoading(false);
@@ -42,6 +44,64 @@ export function useTasks() {
     };
 
     fetchTasks();
+
+    // Set up real-time subscription
+    const tasksSubscription = supabase
+      .channel('public:tasks')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+        },
+        (payload) => {
+          console.log('Alteração em tempo real recebida:', payload);
+
+          if (payload.eventType === 'INSERT') {
+            const newTask = payload.new as TaskRow;
+            if (newTask.user_id === user.id) {
+              const formattedTask: Task = {
+                id: newTask.id,
+                title: newTask.title,
+                description: newTask.description || '',
+                status: newTask.status as TaskStatus,
+                createdAt: newTask.created_at,
+                dueDate: newTask.due_date,
+              };
+              setTasks((prev) => [formattedTask, ...prev]);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedTask = payload.new as TaskRow;
+            if (updatedTask.user_id === user.id) {
+              setTasks((prev) =>
+                prev.map((task) =>
+                  task.id === updatedTask.id
+                    ? {
+                        id: updatedTask.id,
+                        title: updatedTask.title,
+                        description: updatedTask.description || '',
+                        status: updatedTask.status as TaskStatus,
+                        createdAt: updatedTask.created_at,
+                        dueDate: updatedTask.due_date,
+                      }
+                    : task
+                )
+              );
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const deletedTaskId = payload.old.id;
+            if (payload.old.user_id === user.id) {
+              setTasks((prev) => prev.filter((task) => task.id !== deletedTaskId));
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tasksSubscription);
+    };
   }, [user]);
 
   // Add a new task
@@ -52,20 +112,34 @@ export function useTasks() {
     }
 
     try {
+      const tempId = crypto.randomUUID();
+      const newTask: Task = {
+        id: tempId,
+        title: taskData.title,
+        description: taskData.description || '',
+        status: 'todo',
+        createdAt: new Date().toISOString(),
+        dueDate: taskData.dueDate,
+      };
+
+      setTasks((prev) => [newTask, ...prev]);
+
       const { data, error } = await supabase
         .from('tasks')
         .insert({
           title: taskData.title,
           description: taskData.description || '',
-          status: 'todo',
+          status: 'todo' as TaskStatus,
           user_id: user.id,
           due_date: taskData.dueDate,
-          created_at: new Date().toISOString()
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        setTasks((prev) => prev.filter((task) => task.id !== tempId));
+        throw error;
+      }
 
       const formattedTask: Task = {
         id: data.id,
@@ -76,12 +150,13 @@ export function useTasks() {
         dueDate: data.due_date,
       };
 
-      setTasks((prev) => [formattedTask, ...prev]);
+      setTasks((prev) => prev.map((task) => (task.id === tempId ? formattedTask : task)));
+
       toast.success('Tarefa criada com sucesso!');
       return formattedTask;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar tarefa:', error);
-      toast.error('Erro ao criar tarefa');
+      toast.error(error instanceof Error ? error.message : 'Erro ao criar tarefa');
       return null;
     }
   };
@@ -94,34 +169,25 @@ export function useTasks() {
     }
 
     try {
+      const dbData: Partial<TaskRow> = {
+        title: updatedData.title,
+        description: updatedData.description,
+        status: updatedData.status,
+        due_date: updatedData.dueDate,
+      };
+
       const { error } = await supabase
         .from('tasks')
-        .update({
-          title: updatedData.title,
-          description: updatedData.description,
-          status: updatedData.status,
-          due_date: updatedData.dueDate,
-        })
+        .update(dbData)
         .eq('id', id)
         .eq('user_id', user.id);
 
       if (error) throw error;
 
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === id
-            ? {
-                ...task,
-                ...updatedData,
-              }
-            : task
-        )
-      );
-
       toast.success('Tarefa atualizada com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao atualizar tarefa:', error);
-      toast.error('Erro ao atualizar tarefa');
+      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar tarefa');
     }
   };
 
@@ -143,7 +209,7 @@ export function useTasks() {
 
       setTasks((prev) => prev.filter((task) => task.id !== id));
       toast.success('Tarefa excluída com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao excluir tarefa:', error);
       toast.error('Erro ao excluir tarefa');
     }
@@ -157,13 +223,8 @@ export function useTasks() {
     }
 
     try {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ status: newStatus })
-        .eq('id', taskId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      const currentTask = tasks.find((task) => task.id === taskId);
+      if (!currentTask) throw new Error('Tarefa não encontrada');
 
       setTasks((prev) =>
         prev.map((task) =>
@@ -171,8 +232,23 @@ export function useTasks() {
         )
       );
 
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: newStatus })
+        .eq('id', taskId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        setTasks((prev) =>
+          prev.map((task) =>
+            task.id === taskId ? { ...task, status: currentTask.status } : task
+          )
+        );
+        throw error;
+      }
+
       toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao atualizar status da tarefa:', error);
       toast.error('Erro ao atualizar status da tarefa');
     }
@@ -192,6 +268,10 @@ export function useTasks() {
     }
   };
 
+  // Use collaborator-related functionality
+  const { addCollaborator, removeCollaborator, getTaskCollaborators, isTaskOwner } =
+    useTaskCollaborators();
+
   return {
     tasks,
     loading,
@@ -199,6 +279,10 @@ export function useTasks() {
     updateTask,
     deleteTask,
     changeTaskStatus,
+    addCollaborator,
+    removeCollaborator,
+    getTaskCollaborators,
+    isTaskOwner,
   };
 }
 
@@ -229,3 +313,4 @@ interface TaskFormData {
 }
 
 type TaskStatus = 'todo' | 'inProgress' | 'done';
+type ErrorType = Error | unknown;

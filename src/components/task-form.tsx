@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +28,7 @@ export function TaskForm({ initialData = {}, onSubmit }: TaskFormProps) {
     onSubmit({
       title: title.trim(),
       description: description.trim() || undefined,
-      dueDate: dueDate ? new Date(dueDate).toISOString() : undefined
+      dueDate: dueDate || undefined
     });
 
     // Reset form if it's a new task (no initialData)
@@ -68,7 +69,10 @@ export function TaskForm({ initialData = {}, onSubmit }: TaskFormProps) {
           id="due-date"
           type="date"
           value={dueDate ? dueDate.split('T')[0] : ''}
-          onChange={(e) => setDueDate(e.target.value)}
+          onChange={(e) => {
+            const date = e.target.value;
+            setDueDate(date ? new Date(date).toISOString() : '');
+          }}
         />
       </div>
 
