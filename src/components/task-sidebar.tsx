@@ -1,14 +1,14 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Sidebar, SidebarContent, SidebarHeader } from '@/components/ui/sidebar';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { TaskForm } from '@/components/task-form';
 import { TaskFormData } from '@/types/task';
-import { PlusCircle, LayoutDashboard, Calendar, Settings, Info, Mountain, LogOut } from 'lucide-react';
+import { PlusCircle, LayoutDashboard, Calendar, Settings, Info, Mountain, LogOut, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '../supabase/client';
 
 interface TaskSidebarProps {
   onCreateTask?: (data: TaskFormData) => void;
@@ -18,6 +18,67 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      loadUserProfile();
+    }
+  }, [user]);
+
+  // Adicionar um listener para mudanças no perfil
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        },
+        () => {
+          loadUserProfile();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const loadUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        // Só atualiza o username se houver um valor
+        if (data.username) {
+          setUsername(data.username);
+        }
+        setAvatarUrl(data.avatar_url);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar perfil:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreateTask = (data: TaskFormData) => {
     if (onCreateTask) {
@@ -38,19 +99,37 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
             </h1>
           </div>
           {user && (
-            <div className="w-full mt-2 text-center">
-              <p className="text-sm text-purple-300 truncate px-2">{user.email}</p>
+            <div className="flex flex-col items-center gap-2 w-full mt-2">
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-800 border-2 border-purple-400 flex items-center justify-center">
+                {avatarUrl ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt="Avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-8 h-8 text-gray-400" />
+                )}
+              </div>
+              {!loading && username && (
+                <p className="text-sm font-medium text-purple-300">
+                  {username}
+                </p>
+              )}
             </div>
           )}
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700" size="sm">
+              <Button className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 mt-4" size="sm">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nova Tarefa
               </Button>
             </DialogTrigger>
-            <DialogContent className="glass-panel sm:max-w-[425px]">
+            <DialogContent aria-describedby="create-task-description">
               <DialogTitle>Criar Nova Tarefa</DialogTitle>
+              <p id="create-task-description" className="sr-only">
+                Formulário para criar uma nova tarefa
+              </p>
               <TaskForm onSubmit={handleCreateTask} />
             </DialogContent>
           </Dialog>
