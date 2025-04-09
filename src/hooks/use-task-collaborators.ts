@@ -31,9 +31,14 @@ export function useTaskCollaborators() {
         .eq('username', username)
         .single();
 
-      if (userError || !userData) {
+      if (userError) {
         console.error('Erro ao buscar usuário:', userError);
-        toast.error('Usuário não encontrado');
+        toast.error('Usuário não encontrado. Verifique o email informado.');
+        return false;
+      }
+
+      if (!userData) {
+        toast.error('Usuário não encontrado com esse email.');
         return false;
       }
 
@@ -41,14 +46,18 @@ export function useTaskCollaborators() {
       console.log('ID do colaborador encontrado:', collaboratorId);
 
       // Verificar se o usuário já é colaborador
-      const { data: existingCollaborator, error: checkError } = await supabase
+      const { data: existingCollaborators, error: checkError } = await supabase
         .from('task_collaborators')
         .select('id')
         .eq('task_id', taskId)
-        .eq('user_id', collaboratorId)
-        .single();
+        .eq('user_id', collaboratorId);
 
-      if (!checkError && existingCollaborator) {
+      if (checkError) {
+        console.error('Erro ao verificar colaborador existente:', checkError);
+        throw checkError;
+      }
+
+      if (existingCollaborators && existingCollaborators.length > 0) {
         toast.info('Este usuário já é colaborador desta tarefa');
         return false;
       }
@@ -116,41 +125,54 @@ export function useTaskCollaborators() {
     setLoading(true);
 
     try {
-      // Buscar os colaboradores diretamente com join na tabela de perfis
-      const { data, error } = await supabase
+      // Usar uma query simples para buscar os colaboradores e depois buscar os detalhes dos usuários
+      const { data: collaboratorsData, error: collaboratorsError } = await supabase
         .from('task_collaborators')
-        .select(`
-          id,
-          task_id,
-          user_id,
-          created_at,
-          profiles (
-            username,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('task_id', taskId);
 
-      if (error) {
-        console.error('Erro ao buscar colaboradores:', error);
-        throw error;
+      if (collaboratorsError) {
+        console.error('Erro ao buscar colaboradores:', collaboratorsError);
+        throw collaboratorsError;
       }
 
-      // Formatar os dados para o formato da aplicação
-      const collaborators: TaskCollaborator[] = (data || []).map((collab: any) => ({
-        id: collab.id,
-        task_id: collab.task_id,
-        user_id: collab.user_id,
-        added_at: collab.created_at,
-        added_by: user.id,
-        userEmail: collab.profiles?.username ? `${collab.profiles.username}@example.com` : 'sem-email@example.com',
-        userName: collab.profiles?.username || 'Sem nome',
-        permissions: {
-          canEdit: true,
-          canDelete: true,
-          canManageCollaborators: false
-        }
-      }));
+      if (!collaboratorsData || collaboratorsData.length === 0) {
+        return [];
+      }
+
+      // Extrair os IDs dos usuários para buscar seus perfis
+      const userIds = collaboratorsData.map(collab => collab.user_id);
+      
+      // Buscar os perfis dos usuários
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Erro ao buscar perfis de usuários:', profilesError);
+        throw profilesError;
+      }
+
+      // Combinar os dados para formar a lista de colaboradores
+      const collaborators: TaskCollaborator[] = collaboratorsData.map(collab => {
+        const userProfile = profilesData?.find(profile => profile.id === collab.user_id);
+        
+        return {
+          id: collab.id,
+          task_id: collab.task_id,
+          user_id: collab.user_id,
+          added_at: collab.created_at,
+          added_by: user.id,
+          userEmail: userProfile?.username ? `${userProfile.username}@example.com` : 'sem-email@example.com',
+          userName: userProfile?.username || 'Sem nome',
+          permissions: {
+            canEdit: true,
+            canDelete: true,
+            canManageCollaborators: false
+          }
+        };
+      });
 
       return collaborators;
     } catch (error: unknown) {

@@ -19,8 +19,10 @@ export function TaskCollaborators({ taskId }: TaskCollaboratorsProps) {
   const { loading, addCollaborator, removeCollaborator, getTaskCollaborators, isTaskOwner } = useTaskCollaborators();
 
   useEffect(() => {
-    loadCollaborators();
-    checkOwnership();
+    if (taskId) {
+      loadCollaborators();
+      checkOwnership();
+    }
   }, [taskId]);
 
   const loadCollaborators = async () => {
@@ -85,10 +87,10 @@ export function TaskCollaborators({ taskId }: TaskCollaboratorsProps) {
       )}
 
       <div className="space-y-2">
-        {collaborators && collaborators.length === 0 ? (
+        {collaborators.length === 0 ? (
           <div className="text-sm text-muted-foreground">Sem colaboradores</div>
         ) : (
-          collaborators && collaborators.map((collaborator) => (
+          collaborators.map((collaborator) => (
             <div 
               key={collaborator.id}
               className="flex items-center justify-between p-2 rounded-lg bg-black/50"

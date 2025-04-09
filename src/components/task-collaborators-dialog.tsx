@@ -55,7 +55,6 @@ export function TaskCollaboratorsDialog({ taskId, isOpen, onClose }: TaskCollabo
       if (success) {
         setEmail('');
         await loadCollaborators();
-        toast.success('Colaborador adicionado com sucesso');
       }
     } catch (err) {
       console.error('Erro ao adicionar colaborador:', err);
@@ -70,7 +69,6 @@ export function TaskCollaboratorsDialog({ taskId, isOpen, onClose }: TaskCollabo
       setIsLoading(true);
       await removeCollaborator(taskId, userId);
       await loadCollaborators();
-      toast.success('Colaborador removido com sucesso');
     } catch (err) {
       console.error('Erro ao remover colaborador:', err);
       setError('Falha ao remover colaborador');
@@ -112,11 +110,11 @@ export function TaskCollaboratorsDialog({ taskId, isOpen, onClose }: TaskCollabo
             <h3 className="font-medium">Colaboradores</h3>
             {isLoading ? (
               <div>Carregando...</div>
-            ) : collaborators && collaborators.length === 0 ? (
+            ) : collaborators.length === 0 ? (
               <div className="text-sm text-gray-500">Nenhum colaborador adicionado</div>
             ) : (
               <div className="space-y-2">
-                {collaborators && collaborators.map((collaborator) => (
+                {collaborators.map((collaborator) => (
                   <div key={collaborator.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Avatar>
