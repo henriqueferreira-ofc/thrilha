@@ -1,9 +1,18 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { TaskCollaborator } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+
+interface Collaborator {
+  id: string;
+  user_id: string;
+  task_id: string;
+  created_at: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  } | null;
+}
 
 export function useTaskCollaborators() {
   const { user } = useAuth();
@@ -22,8 +31,8 @@ export function useTaskCollaborators() {
       // Buscar o ID do usuário pelo email
       const { data: userData, error: userError } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('username', userEmail.split('@')[0])
+        .select('id, username')
+        .eq('email', userEmail)
         .single();
 
       if (userError || !userData) {
@@ -97,7 +106,7 @@ export function useTaskCollaborators() {
   };
 
   // Buscar colaboradores de uma tarefa
-  const getTaskCollaborators = async (taskId: string): Promise<TaskCollaborator[]> => {
+  const getTaskCollaborators = async (taskId: string) => {
     if (!user) {
       toast.error('Você precisa estar logado para ver colaboradores');
       return [];
@@ -106,39 +115,50 @@ export function useTaskCollaborators() {
     setLoading(true);
 
     try {
-      // Buscar os colaboradores diretamente das tabelas relacionadas
       const { data, error } = await supabase
         .from('task_collaborators')
         .select(`
           id,
-          task_id,
           user_id,
+          task_id,
           created_at,
           profiles:user_id (
             username,
-            avatar_url
+            avatar_url,
+            email
           )
         `)
         .eq('task_id', taskId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na consulta:', error);
+        throw error;
+      }
 
-      // Formatar os dados para o formato da aplicação
-      const collaborators: TaskCollaborator[] = (data || []).map((collab: any) => ({
-        id: collab.id,
-        task_id: collab.task_id,
-        user_id: collab.user_id,
-        added_at: collab.created_at,
-        added_by: user.id,
-        userEmail: collab.profiles?.username ? `${collab.profiles.username}@example.com` : 'sem-email@example.com',
-        userName: collab.profiles?.username || 'Sem nome',
-        permissions: {
-          canEdit: true,
-          canDelete: true,
-          canManageCollaborators: false
-        }
+      console.log('Dados brutos:', data);
+
+      if (!data) return [];
+
+      type SupabaseCollaborator = {
+        id: string;
+        user_id: string;
+        task_id: string;
+        created_at: string;
+        profiles: {
+          username: string;
+          avatar_url: string | null;
+          email: string;
+        }[];
+      };
+
+      const collaborators = data.map((collab: SupabaseCollaborator) => ({
+        id: collab.user_id,
+        email: collab.profiles[0]?.email || 'sem-email@example.com',
+        avatar_url: collab.profiles[0]?.avatar_url || null,
+        full_name: collab.profiles[0]?.username || 'Sem nome'
       }));
 
+      console.log('Colaboradores formatados:', collaborators);
       return collaborators;
     } catch (error: unknown) {
       console.error('Erro ao buscar colaboradores:', error);
