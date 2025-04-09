@@ -1,141 +1,80 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { TaskCollaborator } from '@/types/task';
+import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-
-interface Collaborator {
-  id: string;
-  email: string;
-  avatar_url: string | null;
-  full_name: string | null;
-}
-
-interface SupabaseCollaborator {
-  id: string;
-  user_id: string;
-  users: {
-    id: string;
-    email: string;
-    avatar_url: string | null;
-    full_name: string | null;
-  };
-}
 
 export function useTaskCollaborators() {
   const { user } = useAuth();
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const loadCollaborators = async (taskId: string) => {
-    if (!user) return;
-    
-    console.log('Carregando colaboradores para a tarefa:', taskId);
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const { data, error } = await supabase
-        .from('task_collaborators')
-        .select(`
-          id,
-          user_id,
-          users:user_id (
-            id,
-            email,
-            avatar_url,
-            full_name
-          )
-        `)
-        .eq('task_id', taskId);
-
-      if (error) {
-        console.error('Erro ao buscar colaboradores:', error);
-        throw error;
-      }
-
-      console.log('Dados brutos dos colaboradores:', data);
-
-      const formattedCollaborators = data.map((item: { user_id: string; users: { email: string; avatar_url: string | null; full_name: string | null } }) => ({
-        id: item.user_id,
-        email: item.users.email,
-        avatar_url: item.users.avatar_url,
-        full_name: item.users.full_name
-      }));
-
-      console.log('Colaboradores formatados:', formattedCollaborators);
-      setCollaborators(formattedCollaborators);
-    } catch (err) {
-      console.error('Erro ao carregar colaboradores:', err);
-      setError('Erro ao carregar colaboradores');
-      toast.error('Erro ao carregar colaboradores');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const isTaskOwner = async (taskId: string): Promise<boolean> => {
-    if (!user) return false;
-
-    console.log('Verificando se usuário é dono da tarefa:', taskId);
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('user_id')
-        .eq('id', taskId)
-        .single();
-
-      if (error) {
-        console.error('Erro ao verificar dono da tarefa:', error);
-        throw error;
-      }
-
-      const isOwner = data?.user_id === user.id;
-      console.log('É dono da tarefa?', isOwner);
-      return isOwner;
-    } catch (err) {
-      console.error('Erro ao verificar dono da tarefa:', err);
+  // Adicionar um colaborador a uma tarefa
+  const addCollaborator = async (taskId: string, userEmail: string): Promise<boolean> => {
+    if (!user) {
+      toast.error('Você precisa estar logado para adicionar colaboradores');
       return false;
     }
-  };
-
-  const addCollaborator = async (taskId: string, email: string) => {
-    if (!user) return;
+    
+    setLoading(true);
 
     try {
-      // Primeiro, encontrar o ID do usuário pelo email
+      // Buscar o ID do usuário pelo email
       const { data: userData, error: userError } = await supabase
-        .from('users')
+        .from('profiles')
         .select('id')
-        .eq('email', email)
+        .eq('username', userEmail.split('@')[0])
         .single();
 
       if (userError || !userData) {
-        throw new Error('Usuário não encontrado');
+        toast.error('Usuário não encontrado');
+        return false;
       }
 
-      // Depois, adicionar como colaborador
-      const { error: collaboratorError } = await supabase
+      const collaboratorId = userData.id;
+
+      // Verificar se o usuário já é colaborador
+      const { data: existingCollaborator, error: checkError } = await supabase
+        .from('task_collaborators')
+        .select('id')
+        .eq('task_id', taskId)
+        .eq('user_id', collaboratorId)
+        .single();
+
+      if (!checkError && existingCollaborator) {
+        toast.info('Este usuário já é colaborador desta tarefa');
+        return false;
+      }
+
+      // Adicionar o colaborador
+      const { error } = await supabase
         .from('task_collaborators')
         .insert({
           task_id: taskId,
-          user_id: userData.id
+          user_id: collaboratorId
         });
 
-      if (collaboratorError) throw collaboratorError;
+      if (error) throw error;
 
-      // Recarregar lista de colaboradores
-      await loadCollaborators(taskId);
       toast.success('Colaborador adicionado com sucesso!');
-    } catch (err) {
-      console.error('Erro ao adicionar colaborador:', err);
-      toast.error('Erro ao adicionar colaborador');
-      throw err;
+      return true;
+    } catch (error: unknown) {
+      console.error('Erro ao adicionar colaborador:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao adicionar colaborador');
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const removeCollaborator = async (taskId: string, userId: string) => {
-    if (!user) return;
+  // Remover um colaborador de uma tarefa
+  const removeCollaborator = async (taskId: string, userId: string): Promise<boolean> => {
+    if (!user) {
+      toast.error('Você precisa estar logado para remover colaboradores');
+      return false;
+    }
+    
+    setLoading(true);
 
     try {
       const { error } = await supabase
@@ -146,23 +85,94 @@ export function useTaskCollaborators() {
 
       if (error) throw error;
 
-      // Recarregar lista de colaboradores
-      await loadCollaborators(taskId);
       toast.success('Colaborador removido com sucesso!');
-    } catch (err) {
-      console.error('Erro ao remover colaborador:', err);
-      toast.error('Erro ao remover colaborador');
-      throw err;
+      return true;
+    } catch (error: unknown) {
+      console.error('Erro ao remover colaborador:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao remover colaborador');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Buscar colaboradores de uma tarefa
+  const getTaskCollaborators = async (taskId: string): Promise<TaskCollaborator[]> => {
+    if (!user) {
+      toast.error('Você precisa estar logado para ver colaboradores');
+      return [];
+    }
+    
+    setLoading(true);
+
+    try {
+      // Buscar os colaboradores diretamente das tabelas relacionadas
+      const { data, error } = await supabase
+        .from('task_collaborators')
+        .select(`
+          id,
+          task_id,
+          user_id,
+          created_at,
+          profiles:user_id (
+            username,
+            avatar_url
+          )
+        `)
+        .eq('task_id', taskId);
+
+      if (error) throw error;
+
+      // Formatar os dados para o formato da aplicação
+      const collaborators: TaskCollaborator[] = (data || []).map((collab: any) => ({
+        id: collab.id,
+        task_id: collab.task_id,
+        user_id: collab.user_id,
+        added_at: collab.created_at,
+        added_by: user.id,
+        userEmail: collab.profiles?.username ? `${collab.profiles.username}@example.com` : 'sem-email@example.com',
+        userName: collab.profiles?.username || 'Sem nome',
+        permissions: {
+          canEdit: true,
+          canDelete: true,
+          canManageCollaborators: false
+        }
+      }));
+
+      return collaborators;
+    } catch (error: unknown) {
+      console.error('Erro ao buscar colaboradores:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao buscar colaboradores');
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verificar se o usuário atual é dono de uma tarefa
+  const isTaskOwner = async (taskId: string): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('user_id')
+        .eq('id', taskId)
+        .single();
+
+      if (error || !data) return false;
+      return data.user_id === user.id;
+    } catch (error: unknown) {
+      console.error('Erro ao verificar propriedade da tarefa:', error);
+      return false;
     }
   };
 
   return {
-    collaborators,
-    isLoading,
-    error,
-    loadCollaborators,
-    isTaskOwner,
+    loading,
     addCollaborator,
-    removeCollaborator
+    removeCollaborator,
+    getTaskCollaborators,
+    isTaskOwner
   };
-} 
+}
