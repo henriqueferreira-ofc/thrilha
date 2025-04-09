@@ -1,141 +1,104 @@
-
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useTaskCollaborators } from '@/hooks/use-task-collaborators';
 import { TaskCollaborator } from '@/types/task';
-import { useTaskCollaborators } from '@/hooks/tasks/use-task-collaborators';
-import { UserPlus, X, Users } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { X } from 'lucide-react';
 import { toast } from 'sonner';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface TaskCollaboratorsProps {
   taskId: string;
 }
 
 export function TaskCollaborators({ taskId }: TaskCollaboratorsProps) {
-  const [email, setEmail] = useState('');
   const [collaborators, setCollaborators] = useState<TaskCollaborator[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [newCollaboratorEmail, setNewCollaboratorEmail] = useState('');
   const [isOwner, setIsOwner] = useState(false);
-  const { addCollaborator, removeCollaborator, getTaskCollaborators, isTaskOwner } = useTaskCollaborators();
+  const { loading, addCollaborator, removeCollaborator, getTaskCollaborators, isTaskOwner } = useTaskCollaborators();
 
-  // Carregar colaboradores e verificar se é dono da tarefa
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const taskCollaborators = await getTaskCollaborators(taskId);
-        setCollaborators(taskCollaborators);
-        
-        const owner = await isTaskOwner(taskId);
-        setIsOwner(owner);
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadData();
-  }, [taskId, getTaskCollaborators, isTaskOwner]);
+    loadCollaborators();
+    checkOwnership();
+  }, [taskId]);
 
-  const handleAddCollaborator = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      toast.error('Por favor, informe um email válido');
+  const loadCollaborators = async () => {
+    const data = await getTaskCollaborators(taskId);
+    setCollaborators(data);
+  };
+
+  const checkOwnership = async () => {
+    const owner = await isTaskOwner(taskId);
+    setIsOwner(owner);
+  };
+
+  const handleAddCollaborator = async () => {
+    if (!newCollaboratorEmail.trim()) {
+      toast.error('Por favor, insira um email válido');
       return;
     }
-    
-    setLoading(true);
-    try {
-      const success = await addCollaborator(taskId, email);
-      if (success) {
-        setEmail('');
-        // Recarregar a lista de colaboradores
-        const updatedCollaborators = await getTaskCollaborators(taskId);
-        setCollaborators(updatedCollaborators);
-      }
-    } finally {
-      setLoading(false);
-    }
+
+    await addCollaborator(taskId, newCollaboratorEmail.trim());
+    setNewCollaboratorEmail('');
+    loadCollaborators();
   };
 
   const handleRemoveCollaborator = async (collaboratorId: string) => {
-    setLoading(true);
-    try {
-      const success = await removeCollaborator(collaboratorId);
-      if (success) {
-        // Atualizar a lista removendo o colaborador
-        setCollaborators(prev => prev.filter(c => c.id !== collaboratorId));
-      }
-    } finally {
-      setLoading(false);
-    }
+    await removeCollaborator(taskId, collaboratorId);
+    loadCollaborators();
   };
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium flex items-center gap-2">
-        <Users size={18} />
-        Colaboradores
-      </h3>
-      
       {isOwner && (
-        <form onSubmit={handleAddCollaborator} className="flex gap-2">
+        <div className="flex gap-2">
           <Input
             type="email"
             placeholder="Email do colaborador"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
+            value={newCollaboratorEmail}
+            onChange={(e) => setNewCollaboratorEmail(e.target.value)}
             className="flex-1"
           />
-          <Button type="submit" size="sm" disabled={loading} className="bg-purple-600 hover:bg-purple-700">
-            <UserPlus className="h-4 w-4 mr-2" />
+          <Button 
+            onClick={handleAddCollaborator}
+            disabled={loading}
+          >
             Adicionar
           </Button>
-        </form>
+        </div>
       )}
 
-      <ScrollArea className="h-48 rounded-md border border-white/10 p-2">
-        {loading && <div className="text-center py-4 text-sm">Carregando...</div>}
-        
-        {!loading && collaborators.length === 0 && (
-          <div className="text-center py-4 text-sm text-muted-foreground">
-            Nenhum colaborador adicionado
+      <div className="space-y-2">
+        {collaborators.map((collaborator) => (
+          <div 
+            key={collaborator.id}
+            className="flex items-center justify-between p-2 rounded-lg bg-black/50"
+          >
+            <div className="flex items-center gap-2">
+              <Avatar>
+                <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${collaborator.userName || collaborator.userEmail}`} />
+                <AvatarFallback>
+                  {(collaborator.userName || collaborator.userEmail || '?')[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium">{collaborator.userName || 'Usuário'}</p>
+                <p className="text-sm text-muted-foreground">{collaborator.userEmail}</p>
+              </div>
+            </div>
+            {isOwner && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleRemoveCollaborator(collaborator.user_id)}
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-        )}
-        
-        {!loading && collaborators.length > 0 && (
-          <ul className="space-y-2">
-            {collaborators.map((collab) => (
-              <li key={collab.id} className="flex items-center justify-between p-2 rounded-lg bg-black/30">
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8 bg-purple-500/20 border border-purple-500/30">
-                    <AvatarFallback>{collab.userName?.[0] || '?'}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">{collab.userName || 'Usuário'}</p>
-                    <p className="text-xs text-muted-foreground">{collab.userEmail}</p>
-                  </div>
-                </div>
-                
-                {isOwner && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => handleRemoveCollaborator(collab.id)}
-                    className="h-8 w-8 text-red-500 hover:text-red-400 hover:bg-red-500/10"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </ScrollArea>
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-
 export type TaskStatus = "todo" | "inProgress" | "done";
 
 export interface Task {
@@ -8,6 +7,8 @@ export interface Task {
   status: TaskStatus;
   createdAt: string;
   dueDate?: string;
+  user_id: string;
+  collaborators?: TaskCollaborator[];
 }
 
 export interface Column {
@@ -28,6 +29,11 @@ export interface TaskCollaborator {
   user_id: string;
   added_at: string;
   added_by: string;
-  userEmail?: string; // Campo adicional para exibição
-  userName?: string;  // Campo adicional para exibição
+  userEmail?: string;
+  userName?: string;
+  permissions: {
+    canEdit: boolean;
+    canDelete: boolean;
+    canManageCollaborators: boolean;
+  };
 }

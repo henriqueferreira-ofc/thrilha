@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Calendar, MoreHorizontal, Edit, Trash2, Users, CalendarClock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -18,17 +17,24 @@ import { useDrag } from 'react-dnd';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useTaskCollaborators } from '@/hooks/use-task-collaborators';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { TaskCollaboratorsDialog } from './task-collaborators-dialog';
 
 interface TaskCardProps {
   task: Task;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updatedData: Partial<Task>) => void;
+  onToggleComplete: (taskId: string) => void;
 }
 
-export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
+export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCardProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [isManagingCollaborators, setIsManagingCollaborators] = useState(false);
+  const [isCollaboratorsDialogOpen, setIsCollaboratorsDialogOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const { isTaskOwner } = useTaskCollaborators();
 
   // Configuração do drag and drop
   const [{ isDragging }, drag] = useDrag({
@@ -41,10 +47,6 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
 
   const handleEdit = () => {
     setIsEditing(true);
-  };
-
-  const handleManageCollaborators = () => {
-    setIsManagingCollaborators(true);
   };
 
   const handleUpdate = (updatedData: Partial<Task>) => {
@@ -95,35 +97,60 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
     <>
       <Card 
         ref={drag}
-        className={`mb-3 p-4 cursor-grab animate-fade-in transition-all duration-300 ${getBackgroundStyle()} ${isHovered ? 'scale-105 shadow-lg' : ''} ${isDragging ? 'opacity-50' : ''}`} 
+        className={cn(
+          "mb-3 p-4 cursor-grab animate-fade-in transition-all duration-300",
+          getBackgroundStyle(),
+          isHovered ? 'scale-105 shadow-lg' : '',
+          isDragging ? 'opacity-50' : ''
+        )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <div className="flex justify-between items-start">
-          <h3 className="font-medium truncate mr-2">{task.title}</h3>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-white/10">
-                <MoreHorizontal size={16} />
-                <span className="sr-only">Opções</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleEdit}>
-                <Edit className="mr-2 h-4 w-4" />
-                Editar
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleManageCollaborators}>
-                <Users className="mr-2 h-4 w-4" />
-                Colaboradores
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onDelete(task.id)} className="text-destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Excluir
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <h3 className="font-medium truncate mr-2">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={task.completed}
+                onCheckedChange={() => onToggleComplete(task.id)}
+              />
+              <span className={task.completed ? 'line-through' : ''}>
+                {task.title}
+              </span>
+            </div>
+          </h3>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsCollaboratorsDialogOpen(true)}
+              className="h-8 w-8"
+            >
+              <Users className="h-4 w-4" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-white/10">
+                  <MoreHorizontal size={16} />
+                  <span className="sr-only">Opções</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleEdit}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar
+                </DropdownMenuItem>
+                {isTaskOwner(task.id) && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onDelete(task.id)} className="text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {task.description && (
@@ -141,11 +168,6 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
               {formatTaskDueDate()}
             </div>
           )}
-          
-          <Badge variant="outline" className="ml-auto bg-purple-500/10 text-purple-300 hover:bg-purple-500/20">
-            <Users size={12} className="mr-1" />
-            Equipe
-          </Badge>
         </div>
       </Card>
 
@@ -163,12 +185,11 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isManagingCollaborators} onOpenChange={setIsManagingCollaborators}>
-        <DialogContent className="glass-panel sm:max-w-[500px]">
-          <DialogTitle>Gerenciar Colaboradores</DialogTitle>
-          <TaskCollaborators taskId={task.id} />
-        </DialogContent>
-      </Dialog>
+      <TaskCollaboratorsDialog
+        taskId={task.id}
+        isOpen={isCollaboratorsDialogOpen}
+        onClose={() => setIsCollaboratorsDialogOpen(false)}
+      />
     </>
   );
 }
