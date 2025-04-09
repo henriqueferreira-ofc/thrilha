@@ -32,11 +32,12 @@ export function TaskCollaboratorsDialog({ taskId, isOpen, onClose }: TaskCollabo
     setIsLoading(true);
     try {
       const data = await getTaskCollaborators(taskId);
-      setCollaborators(data);
+      setCollaborators(data || []);
       setError(null);
     } catch (err) {
       console.error('Erro ao carregar colaboradores:', err);
       setError('Falha ao carregar colaboradores');
+      setCollaborators([]);
     } finally {
       setIsLoading(false);
     }
@@ -111,11 +112,11 @@ export function TaskCollaboratorsDialog({ taskId, isOpen, onClose }: TaskCollabo
             <h3 className="font-medium">Colaboradores</h3>
             {isLoading ? (
               <div>Carregando...</div>
-            ) : collaborators.length === 0 ? (
+            ) : collaborators && collaborators.length === 0 ? (
               <div className="text-sm text-gray-500">Nenhum colaborador adicionado</div>
             ) : (
               <div className="space-y-2">
-                {collaborators.map((collaborator) => (
+                {collaborators && collaborators.map((collaborator) => (
                   <div key={collaborator.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Avatar>

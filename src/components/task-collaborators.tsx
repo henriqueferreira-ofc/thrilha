@@ -24,8 +24,13 @@ export function TaskCollaborators({ taskId }: TaskCollaboratorsProps) {
   }, [taskId]);
 
   const loadCollaborators = async () => {
-    const data = await getTaskCollaborators(taskId);
-    setCollaborators(data);
+    try {
+      const data = await getTaskCollaborators(taskId);
+      setCollaborators(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar colaboradores:', error);
+      toast.error('Não foi possível carregar os colaboradores');
+    }
   };
 
   const checkOwnership = async () => {
@@ -39,14 +44,24 @@ export function TaskCollaborators({ taskId }: TaskCollaboratorsProps) {
       return;
     }
 
-    await addCollaborator(taskId, newCollaboratorEmail.trim());
-    setNewCollaboratorEmail('');
-    loadCollaborators();
+    try {
+      const success = await addCollaborator(taskId, newCollaboratorEmail.trim());
+      if (success) {
+        setNewCollaboratorEmail('');
+        await loadCollaborators();
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar colaborador:', error);
+    }
   };
 
   const handleRemoveCollaborator = async (collaboratorId: string) => {
-    await removeCollaborator(taskId, collaboratorId);
-    loadCollaborators();
+    try {
+      await removeCollaborator(taskId, collaboratorId);
+      await loadCollaborators();
+    } catch (error) {
+      console.error('Erro ao remover colaborador:', error);
+    }
   };
 
   return (
@@ -70,35 +85,39 @@ export function TaskCollaborators({ taskId }: TaskCollaboratorsProps) {
       )}
 
       <div className="space-y-2">
-        {collaborators.map((collaborator) => (
-          <div 
-            key={collaborator.id}
-            className="flex items-center justify-between p-2 rounded-lg bg-black/50"
-          >
-            <div className="flex items-center gap-2">
-              <Avatar>
-                <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${collaborator.userName || collaborator.userEmail}`} />
-                <AvatarFallback>
-                  {(collaborator.userName || collaborator.userEmail || '?')[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{collaborator.userName || 'Usuário'}</p>
-                <p className="text-sm text-muted-foreground">{collaborator.userEmail}</p>
+        {collaborators && collaborators.length === 0 ? (
+          <div className="text-sm text-muted-foreground">Sem colaboradores</div>
+        ) : (
+          collaborators && collaborators.map((collaborator) => (
+            <div 
+              key={collaborator.id}
+              className="flex items-center justify-between p-2 rounded-lg bg-black/50"
+            >
+              <div className="flex items-center gap-2">
+                <Avatar>
+                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${collaborator.userName || collaborator.userEmail}`} />
+                  <AvatarFallback>
+                    {(collaborator.userName || collaborator.userEmail || '?')[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{collaborator.userName || 'Usuário'}</p>
+                  <p className="text-sm text-muted-foreground">{collaborator.userEmail}</p>
+                </div>
               </div>
+              {isOwner && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleRemoveCollaborator(collaborator.user_id)}
+                  className="h-8 w-8"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
-            {isOwner && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleRemoveCollaborator(collaborator.user_id)}
-                className="h-8 w-8"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

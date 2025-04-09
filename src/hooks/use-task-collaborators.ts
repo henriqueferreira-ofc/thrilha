@@ -19,19 +19,26 @@ export function useTaskCollaborators() {
     setLoading(true);
 
     try {
-      // Buscar o ID do usuário pelo email
+      // Extract username from email (remove domain part)
+      const username = userEmail.split('@')[0];
+      
+      console.log('Procurando usuário com username:', username);
+      
+      // Buscar o ID do usuário pelo username
       const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('username', userEmail.split('@')[0])
+        .eq('username', username)
         .single();
 
       if (userError || !userData) {
+        console.error('Erro ao buscar usuário:', userError);
         toast.error('Usuário não encontrado');
         return false;
       }
 
       const collaboratorId = userData.id;
+      console.log('ID do colaborador encontrado:', collaboratorId);
 
       // Verificar se o usuário já é colaborador
       const { data: existingCollaborator, error: checkError } = await supabase
@@ -54,7 +61,10 @@ export function useTaskCollaborators() {
           user_id: collaboratorId
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao adicionar colaborador:', error);
+        throw error;
+      }
 
       toast.success('Colaborador adicionado com sucesso!');
       return true;
@@ -106,7 +116,7 @@ export function useTaskCollaborators() {
     setLoading(true);
 
     try {
-      // Buscar os colaboradores diretamente das tabelas relacionadas
+      // Buscar os colaboradores diretamente com join na tabela de perfis
       const { data, error } = await supabase
         .from('task_collaborators')
         .select(`
@@ -114,14 +124,17 @@ export function useTaskCollaborators() {
           task_id,
           user_id,
           created_at,
-          profiles:user_id (
+          profiles (
             username,
             avatar_url
           )
         `)
         .eq('task_id', taskId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar colaboradores:', error);
+        throw error;
+      }
 
       // Formatar os dados para o formato da aplicação
       const collaborators: TaskCollaborator[] = (data || []).map((collab: any) => ({
