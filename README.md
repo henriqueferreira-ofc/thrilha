@@ -51,10 +51,11 @@ Esse projeto está sob a licença MIT.
 
 Simply visit the [Trilha Project](https://github.com/henriqueferreira-ofc/trilha) and start prompting.
 
-Feito com <span style="color: red;">♥</span> por Henrique Ferreira 👋  
+Feito com ❤️ por Henrique Ferreira 👋  
 <a href="https://www.henriqueportfolio.com/" target="_blank" rel="noopener noreferrer">
   Conheça um pouco mais sobre mim!
 </a>
+
 
 
 
