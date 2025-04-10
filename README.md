@@ -52,7 +52,7 @@ Esse projeto está sob a licença MIT.
 Simply visit the [Trilha Project](https://github.com/henriqueferreira-ofc/trilha) and start prompting.
 
 Feito com ❤️ por Henrique Ferreira 👋  
-[Conheça um pouco mais sobre mim!](https://www.henriqueportfolio.com/)
+[Conheça um pouco mais sobre mim!!](https://www.henriqueportfolio.com/)
 
 
 
