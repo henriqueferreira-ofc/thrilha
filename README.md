@@ -2,7 +2,7 @@
 
 <p align="center">
 Meu Projeto ainda está sendo desenvolvido e logo teremos boas novas<br/>
-<a href="https://github.com/henriqueferreira-ofc/trilha">Veja meu Projeto Clicando aqui</a>
+<a href="https://trilha-eight.vercel.app/">Veja meu Projeto Clicando aqui</a>
 </p>
 
 <p align="center">
@@ -51,7 +51,10 @@ Esse projeto está sob a licença MIT.
 
 Simply visit the [Trilha Project](https://github.com/henriqueferreira-ofc/trilha) and start prompting.
 
-Feito com ♥ por Henrique Ferreira :wave: [Conheça um pouco mais sobre mim!](https://www.henriqueportfolio.com/)
+Feito com ❤️ por Henrique Ferreira 👋  
+[Conheça um pouco mais sobre mim!!](https://www.henriqueportfolio.com/)
+
+
 
 
 
