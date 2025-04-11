@@ -14,6 +14,7 @@ import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Card } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { CollaborationSettings } from '../components/CollaborationSettings';
 
 // As preferências padrão do usuário
 const defaultPreferences: UserPreferences = {
@@ -25,7 +26,7 @@ const defaultPreferences: UserPreferences = {
   taskReminders: true
 };
 
-type Section = 'account' | 'appearance' | 'notifications';
+type Section = 'account' | 'appearance' | 'notifications' | 'collaboration';
 
 interface ProfileChanges {
   id: string;
@@ -340,7 +341,8 @@ const Settings = () => {
   const menuItems = [
     { id: 'account', label: 'Configurações da Conta' },
     { id: 'appearance', label: 'Aparência' },
-    { id: 'notifications', label: 'Notificações' }
+    { id: 'notifications', label: 'Notificações' },
+    { id: 'collaboration', label: 'Colaboração' }
   ] as const;
 
   const AccountContent = () => {
@@ -529,6 +531,8 @@ const Settings = () => {
         return <AppearanceContent />;
       case 'notifications':
         return <NotificationsContent />;
+      case 'collaboration':
+        return <CollaborationSettings />;
       default:
         return <AccountContent />;
     }
