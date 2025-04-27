@@ -2,7 +2,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { 
+  BrowserRouter, 
+  Routes, 
+  Route, 
+  Navigate, 
+  useNavigate, 
+  useLocation,
+  HashRouter 
+} from "react-router-dom";
 import Index from "./pages/Index";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
@@ -44,6 +52,10 @@ const NavigationHandler: React.FC<{ children: React.ReactNode }> = ({ children }
   return <>{children}</>;
 };
 
+// Determinar qual Router usar, dependendo do ambiente
+// HashRouter é mais seguro para ambientes que não configuram corretamente o roteamento de SPA
+const Router = import.meta.env.DEV ? HashRouter : BrowserRouter;
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -52,7 +64,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <Router>
           <NavigationHandler>
             <Routes>
               <Route path="/" element={<LandingPage />} />
@@ -71,7 +83,7 @@ const App = () => (
               <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </NavigationHandler>
-        </BrowserRouter>
+        </Router>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
