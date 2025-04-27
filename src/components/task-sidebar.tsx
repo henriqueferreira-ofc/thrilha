@@ -42,31 +42,60 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel('profile-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`,
-        },
-        (payload: RealtimePostgresChangesPayload<ProfilePayload>) => {
-          // Força a limpeza do cache de imagem adicionando timestamp
-          const newProfile = payload.new as ProfilePayload;
-          if (newProfile && newProfile.avatar_url) {
-            const newUrl = newProfile.avatar_url + '?t=' + new Date().getTime();
-            setAvatarUrl(newUrl);
-          } else {
-            loadUserProfile();
-          }
+    let channel;
+    const setupChannel = async () => {
+      try {
+        // Limpar qualquer canal existente antes de criar um novo
+        if (channel) {
+          await supabase.removeChannel(channel);
         }
-      )
-      .subscribe();
 
+        channel = supabase
+          .channel('profile-changes-sidebar')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'profiles',
+              filter: `id=eq.${user.id}`,
+            },
+            (payload: RealtimePostgresChangesPayload<ProfilePayload>) => {
+              // Força a limpeza do cache de imagem adicionando timestamp
+              const newProfile = payload.new as ProfilePayload;
+              if (newProfile && newProfile.avatar_url) {
+                const newUrl = newProfile.avatar_url + '?t=' + new Date().getTime();
+                setAvatarUrl(newUrl);
+              } else {
+                loadUserProfile();
+              }
+            }
+          );
+
+        // Iniciar a assinatura do canal
+        const status = await channel.subscribe((status) => {
+          console.log(`Status do canal sidebar: ${status}`);
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Erro no canal realtime sidebar, tentando reconectar...');
+            setTimeout(() => setupChannel(), 5000);
+          }
+        });
+
+        console.log('Status da inscrição sidebar:', status);
+      } catch (error) {
+        console.error('Erro ao configurar canal realtime:', error);
+      }
+    };
+
+    setupChannel();
+
+    // Limpeza quando o componente é desmontado
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel).catch(err => {
+          console.error('Erro ao remover canal sidebar:', err);
+        });
+      }
     };
   }, [user]);
 

@@ -62,29 +62,58 @@ const Settings = () => {
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel('profile-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`,
-        },
-        (payload: RealtimePostgresChangesPayload<ProfileChanges>) => {
-          const newProfile = payload.new as ProfileChanges;
-          if (newProfile && newProfile.avatar_url !== undefined) {
-            const newUrl = newProfile.avatar_url + '?t=' + new Date().getTime();
-            console.log('Avatar atualizado via realtime:', newUrl);
-            setAvatarUrl(newUrl);
-          }
+    let channel;
+    const setupChannel = async () => {
+      try {
+        // Limpar qualquer canal existente antes de criar um novo
+        if (channel) {
+          await supabase.removeChannel(channel);
         }
-      )
-      .subscribe();
 
+        channel = supabase
+          .channel('profile-changes-settings')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'profiles',
+              filter: `id=eq.${user.id}`,
+            },
+            (payload: RealtimePostgresChangesPayload<ProfileChanges>) => {
+              const newProfile = payload.new as ProfileChanges;
+              if (newProfile && newProfile.avatar_url !== undefined) {
+                const newUrl = newProfile.avatar_url + '?t=' + new Date().getTime();
+                console.log('Avatar atualizado via realtime:', newUrl);
+                setAvatarUrl(newUrl);
+              }
+            }
+          );
+
+        // Iniciar a assinatura do canal
+        const status = await channel.subscribe((status) => {
+          console.log(`Status do canal settings: ${status}`);
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Erro no canal realtime settings, tentando reconectar...');
+            setTimeout(() => setupChannel(), 5000);
+          }
+        });
+
+        console.log('Status da inscrição settings:', status);
+      } catch (error) {
+        console.error('Erro ao configurar canal realtime settings:', error);
+      }
+    };
+
+    setupChannel();
+
+    // Limpeza quando o componente é desmontado
     return () => {
-      channel.unsubscribe();
+      if (channel) {
+        supabase.removeChannel(channel).catch(err => {
+          console.error('Erro ao remover canal settings:', err);
+        });
+      }
     };
   }, [user]);
   

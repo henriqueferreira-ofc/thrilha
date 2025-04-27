@@ -21,6 +21,7 @@ import Auth from "./pages/Auth";
 import { AuthProvider } from "./context/AuthContext";
 import { RequireAuth } from "./components/RequireAuth";
 import { useEffect } from "react";
+import { supabase } from './supabase/client';
 
 // Componente para lidar com navegação e erros
 const NavigationHandler: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -52,6 +53,35 @@ const NavigationHandler: React.FC<{ children: React.ReactNode }> = ({ children }
   return <>{children}</>;
 };
 
+// Componente para lidar com conexão e desconexão limpa
+function ConnectionManager() {
+  useEffect(() => {
+    // Quando o componente é montado, verificamos se há canais existentes para limpar
+    const cleanup = () => {
+      try {
+        // Fechar todas as conexões do Supabase
+        supabase.realtime.disconnect();
+        console.log('Todas as conexões Supabase foram encerradas');
+      } catch (err) {
+        console.error('Erro ao limpar conexões:', err);
+      }
+    };
+
+    // Adicionar event listeners para casos de fechamento de página
+    window.addEventListener('beforeunload', cleanup);
+    window.addEventListener('pagehide', cleanup);
+
+    // Limpeza ao desmontar o componente
+    return () => {
+      window.removeEventListener('beforeunload', cleanup);
+      window.removeEventListener('pagehide', cleanup);
+      cleanup();
+    };
+  }, []);
+
+  return null; // Este componente não renderiza nada
+}
+
 // Determinar qual Router usar, dependendo do ambiente
 // HashRouter é mais seguro para ambientes que não configuram corretamente o roteamento de SPA
 const Router = import.meta.env.DEV ? HashRouter : BrowserRouter;
@@ -62,6 +92,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
+        <ConnectionManager />
         <Toaster />
         <Sonner />
         <Router>
