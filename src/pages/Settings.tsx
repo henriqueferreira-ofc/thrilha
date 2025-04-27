@@ -38,7 +38,7 @@ interface ProfileChanges {
 }
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, uploadAvatar, updateProfile } = useAuth();
   const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -288,56 +288,22 @@ const Settings = () => {
         return;
       }
 
-      console.log('Iniciando upload de novo avatar');
-
-      // Gerar nome de arquivo único
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
-      console.log('Nome do arquivo para upload:', fileName);
-
-      // Upload do arquivo
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, {
-          cacheControl: '0',
-          upsert: true
-        });
-
-      if (uploadError) {
-        console.error('Erro ao fazer upload:', uploadError);
-        throw uploadError;
-      }
-
-      console.log('Upload concluído, obtendo URL pública');
+      toast.info('Fazendo upload do avatar...');
       
-      // Obter URL pública
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
+      // Fazer upload do avatar usando a função do contexto
+      const publicUrl = await uploadAvatar(file);
+      console.log('Avatar enviado com sucesso, URL:', publicUrl);
       
-      console.log('URL pública obtida:', publicUrl);
-
-      // Atualizar perfil com nova URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          avatar_url: publicUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (updateError) {
-        console.error('Erro ao atualizar perfil com novo avatar:', updateError);
-        throw updateError;
-      }
-
-      // Atualizar estado local com timestamp para evitar cache
-      setAvatarUrl(publicUrl + '?t=' + Date.now());
+      // Atualizar o perfil com a nova URL
+      await updateProfile({ avatar_url: publicUrl });
+      
+      // Atualizar o estado local
+      setAvatarUrl(publicUrl);
       
       toast.success('Avatar atualizado com sucesso');
     } catch (error) {
-      console.error('Erro ao atualizar avatar:', error);
-      toast.error('Erro ao atualizar avatar');
+      console.error('Erro detalhado ao atualizar avatar:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
     } finally {
       setUploadingAvatar(false);
     }
@@ -422,15 +388,19 @@ const Settings = () => {
               <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-800 border-2 border-purple-400 flex items-center justify-center">
                 {avatarUrl ? (
                   <img 
-                    src={avatarUrl + '?t=' + new Date().getTime()} 
+                    src={avatarUrl}
                     alt="Avatar" 
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      console.error('Erro ao carregar imagem:', e);
+                      console.error('Erro ao carregar imagem de avatar nas configurações:', e);
                       const target = e.target as HTMLImageElement;
                       target.src = '';
                       setAvatarUrl(null);
+                      
+                      // Exibir mensagem de erro para o usuário
+                      toast.error('Não foi possível carregar seu avatar. Tente fazer upload novamente.');
                     }}
+                    loading="lazy"
                   />
                 ) : (
                   <User className="w-12 h-12 text-gray-400" />

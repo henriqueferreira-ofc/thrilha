@@ -76,11 +76,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Limpar o estado antes de fazer logout para evitar problemas
+      setUser(null);
+      setSession(null);
+      
+      // Usar opções específicas para evitar o erro 403
+      const { error } = await supabase.auth.signOut({
+        scope: 'local' // Usar 'local' em vez de 'global' para evitar o erro 403
+      });
+      
+      if (error) {
+        console.error('Erro ao fazer logout:', error);
+        throw error;
+      }
+      
+      // Limpar qualquer dado local
+      localStorage.removeItem('supabase.auth.token');
+      
       toast.success('Logout realizado com sucesso!');
+      
+      // Redirecionamento opcional para a página inicial
+      window.location.href = '/';
     } catch (error: unknown) {
+      console.error('Erro detalhado ao fazer logout:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao fazer logout');
+      
+      // Mesmo com erro, redefinir o estado para garantir logout no lado do cliente
+      setUser(null);
+      setSession(null);
     }
   };
 
@@ -88,26 +111,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       if (!user) throw new Error('Usuário não autenticado');
 
+      // Validar o tipo de arquivo
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Por favor, selecione uma imagem válida');
+      }
+
+      // Validar tamanho (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        throw new Error('A imagem deve ter no máximo 2MB');
+      }
+
+      // Gerar nome de arquivo único
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+      const uniqueId = Math.random().toString(36).substring(2, 10);
+      const fileName = `${user.id}_${Date.now()}_${uniqueId}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, {
-          cacheControl: '0',
-          upsert: true
-        });
+      console.log('Iniciando upload do avatar:', fileName);
 
-      if (uploadError) throw uploadError;
+      // Verificar se o bucket existe
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.error('Erro ao verificar buckets:', bucketsError);
+        throw bucketsError;
+      }
+      
+      if (!buckets.some(b => b.name === 'avatars')) {
+        console.error('O bucket "avatars" não existe');
+        throw new Error('Bucket de avatares não encontrado');
+      }
 
+      // Upload do arquivo com retry
+      let uploadError = null;
+      let uploadAttempt = 0;
+      const maxAttempts = 3;
+      
+      while (uploadAttempt < maxAttempts) {
+        uploadAttempt++;
+        console.log(`Tentativa de upload ${uploadAttempt}/${maxAttempts}`);
+        
+        const { error } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, file, {
+            cacheControl: 'no-cache',
+            upsert: true
+          });
+          
+        if (!error) {
+          uploadError = null;
+          break;
+        }
+        
+        uploadError = error;
+        
+        // Esperar antes de tentar novamente
+        if (uploadAttempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      if (uploadError) {
+        console.error('Falha no upload após múltiplas tentativas:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('Upload concluído com sucesso, obtendo URL pública');
+
+      // Obter URL pública com parâmetro de timestamp para evitar cache
+      const timestamp = new Date().getTime();
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
-      return publicUrl;
+      // Adicionar timestamp à URL para evitar cache
+      const urlWithTimestamp = `${publicUrl}?t=${timestamp}`;
+      console.log('URL pública gerada:', urlWithTimestamp);
+
+      return urlWithTimestamp;
     } catch (error: unknown) {
-      console.error('Erro ao fazer upload da imagem:', error);
-      toast.error('Erro ao fazer upload da imagem');
+      console.error('Erro detalhado ao fazer upload da imagem:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao fazer upload da imagem');
       throw error;
     }
   };

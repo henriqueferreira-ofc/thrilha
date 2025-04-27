@@ -135,15 +135,18 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
               <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-800 border-2 border-purple-400 flex items-center justify-center">
                 {avatarUrl ? (
                   <img 
-                    src={avatarUrl + '?t=' + new Date().getTime()} 
+                    src={avatarUrl} 
                     alt="Avatar" 
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      console.error('Erro ao carregar imagem:', e);
+                      console.error('Erro ao carregar imagem do avatar:', e);
                       const target = e.target as HTMLImageElement;
                       target.src = '';
                       setAvatarUrl(null);
+                      
+                      setTimeout(() => loadUserProfile(), 5000);
                     }}
+                    loading="lazy"
                   />
                 ) : (
                   <User className="w-8 h-8 text-gray-400" />
