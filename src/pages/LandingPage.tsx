@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,14 +15,25 @@ const LandingPage = () => {
           <Mountain className="h-6 w-6 text-purple-300" />
           <span className="text-xl font-bold purple-gradient-text">Trilha</span>
         </div>
-        <Link to={user ? "/tasks" : "/auth"}>
-          <Button 
-            variant="outline" 
-            className="border-purple-300 text-purple-300 hover:bg-purple-300/10"
-          >
-            Login
-          </Button>
-        </Link>
+        {user ? (
+          <Link to="/tasks">
+            <Button 
+              variant="outline" 
+              className="border-purple-300 text-purple-300 hover:bg-purple-300/10"
+            >
+              Minhas Tarefas
+            </Button>
+          </Link>
+        ) : (
+          <Link to="/auth">
+            <Button 
+              variant="outline" 
+              className="border-purple-300 text-purple-300 hover:bg-purple-300/10"
+            >
+              Login
+            </Button>
+          </Link>
+        )}
       </nav>
 
       {/* Hero Section */}
@@ -37,11 +47,19 @@ const LandingPage = () => {
             Aumente sua produtividade com o Trilha.
           </p>
           <div className="flex gap-4 pt-4">
-            <Link to={user ? "/tasks" : "/auth"}>
-              <Button className="purple-gradient-bg text-white px-8 py-6 text-lg">
-                {user ? 'Minhas Tarefas' : 'Começar Grátis'}
-              </Button>
-            </Link>
+            {user ? (
+              <Link to="/tasks">
+                <Button className="purple-gradient-bg text-white px-8 py-6 text-lg">
+                  Minhas Tarefas
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/auth">
+                <Button className="purple-gradient-bg text-white px-8 py-6 text-lg">
+                  Começar Grátis
+                </Button>
+              </Link>
+            )}
             <a href="#features">
               <Button variant="outline" className="text-white border-white/20 bg-white/5 px-8 py-6 text-lg">
                 Saiba Mais

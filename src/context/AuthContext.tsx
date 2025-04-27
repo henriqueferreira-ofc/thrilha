@@ -76,7 +76,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Limpar o estado antes de fazer logout para evitar problemas
+      // Redirecionar para a página inicial antes de fazer logout
+      // para evitar flash da tela de login
+      window.location.href = '/';
+      
+      // Pequeno delay para garantir que o redirecionamento ocorra antes do logout
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Limpar o estado
       setUser(null);
       setSession(null);
       
@@ -94,9 +101,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('supabase.auth.token');
       
       toast.success('Logout realizado com sucesso!');
-      
-      // Redirecionamento opcional para a página inicial
-      window.location.href = '/';
     } catch (error: unknown) {
       console.error('Erro detalhado ao fazer logout:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao fazer logout');

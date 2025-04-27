@@ -1,10 +1,20 @@
-
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useEffect } from "react";
 
 export function RequireAuth() {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Adicionar este effect para lidar com a mudança de estado do usuário
+  useEffect(() => {
+    if (!loading && !user) {
+      // Se o usuário não está carregando e não está autenticado
+      // redirecionar diretamente para a página inicial em vez da página de auth
+      navigate('/', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   // Enquanto verifica a autenticação, não redireciona
   if (loading) {
@@ -15,10 +25,9 @@ export function RequireAuth() {
     );
   }
 
-  // Se não houver usuário autenticado, redireciona para a página de login
+  // Se não houver usuário autenticado, redireciona para a página inicial em vez da página de login
   if (!user) {
-    // Redireciona para a página de login, mantendo a URL atual como state para retornar após o login
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/" replace />;
   }
 
   // Se houver usuário autenticado, renderiza a rota protegida
