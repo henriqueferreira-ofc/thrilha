@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
@@ -12,6 +12,37 @@ import About from "./pages/About";
 import Auth from "./pages/Auth";
 import { AuthProvider } from "./context/AuthContext";
 import { RequireAuth } from "./components/RequireAuth";
+import { useEffect } from "react";
+
+// Componente para lidar com navegação e erros
+const NavigationHandler: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Detectar erros de navegação e registrá-los
+  useEffect(() => {
+    const handleError = (event: PromiseRejectionEvent) => {
+      console.error("Erro de navegação:", event);
+      
+      // Se for um erro 404, redirecionar para a página inicial
+      if (event.reason && event.reason.toString().includes("404")) {
+        navigate("/", { replace: true });
+      }
+    };
+
+    window.addEventListener("unhandledrejection", handleError);
+    
+    return () => {
+      window.removeEventListener("unhandledrejection", handleError);
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    console.log("Navegação para:", location.pathname);
+  }, [location]);
+
+  return <>{children}</>;
+};
 
 const queryClient = new QueryClient();
 
@@ -21,23 +52,25 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <Toaster theme="dark" position="top-right" />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<Auth />} />
-            
-            {/* Rotas protegidas */}
-            <Route element={<RequireAuth />}>
-              <Route path="/tasks" element={<Index />} />
-              <Route path="/calendar" element={<Calendar />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/about" element={<About />} />
-            </Route>
+          <NavigationHandler>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/auth" element={<Auth />} />
+              
+              {/* Rotas protegidas */}
+              <Route element={<RequireAuth />}>
+                <Route path="/tasks" element={<Index />} />
+                <Route path="/calendar" element={<Calendar />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/about" element={<About />} />
+              </Route>
 
-            {/* Rota para qualquer outra URL */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* Rota para qualquer outra URL */}
+              <Route path="/404" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
+            </Routes>
+          </NavigationHandler>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

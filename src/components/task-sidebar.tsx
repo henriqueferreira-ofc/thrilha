@@ -175,7 +175,7 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
         <SidebarContent className="flex flex-col gap-4">
           <Button 
             variant="ghost" 
-            className="justify-start hover:bg-white/5" 
+            className={`justify-start hover:bg-white/5 ${location.pathname === "/tasks" ? "bg-white/5 text-purple-300" : ""}`}
             asChild
           >
             <Link to="/tasks">
@@ -186,7 +186,7 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
           
           <Button 
             variant="ghost" 
-            className="justify-start hover:bg-white/5" 
+            className={`justify-start hover:bg-white/5 ${location.pathname === "/calendar" ? "bg-white/5 text-purple-300" : ""}`}
             asChild
           >
             <Link to="/calendar">
@@ -197,7 +197,7 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
           
           <Button 
             variant="ghost" 
-            className="justify-start hover:bg-white/5" 
+            className={`justify-start hover:bg-white/5 ${location.pathname === "/settings" ? "bg-white/5 text-purple-300" : ""}`}
             asChild
           >
             <Link to="/settings">
@@ -208,7 +208,7 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
           
           <Button 
             variant="ghost" 
-            className="justify-start hover:bg-white/5" 
+            className={`justify-start hover:bg-white/5 ${location.pathname === "/about" ? "bg-white/5 text-purple-300" : ""}`}
             asChild
           >
             <Link to="/about">
