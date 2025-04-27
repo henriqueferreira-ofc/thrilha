@@ -89,21 +89,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!user) throw new Error('Usuário não autenticado');
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(fileName, file, {
+          cacheControl: '0',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
       return publicUrl;
     } catch (error: unknown) {
+      console.error('Erro ao fazer upload da imagem:', error);
       toast.error('Erro ao fazer upload da imagem');
       throw error;
     }

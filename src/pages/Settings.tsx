@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '../components/ui/input';
-import { Moon, Sun, Volume2, VolumeX, Bell, BellOff, Mail, MailX, CalendarClock, Calendar, Upload, User } from 'lucide-react';
+import { Moon, Sun, Volume2, VolumeX, Bell, BellOff, Mail, MailX, CalendarClock, Calendar, Upload, User, Loader2 } from 'lucide-react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
@@ -48,6 +48,8 @@ const Settings = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [bucketsList, setBucketsList] = useState<string[]>([]);
   
   useEffect(() => {
     if (user && isInitialLoad) {
@@ -73,7 +75,9 @@ const Settings = () => {
         (payload: RealtimePostgresChangesPayload<ProfileChanges>) => {
           const newProfile = payload.new as ProfileChanges;
           if (newProfile && newProfile.avatar_url !== undefined) {
-            setAvatarUrl(newProfile.avatar_url);
+            const newUrl = newProfile.avatar_url + '?t=' + new Date().getTime();
+            console.log('Avatar atualizado via realtime:', newUrl);
+            setAvatarUrl(newUrl);
           }
         }
       )
@@ -174,12 +178,19 @@ const Settings = () => {
       // Se tiver avatar_url no perfil, usar ela
       if (profileData.avatar_url) {
         console.log('Avatar URL encontrada:', profileData.avatar_url);
-        setAvatarUrl(profileData.avatar_url);
+        const avatarWithTimestamp = profileData.avatar_url + '?t=' + new Date().getTime();
+        console.log('Avatar URL com timestamp:', avatarWithTimestamp);
+        setAvatarUrl(avatarWithTimestamp);
       } else {
         // Se não tiver, tentar pegar do user metadata
         const metadataAvatar = user.user_metadata?.avatar_url;
         console.log('Avatar do metadata:', metadataAvatar);
-        setAvatarUrl(metadataAvatar || null);
+        if (metadataAvatar) {
+          const metadataAvatarWithTimestamp = metadataAvatar + '?t=' + new Date().getTime();
+          setAvatarUrl(metadataAvatarWithTimestamp);
+        } else {
+          setAvatarUrl(null);
+        }
       }
     } catch (error: unknown) {
       console.error('Erro detalhado ao carregar preferências:', error);
@@ -277,39 +288,34 @@ const Settings = () => {
         return;
       }
 
-      // Deletar avatar antigo se existir
-      if (avatarUrl) {
-        const oldFilePath = avatarUrl.split('/').pop();
-        if (oldFilePath) {
-          await supabase.storage
-            .from('avatars')
-            .remove([`avatars/${oldFilePath}`]);
-        }
-      }
+      console.log('Iniciando upload de novo avatar');
 
+      // Gerar nome de arquivo único
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+      console.log('Nome do arquivo para upload:', fileName);
 
-      // Upload do novo arquivo
+      // Upload do arquivo
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(fileName, file, {
+          cacheControl: '0',
+          upsert: true
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Erro ao fazer upload:', uploadError);
+        throw uploadError;
+      }
 
-      // Obter URL pública com configurações de cache
+      console.log('Upload concluído, obtendo URL pública');
+      
+      // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath, {
-          download: false,
-          transform: {
-            width: 200,
-            height: 200,
-            resize: 'cover',
-            format: 'origin'
-          }
-        });
+        .getPublicUrl(fileName);
+      
+      console.log('URL pública obtida:', publicUrl);
 
       // Atualizar perfil com nova URL
       const { error: updateError } = await supabase
@@ -320,10 +326,13 @@ const Settings = () => {
         })
         .eq('id', user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Erro ao atualizar perfil com novo avatar:', updateError);
+        throw updateError;
+      }
 
-      // Atualizar estado local
-      setAvatarUrl(publicUrl);
+      // Atualizar estado local com timestamp para evitar cache
+      setAvatarUrl(publicUrl + '?t=' + Date.now());
       
       toast.success('Avatar atualizado com sucesso');
     } catch (error) {
@@ -331,6 +340,53 @@ const Settings = () => {
       toast.error('Erro ao atualizar avatar');
     } finally {
       setUploadingAvatar(false);
+    }
+  };
+
+  const testSupabaseConnection = async () => {
+    try {
+      setTestingConnection(true);
+      
+      console.log('Testando conexão com Supabase...');
+      // Verificar buckets disponíveis
+      const { data: buckets, error } = await supabase.storage.listBuckets();
+      
+      if (error) {
+        console.error('Erro ao listar buckets:', error);
+        toast.error('Erro ao conectar com Supabase Storage');
+        return;
+      }
+      
+      console.log('Buckets disponíveis:', buckets);
+      setBucketsList(buckets.map(b => b.name));
+      
+      // Verificar se o bucket 'avatars' existe
+      const avatarBucket = buckets.find(b => b.name === 'avatars');
+      if (!avatarBucket) {
+        console.error('Bucket de avatares não encontrado!');
+        toast.error('Bucket de avatares não encontrado');
+        return;
+      }
+      
+      toast.success('Conexão com Supabase OK');
+      
+      // Listar arquivos no bucket de avatars
+      const { data: files, error: filesError } = await supabase.storage
+        .from('avatars')
+        .list();
+        
+      if (filesError) {
+        console.error('Erro ao listar arquivos:', filesError);
+        return;
+      }
+      
+      console.log('Arquivos no bucket avatars:', files);
+      
+    } catch (error) {
+      console.error('Erro ao testar conexão:', error);
+      toast.error('Erro ao testar conexão com Supabase');
+    } finally {
+      setTestingConnection(false);
     }
   };
 
@@ -366,7 +422,7 @@ const Settings = () => {
               <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-800 border-2 border-purple-400 flex items-center justify-center">
                 {avatarUrl ? (
                   <img 
-                    src={avatarUrl} 
+                    src={avatarUrl + '?t=' + new Date().getTime()} 
                     alt="Avatar" 
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -374,12 +430,6 @@ const Settings = () => {
                       const target = e.target as HTMLImageElement;
                       target.src = '';
                       setAvatarUrl(null);
-                      // Tentar carregar novamente após um curto intervalo
-                      setTimeout(() => {
-                        if (avatarUrl) {
-                          setAvatarUrl(avatarUrl + '?t=' + new Date().getTime());
-                        }
-                      }, 1000);
                     }}
                   />
                 ) : (
@@ -402,6 +452,31 @@ const Settings = () => {
               </label>
             </div>
             {uploadingAvatar && <p className="text-sm text-gray-400">Enviando...</p>}
+            
+            <div className="w-full flex justify-center mt-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={testSupabaseConnection}
+                disabled={testingConnection}
+                className="text-xs"
+              >
+                {testingConnection ? (
+                  <>
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                    Testando...
+                  </>
+                ) : (
+                  'Testar conexão'
+                )}
+              </Button>
+            </div>
+            
+            {bucketsList.length > 0 && (
+              <div className="w-full max-w-md bg-black/30 p-2 rounded text-xs">
+                <p>Buckets disponíveis: {bucketsList.join(', ')}</p>
+              </div>
+            )}
           </div>
 
           <div className="max-w-md mx-auto space-y-4">

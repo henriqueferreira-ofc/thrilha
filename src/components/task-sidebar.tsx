@@ -9,9 +9,19 @@ import { PlusCircle, LayoutDashboard, Calendar, Settings, Info, Mountain, LogOut
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '../supabase/client';
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 interface TaskSidebarProps {
   onCreateTask?: (data: TaskFormData) => void;
+}
+
+interface ProfilePayload {
+  id: string;
+  avatar_url: string | null;
+  username?: string;
+  updated_at?: string;
+  full_name?: string | null;
+  website?: string | null;
 }
 
 export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
@@ -42,8 +52,15 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
           table: 'profiles',
           filter: `id=eq.${user.id}`,
         },
-        () => {
-          loadUserProfile();
+        (payload: RealtimePostgresChangesPayload<ProfilePayload>) => {
+          // Força a limpeza do cache de imagem adicionando timestamp
+          const newProfile = payload.new as ProfilePayload;
+          if (newProfile && newProfile.avatar_url) {
+            const newUrl = newProfile.avatar_url + '?t=' + new Date().getTime();
+            setAvatarUrl(newUrl);
+          } else {
+            loadUserProfile();
+          }
         }
       )
       .subscribe();
@@ -58,23 +75,38 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
     
     try {
       setLoading(true);
+      console.log('Carregando perfil do usuário:', user.id);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('username, avatar_url')
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao carregar perfil:', error);
+        throw error;
+      }
 
       if (data) {
+        console.log('Dados do perfil carregados:', data);
         // Só atualiza o username se houver um valor
         if (data.username) {
           setUsername(data.username);
         }
-        setAvatarUrl(data.avatar_url);
+        
+        // Adicionar timestamp à URL para evitar cache
+        if (data.avatar_url) {
+          const avatarWithTimestamp = data.avatar_url + '?t=' + new Date().getTime();
+          console.log('Avatar URL com timestamp:', avatarWithTimestamp);
+          setAvatarUrl(avatarWithTimestamp);
+        } else {
+          setAvatarUrl(null);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
+      setAvatarUrl(null);
     } finally {
       setLoading(false);
     }
@@ -103,9 +135,15 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
               <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-800 border-2 border-purple-400 flex items-center justify-center">
                 {avatarUrl ? (
                   <img 
-                    src={avatarUrl} 
+                    src={avatarUrl + '?t=' + new Date().getTime()} 
                     alt="Avatar" 
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Erro ao carregar imagem:', e);
+                      const target = e.target as HTMLImageElement;
+                      target.src = '';
+                      setAvatarUrl(null);
+                    }}
                   />
                 ) : (
                   <User className="w-8 h-8 text-gray-400" />
