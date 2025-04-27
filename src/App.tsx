@@ -18,8 +18,7 @@ import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
-import { AuthProvider } from "./context/AuthContext";
-import { RequireAuth } from "./components/RequireAuth";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { useEffect } from "react";
 import { supabase } from './supabase/client';
 
@@ -82,6 +81,37 @@ function ConnectionManager() {
   return null; // Este componente não renderiza nada
 }
 
+// Componente para verificar autenticação e redirecionar para rotas protegidas
+const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
+  const { user, loading } = useAuth();
+  
+  useEffect(() => {
+    if (!loading && !user) {
+      // Redirecionamento direto para a página de autenticação usando HashRouter
+      window.location.replace('#/auth');
+    }
+  }, [user, loading]);
+  
+  // Exibir carregamento enquanto verifica usuário
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-xl text-purple-400">Carregando...</div>
+      </div>
+    );
+  }
+  
+  // Se o usuário não estiver autenticado, não renderizar nada enquanto redireciona
+  if (!user) {
+    // Forçar o redirecionamento novamente para garantir
+    window.location.replace('#/auth');
+    return null;
+  }
+  
+  // Se o usuário está autenticado, renderiza o elemento
+  return element;
+};
+
 // Determinar qual Router usar, dependendo do ambiente
 // HashRouter é mais seguro para ambientes que não configuram corretamente o roteamento de SPA
 const Router = import.meta.env.DEV ? HashRouter : BrowserRouter;
@@ -101,13 +131,11 @@ const App = () => (
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<Auth />} />
               
-              {/* Rotas protegidas */}
-              <Route element={<RequireAuth />}>
-                <Route path="/tasks" element={<Index />} />
-                <Route path="/calendar" element={<Calendar />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/about" element={<About />} />
-              </Route>
+              {/* Rotas protegidas com verificação de autenticação */}
+              <Route path="/tasks" element={<ProtectedRoute element={<Index />} />} />
+              <Route path="/calendar" element={<ProtectedRoute element={<Calendar />} />} />
+              <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
+              <Route path="/about" element={<ProtectedRoute element={<About />} />} />
 
               {/* Rota para qualquer outra URL */}
               <Route path="/404" element={<NotFound />} />

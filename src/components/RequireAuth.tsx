@@ -1,3 +1,6 @@
+// Este componente está sendo substituído pelo ProtectedRoute no App.tsx
+// Mantido apenas como referência
+
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
@@ -11,8 +14,8 @@ export function RequireAuth() {
   useEffect(() => {
     if (!loading && !user) {
       // Se o usuário não está carregando e não está autenticado
-      // redirecionar diretamente para a página inicial em vez da página de auth
-      navigate('/', { replace: true });
+      // redirecionar para a página de autenticação
+      navigate('/auth', { replace: true });
     }
   }, [user, loading, navigate]);
 
@@ -25,9 +28,9 @@ export function RequireAuth() {
     );
   }
 
-  // Se não houver usuário autenticado, redireciona para a página inicial em vez da página de login
+  // Se não houver usuário autenticado, redireciona para a página de autenticação
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   // Se houver usuário autenticado, renderiza a rota protegida

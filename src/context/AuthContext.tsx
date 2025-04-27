@@ -13,14 +13,47 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   updateProfile: (data: { avatar_url?: string }) => Promise<void>;
   uploadAvatar: (file: File) => Promise<string>;
+  forceLogout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Função para limpar completamente todos os dados de autenticação
+const clearAuthData = () => {
+  // Limpar dados do localStorage
+  localStorage.removeItem('supabase.auth.token');
+  localStorage.removeItem('supabase.auth.refreshToken');
+  localStorage.removeItem('sb-yieihrvcbshzmxieflsv-auth-token');
+  
+  // Limpar cookies relacionados à autenticação
+  document.cookie.split(';').forEach(cookie => {
+    const [name] = cookie.split('=').map(c => c.trim());
+    if (name.includes('supabase') || name.includes('sb-')) {
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    }
+  });
+  
+  // Limpar sessionStorage
+  sessionStorage.clear();
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Função para forçar logout sem depender do Supabase
+  const forceLogout = () => {
+    // Limpar estado do app
+    setUser(null);
+    setSession(null);
+    
+    // Limpar dados de autenticação
+    clearAuthData();
+    
+    // Forçar redirecionamento para a página inicial
+    window.location.href = '/';
+  };
 
   useEffect(() => {
     // Primeiro configurar o listener para mudanças no estado de autenticação
@@ -76,38 +109,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Redirecionar para a página inicial antes de fazer logout
-      // para evitar flash da tela de login
-      window.location.href = '/';
-      
-      // Pequeno delay para garantir que o redirecionamento ocorra antes do logout
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Limpar o estado
+      // Limpar o estado antes de redirecionar
       setUser(null);
       setSession(null);
       
-      // Usar opções específicas para evitar o erro 403
-      const { error } = await supabase.auth.signOut({
-        scope: 'local' // Usar 'local' em vez de 'global' para evitar o erro 403
+      // Limpar todos os dados de autenticação
+      clearAuthData();
+      
+      // Tentar fazer o logout do Supabase (sem esperar pela resposta)
+      supabase.auth.signOut({ scope: 'local' }).catch(err => {
+        console.log('Erro ao sair do Supabase, mas os dados locais foram limpos');
       });
       
-      if (error) {
-        console.error('Erro ao fazer logout:', error);
-        throw error;
-      }
-      
-      // Limpar qualquer dado local
-      localStorage.removeItem('supabase.auth.token');
+      // Redirecionar imediatamente para a página inicial
+      window.location.href = '/';
       
       toast.success('Logout realizado com sucesso!');
     } catch (error: unknown) {
       console.error('Erro detalhado ao fazer logout:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao fazer logout');
       
-      // Mesmo com erro, redefinir o estado para garantir logout no lado do cliente
+      // Mesmo com erro, redefinir o estado e limpar dados
       setUser(null);
       setSession(null);
+      clearAuthData();
+      
+      // Forçar redirecionamento mesmo com erro
+      window.location.href = '/';
     }
   };
 
@@ -229,6 +256,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateProfile,
     uploadAvatar,
+    forceLogout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -240,4 +268,10 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+// Função para verificar se o usuário está autenticado sem usar o contexto
+// Pode ser acessada diretamente sem hooks
+export function isAuthenticated(): boolean {
+  return !!supabase.auth.getUser() || !!localStorage.getItem('supabase.auth.token');
 }

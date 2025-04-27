@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,25 +7,50 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { Mountain, LogIn, UserPlus } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, forceLogout } = useAuth();
 
-  // Se o usuário já estiver autenticado, redirecionar para a página de tarefas
-  if (user) {
-    return <Navigate to="/tasks" replace />;
-  }
+  // Força a limpar qualquer resíduo de autenticação ao carregar a página
+  useEffect(() => {
+    // Limpar tokens e cookies de autenticação
+    localStorage.removeItem('supabase.auth.token');
+    localStorage.removeItem('supabase.auth.refreshToken');
+    localStorage.removeItem('sb-yieihrvcbshzmxieflsv-auth-token');
+    sessionStorage.clear();
+    
+    // Limpar cookies relacionados à autenticação
+    document.cookie.split(';').forEach(cookie => {
+      const [name] = cookie.split('=').map(c => c.trim());
+      if (name.includes('supabase') || name.includes('sb-')) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      }
+    });
+  }, []);
+
+  // Usar useEffect para redirecionar se o usuário já estiver autenticado
+  useEffect(() => {
+    if (user) {
+      // Usando window.location diretamente para um redirecionamento completo
+      window.location.replace('#/tasks');
+    }
+  }, [user]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       await signIn(email, password);
+      // Após login bem-sucedido, redirecionar para tarefas
+      setTimeout(() => {
+        window.location.replace('#/tasks');
+      }, 200);
+    } catch (error) {
+      console.error("Erro no login:", error);
     } finally {
       setIsLoading(false);
     }
@@ -37,6 +61,9 @@ const Auth = () => {
     setIsLoading(true);
     try {
       await signUp(email, password, username);
+      // Mostrar mensagem de confirmação (a própria função signUp já mostra)
+    } catch (error) {
+      console.error("Erro no cadastro:", error);
     } finally {
       setIsLoading(false);
     }

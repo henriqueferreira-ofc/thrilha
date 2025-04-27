@@ -6,7 +6,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { TaskForm } from '@/components/task-form';
 import { TaskFormData } from '@/types/task';
 import { PlusCircle, LayoutDashboard, Calendar, Settings, Info, Mountain, LogOut, User } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '../supabase/client';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
@@ -27,10 +27,42 @@ interface ProfilePayload {
 export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { user, signOut, forceLogout } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState(true);
+
+  // Função para navegar com verificação de autenticação
+  const navigateTo = (path: string) => {
+    // Sempre redirecionar para autenticação primeiro
+    window.location.replace('#/auth');
+  };
+
+  // Função para fazer logout e redirecionar para a página inicial
+  const handleLogout = () => {
+    try {
+      // Limpar dados de autenticação manualmente
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('supabase.auth.refreshToken');
+      localStorage.removeItem('sb-yieihrvcbshzmxieflsv-auth-token');
+      sessionStorage.clear();
+      
+      // Limpar cookies relacionados à autenticação
+      document.cookie.split(';').forEach(cookie => {
+        const [name] = cookie.split('=').map(c => c.trim());
+        if (name.includes('supabase') || name.includes('sb-')) {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+      });
+      
+      // Redirecionar diretamente para a página inicial
+      window.location.href = "/";
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      window.location.href = "/";
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -208,52 +240,44 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
           <Button 
             variant="ghost" 
             className={`justify-start hover:bg-white/5 ${location.pathname === "/tasks" ? "bg-white/5 text-purple-300" : ""}`}
-            asChild
+            onClick={() => navigateTo('/tasks')}
           >
-            <Link to="/tasks">
-              <LayoutDashboard className="mr-2 h-4 w-4 text-purple-300" />
-              Tarefas
-            </Link>
+            <LayoutDashboard className="mr-2 h-4 w-4 text-purple-300" />
+            Tarefas
           </Button>
           
           <Button 
             variant="ghost" 
             className={`justify-start hover:bg-white/5 ${location.pathname === "/calendar" ? "bg-white/5 text-purple-300" : ""}`}
-            asChild
+            onClick={() => navigateTo('/calendar')}
           >
-            <Link to="/calendar">
-              <Calendar className="mr-2 h-4 w-4 text-purple-300" />
-              Calendário
-            </Link>
+            <Calendar className="mr-2 h-4 w-4 text-purple-300" />
+            Calendário
           </Button>
           
           <Button 
             variant="ghost" 
             className={`justify-start hover:bg-white/5 ${location.pathname === "/settings" ? "bg-white/5 text-purple-300" : ""}`}
-            asChild
+            onClick={() => navigateTo('/settings')}
           >
-            <Link to="/settings">
-              <Settings className="mr-2 h-4 w-4 text-purple-300" />
-              Configurações
-            </Link>
+            <Settings className="mr-2 h-4 w-4 text-purple-300" />
+            Configurações
           </Button>
           
           <Button 
             variant="ghost" 
             className={`justify-start hover:bg-white/5 ${location.pathname === "/about" ? "bg-white/5 text-purple-300" : ""}`}
-            asChild
+            onClick={() => navigateTo('/about')}
           >
-            <Link to="/about">
-              <Info className="mr-2 h-4 w-4 text-purple-300" />
-              Sobre
-            </Link>
+            <Info className="mr-2 h-4 w-4 text-purple-300" />
+            Sobre
           </Button>
 
           <div className="mt-auto">
             <Button 
               variant="ghost" 
               className="justify-start w-full hover:bg-white/5 text-red-400 hover:text-red-300"
-              onClick={signOut}
+              onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Sair

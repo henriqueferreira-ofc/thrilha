@@ -1,11 +1,30 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Mountain } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const LandingPage = () => {
-  const { user } = useAuth();
+  const { user, forceLogout } = useAuth();
+  
+  // Função de redirecionamento direto que não depende de nenhuma outra função
+  const goToLoginPage = () => {
+    // Limpar dados de autenticação manualmente
+    localStorage.removeItem('supabase.auth.token');
+    localStorage.removeItem('supabase.auth.refreshToken');
+    localStorage.removeItem('sb-yieihrvcbshzmxieflsv-auth-token');
+    sessionStorage.clear();
+    
+    // Limpar cookies relacionados à autenticação
+    document.cookie.split(';').forEach(cookie => {
+      const [name] = cookie.split('=').map(c => c.trim());
+      if (name.includes('supabase') || name.includes('sb-')) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      }
+    });
+    
+    // Redirecionar de forma direta e imediata
+    window.location.href = "/#/auth";
+  };
   
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
@@ -15,25 +34,13 @@ const LandingPage = () => {
           <Mountain className="h-6 w-6 text-purple-300" />
           <span className="text-xl font-bold purple-gradient-text">Trilha</span>
         </div>
-        {user ? (
-          <Link to="/tasks">
-            <Button 
-              variant="outline" 
-              className="border-purple-300 text-purple-300 hover:bg-purple-300/10"
-            >
-              Minhas Tarefas
-            </Button>
-          </Link>
-        ) : (
-          <Link to="/auth">
-            <Button 
-              variant="outline" 
-              className="border-purple-300 text-purple-300 hover:bg-purple-300/10"
-            >
-              Login
-            </Button>
-          </Link>
-        )}
+        <Button 
+          variant="outline" 
+          className="border-purple-300 text-purple-300 hover:bg-purple-300/10"
+          onClick={goToLoginPage}
+        >
+          Login
+        </Button>
       </nav>
 
       {/* Hero Section */}
@@ -47,19 +54,12 @@ const LandingPage = () => {
             Aumente sua produtividade com o Trilha.
           </p>
           <div className="flex gap-4 pt-4">
-            {user ? (
-              <Link to="/tasks">
-                <Button className="purple-gradient-bg text-white px-8 py-6 text-lg">
-                  Minhas Tarefas
-                </Button>
-              </Link>
-            ) : (
-              <Link to="/auth">
-                <Button className="purple-gradient-bg text-white px-8 py-6 text-lg">
-                  Começar Grátis
-                </Button>
-              </Link>
-            )}
+            <Button 
+              className="purple-gradient-bg text-white px-8 py-6 text-lg"
+              onClick={goToLoginPage}
+            >
+              Teste Grátis
+            </Button>
             <a href="#features">
               <Button variant="outline" className="text-white border-white/20 bg-white/5 px-8 py-6 text-lg">
                 Saiba Mais
