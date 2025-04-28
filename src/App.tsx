@@ -84,13 +84,14 @@ function ConnectionManager() {
 // Componente para verificar autenticação e redirecionar para rotas protegidas
 const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
     if (!loading && !user) {
-      // Redirecionamento direto para a página de autenticação usando HashRouter
-      window.location.replace('#/auth');
+      // Redirecionamento usando o hook de navegação do React Router
+      navigate('/', { replace: true });
     }
-  }, [user, loading]);
+  }, [user, loading, navigate]);
   
   // Exibir carregamento enquanto verifica usuário
   if (loading) {
@@ -103,8 +104,7 @@ const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) 
   
   // Se o usuário não estiver autenticado, não renderizar nada enquanto redireciona
   if (!user) {
-    // Forçar o redirecionamento novamente para garantir
-    window.location.replace('#/auth');
+    // Já estamos redirecionando no useEffect
     return null;
   }
   
@@ -120,12 +120,12 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <ConnectionManager />
-        <Toaster />
-        <Sonner />
-        <Router>
+    <Router>
+      <AuthProvider>
+        <TooltipProvider>
+          <ConnectionManager />
+          <Toaster />
+          <Sonner />
           <NavigationHandler>
             <Routes>
               <Route path="/" element={<LandingPage />} />
@@ -142,9 +142,9 @@ const App = () => (
               <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </NavigationHandler>
-        </Router>
-      </TooltipProvider>
-    </AuthProvider>
+        </TooltipProvider>
+      </AuthProvider>
+    </Router>
   </QueryClientProvider>
 );
 

@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../supabase/client';
 import { toast } from 'sonner';
 import { ErrorType } from '@/types/common';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Função para forçar logout sem depender do Supabase
   const forceLogout = () => {
@@ -109,31 +111,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Limpar o estado antes de redirecionar
-      setUser(null);
-      setSession(null);
+      // Redirecionar para a página inicial imediatamente
+      // Usando navigate se disponível, caso contrário, window.location
+      navigate('/', { replace: true });
       
-      // Limpar todos os dados de autenticação
-      clearAuthData();
-      
-      // Tentar fazer o logout do Supabase (sem esperar pela resposta)
-      supabase.auth.signOut({ scope: 'local' }).catch(err => {
-        console.log('Erro ao sair do Supabase, mas os dados locais foram limpos');
-      });
-      
-      // Redirecionar imediatamente para a página inicial
-      window.location.href = '/';
-      
-      toast.success('Logout realizado com sucesso!');
-    } catch (error: unknown) {
-      console.error('Erro detalhado ao fazer logout:', error);
-      
-      // Mesmo com erro, redefinir o estado e limpar dados
-      setUser(null);
-      setSession(null);
-      clearAuthData();
-      
-      // Forçar redirecionamento mesmo com erro
+      // Pequeno atraso para garantir redirecionamento antes de limpar o estado
+      setTimeout(async () => {
+        try {
+          // Limpar o estado do usuário e fazer logout no Supabase
+          await supabase.auth.signOut();
+          setUser(null);
+          setSession(null);
+          console.log('User signed out successfully');
+        } catch (error) {
+          console.error('Error signing out:', error);
+          // Garantir que o estado do usuário seja limpo mesmo em caso de erro
+          setUser(null);
+          setSession(null);
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      // Fallback para redirecionamento direto se navigate falhar
       window.location.href = '/';
     }
   };

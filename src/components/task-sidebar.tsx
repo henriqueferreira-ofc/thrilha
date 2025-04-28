@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Sidebar, SidebarContent, SidebarHeader } from '@/components/ui/sidebar';
@@ -9,6 +9,7 @@ import { PlusCircle, LayoutDashboard, Calendar, Settings, Info, Mountain, LogOut
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '../supabase/client';
+import { getOrCreateProfile } from '../supabase/helper';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 interface TaskSidebarProps {
@@ -32,11 +33,14 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  // Usar ref para controlar tentativas de inscrição do canal
+  const isSettingUpChannel = useRef(false);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Função para navegar com verificação de autenticação
   const navigateTo = (path: string) => {
-    // Sempre redirecionar para autenticação primeiro
-    window.location.replace('#/auth');
+    // Redirecionar para o caminho solicitado
+    window.location.replace(`#${path}`);
   };
 
   // Função para fazer logout e redirecionar para a página inicial
@@ -72,18 +76,27 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
 
   // Adicionar um listener para mudanças no perfil
   useEffect(() => {
-    if (!user) return;
+    if (!user || isSettingUpChannel.current) return;
 
-    let channel;
+    // Marcar que estamos configurando o canal para evitar múltiplas tentativas
+    isSettingUpChannel.current = true;
+
     const setupChannel = async () => {
       try {
         // Limpar qualquer canal existente antes de criar um novo
-        if (channel) {
-          await supabase.removeChannel(channel);
+        if (channelRef.current) {
+          await supabase.removeChannel(channelRef.current).catch(e => {
+            console.warn('Erro ao remover canal existente:', e);
+          });
+          channelRef.current = null;
         }
 
-        channel = supabase
-          .channel('profile-changes-sidebar')
+        // Criar um canal com ID único para cada usuário
+        const channelId = `profile-changes-${user.id.slice(0, 8)}-${Date.now()}`;
+        console.log('Criando canal com ID:', channelId);
+
+        channelRef.current = supabase
+          .channel(channelId)
           .on(
             'postgres_changes',
             {
@@ -93,11 +106,17 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
               filter: `id=eq.${user.id}`,
             },
             (payload: RealtimePostgresChangesPayload<ProfilePayload>) => {
+              console.log('Recebida atualização de perfil:', payload);
+              
               // Força a limpeza do cache de imagem adicionando timestamp
               const newProfile = payload.new as ProfilePayload;
               if (newProfile && newProfile.avatar_url) {
                 const newUrl = newProfile.avatar_url + '?t=' + new Date().getTime();
                 setAvatarUrl(newUrl);
+                
+                if (newProfile.username) {
+                  setUsername(newProfile.username);
+                }
               } else {
                 loadUserProfile();
               }
@@ -105,17 +124,23 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
           );
 
         // Iniciar a assinatura do canal
-        const status = await channel.subscribe((status) => {
-          console.log(`Status do canal sidebar: ${status}`);
-          if (status === 'CHANNEL_ERROR') {
-            console.error('Erro no canal realtime sidebar, tentando reconectar...');
-            setTimeout(() => setupChannel(), 5000);
-          }
-        });
-
-        console.log('Status da inscrição sidebar:', status);
+        try {
+          await channelRef.current.subscribe();
+          console.log('Canal inscrito com sucesso:', channelId);
+        } catch (err) {
+          console.error('Erro ao inscrever no canal:', err);
+          
+          // Limpar a referência e permitir nova tentativa depois
+          channelRef.current = null;
+          isSettingUpChannel.current = false;
+          
+          // Tentar novamente após um tempo
+          setTimeout(() => setupChannel(), 5000);
+        }
       } catch (error) {
         console.error('Erro ao configurar canal realtime:', error);
+        // Permitir nova tentativa
+        isSettingUpChannel.current = false;
       }
     };
 
@@ -123,11 +148,14 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
 
     // Limpeza quando o componente é desmontado
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel).catch(err => {
+      if (channelRef.current) {
+        console.log('Removendo canal:', channelRef.current.topic);
+        supabase.removeChannel(channelRef.current).catch(err => {
           console.error('Erro ao remover canal sidebar:', err);
         });
+        channelRef.current = null;
       }
+      isSettingUpChannel.current = false;
     };
   }, [user]);
 
@@ -138,27 +166,30 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
       setLoading(true);
       console.log('Carregando perfil do usuário:', user.id);
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, avatar_url')
-        .eq('id', user.id)
-        .single();
-
+      // Usar o helper para verificar/criar o perfil
+      const { profile, isNew, error } = await getOrCreateProfile(user.id);
+      
       if (error) {
-        console.error('Erro ao carregar perfil:', error);
-        throw error;
+        console.warn('Houve um erro, mas temos um perfil fallback:', error);
       }
-
-      if (data) {
-        console.log('Dados do perfil carregados:', data);
-        // Só atualiza o username se houver um valor
-        if (data.username) {
-          setUsername(data.username);
+      
+      if (profile) {
+        console.log(`Perfil ${isNew ? 'criado' : 'carregado'}:`, profile);
+        
+        // Atualizar username
+        if (profile.username) {
+          setUsername(profile.username);
+        } else {
+          // Fallback para email se username estiver vazio
+          const defaultName = user.email 
+            ? user.email.split('@')[0] 
+            : `user_${user.id.substring(0, 8)}`;
+          setUsername(defaultName);
         }
         
-        // Adicionar timestamp à URL para evitar cache
-        if (data.avatar_url) {
-          const avatarWithTimestamp = data.avatar_url + '?t=' + new Date().getTime();
+        // Atualizar avatar
+        if (profile.avatar_url) {
+          const avatarWithTimestamp = profile.avatar_url + '?t=' + new Date().getTime();
           console.log('Avatar URL com timestamp:', avatarWithTimestamp);
           setAvatarUrl(avatarWithTimestamp);
         } else {
@@ -166,7 +197,15 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
         }
       }
     } catch (error) {
-      console.error('Erro ao carregar perfil:', error);
+      console.error('Erro ao carregar/criar perfil:', error);
+      // Fallback para usar o email como nome de usuário
+      if (user?.email) {
+        setUsername(user.email.split('@')[0]);
+      } else if (user?.id) {
+        setUsername(`user_${user.id.substring(0, 8)}`);
+      } else {
+        setUsername('Usuário');
+      }
       setAvatarUrl(null);
     } finally {
       setLoading(false);

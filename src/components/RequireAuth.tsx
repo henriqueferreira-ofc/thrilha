@@ -14,8 +14,8 @@ export function RequireAuth() {
   useEffect(() => {
     if (!loading && !user) {
       // Se o usuário não está carregando e não está autenticado
-      // redirecionar para a página de autenticação
-      navigate('/auth', { replace: true });
+      // redirecionar para a página inicial em vez da página de autenticação
+      navigate('/', { replace: true });
     }
   }, [user, loading, navigate]);
 
@@ -28,9 +28,9 @@ export function RequireAuth() {
     );
   }
 
-  // Se não houver usuário autenticado, redireciona para a página de autenticação
+  // Se não houver usuário autenticado, redireciona para a página inicial
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // Se houver usuário autenticado, renderiza a rota protegida
