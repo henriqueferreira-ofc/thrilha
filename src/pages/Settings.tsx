@@ -50,13 +50,29 @@ const Settings = () => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [testingConnection, setTestingConnection] = useState(false);
   const [bucketsList, setBucketsList] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     if (user && isInitialLoad) {
       loadUserPreferences();
+      
+      // Verificar se existe avatar local armazenado
+      if (!avatarUrl) {
+        try {
+          const localAvatar = localStorage.getItem(`avatar_${user.id}`);
+          if (localAvatar) {
+            console.log('Avatar local encontrado');
+            setAvatarUrl(localAvatar);
+          }
+        } catch (error) {
+          console.warn('Erro ao verificar avatar local:', error);
+        }
+      }
+      
       setIsInitialLoad(false);
     }
-  }, [user, isInitialLoad]);
+  }, [user, isInitialLoad, avatarUrl]);
   
   // Adicionar listener para mudanças no perfil
   useEffect(() => {
@@ -67,7 +83,12 @@ const Settings = () => {
       try {
         // Limpar qualquer canal existente antes de criar um novo
         if (channel) {
-          await supabase.removeChannel(channel);
+          try {
+            await supabase.removeChannel(channel);
+            console.log('Canal anterior removido com sucesso');
+          } catch (removeError) {
+            console.warn('Erro ao remover canal anterior:', removeError);
+          }
         }
 
         channel = supabase
@@ -81,27 +102,39 @@ const Settings = () => {
               filter: `id=eq.${user.id}`,
             },
             (payload: RealtimePostgresChangesPayload<ProfileChanges>) => {
-              const newProfile = payload.new as ProfileChanges;
-              if (newProfile && newProfile.avatar_url !== undefined) {
-                const newUrl = newProfile.avatar_url + '?t=' + new Date().getTime();
-                console.log('Avatar atualizado via realtime:', newUrl);
-                setAvatarUrl(newUrl);
+              try {
+                const newProfile = payload.new as ProfileChanges;
+                if (newProfile && newProfile.avatar_url !== undefined) {
+                  const newUrl = newProfile.avatar_url + '?t=' + new Date().getTime();
+                  console.log('Avatar atualizado via realtime:', newUrl);
+                  setAvatarUrl(newUrl);
+                }
+              } catch (error) {
+                console.error('Erro ao processar payload do canal:', error);
               }
             }
           );
 
         // Iniciar a assinatura do canal
-        const status = await channel.subscribe((status) => {
-          console.log(`Status do canal settings: ${status}`);
-          if (status === 'CHANNEL_ERROR') {
-            console.error('Erro no canal realtime settings, tentando reconectar...');
-            setTimeout(() => setupChannel(), 5000);
-          }
-        });
+        try {
+          const status = await channel.subscribe((status) => {
+            console.log(`Status do canal settings: ${status}`);
+            if (status === 'CHANNEL_ERROR') {
+              console.error('Erro no canal realtime settings, tentando reconectar...');
+              setTimeout(() => setupChannel(), 5000);
+            }
+          });
 
-        console.log('Status da inscrição settings:', status);
+          console.log('Status da inscrição settings:', status);
+        } catch (subscribeError) {
+          console.error('Erro ao inscrever no canal:', subscribeError);
+          // Tentar novamente após um tempo
+          setTimeout(() => setupChannel(), 5000);
+        }
       } catch (error) {
         console.error('Erro ao configurar canal realtime settings:', error);
+        // Tentar novamente após um tempo
+        setTimeout(() => setupChannel(), 5000);
       }
     };
 
@@ -298,43 +331,235 @@ const Settings = () => {
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.target as HTMLImageElement;
+    const currentUrl = target.src;
+    console.error('Erro ao carregar imagem de avatar:', {
+      url: currentUrl,
+      userId: user?.id
+    });
+
+    // Verificar se a URL contém 'retry' para evitar loops infinitos
+    if (currentUrl.includes('retry')) {
+      console.log('Já tentamos recarregar, usando fallback...');
+      
+      // Tentar usar o avatar local
+      try {
+        const localAvatar = localStorage.getItem(`avatar_${user?.id}`);
+        if (localAvatar) {
+          console.log('Usando avatar local após erro');
+          target.src = localAvatar;
+          setAvatarUrl(localAvatar);
+          return;
+        }
+      } catch (localError) {
+        console.warn('Erro ao recuperar avatar local:', localError);
+      }
+
+      // Se não houver avatar local, usar DiceBear como último recurso
+      if (user?.id) {
+        const diceBearUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${user.id}`;
+        console.log('Usando avatar DiceBear como fallback');
+        target.src = diceBearUrl;
+        setAvatarUrl(diceBearUrl);
+        return;
+      }
+
+      // Se tudo falhar, limpar a URL
+      target.src = '';
+      setAvatarUrl(null);
+      toast.error('Não foi possível carregar seu avatar. Tente fazer upload novamente.');
+      return;
+    }
+
+    // Tentar recarregar com novo timestamp
     try {
-      setUploadingAvatar(true);
-      
-      const file = event.target.files?.[0];
-      if (!file || !user) return;
-
-      // Validar tipo de arquivo
-      if (!file.type.startsWith('image/')) {
-        toast.error('Por favor, selecione uma imagem válida');
-        return;
-      }
-
-      // Validar tamanho (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error('A imagem deve ter no máximo 2MB');
-        return;
-      }
-
-      toast.info('Fazendo upload do avatar...');
-      
-      // Fazer upload do avatar usando a função do contexto
-      const publicUrl = await uploadAvatar(file);
-      console.log('Avatar enviado com sucesso, URL:', publicUrl);
-      
-      // Atualizar o perfil com a nova URL
-      await updateProfile({ avatar_url: publicUrl });
-      
-      // Atualizar o estado local
-      setAvatarUrl(publicUrl);
-      
-      toast.success('Avatar atualizado com sucesso');
+      const newTimestamp = new Date().getTime();
+      const baseUrl = currentUrl.split('?')[0];
+      const newUrl = `${baseUrl}?t=${newTimestamp}&retry=true`;
+      console.log('Tentando recarregar com novo timestamp:', newUrl);
+      target.src = newUrl;
     } catch (error) {
-      console.error('Erro detalhado ao atualizar avatar:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
+      console.error('Erro ao tentar recarregar avatar:', error);
+      // Se falhar, tentar usar o avatar local
+      try {
+        const localAvatar = localStorage.getItem(`avatar_${user?.id}`);
+        if (localAvatar) {
+          console.log('Usando avatar local após erro no recarregamento');
+          target.src = localAvatar;
+          setAvatarUrl(localAvatar);
+        }
+      } catch (localError) {
+        console.warn('Erro ao recuperar avatar local:', localError);
+      }
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!e.target.files || !e.target.files[0]) {
+        console.log('Nenhum arquivo selecionado');
+        return;
+      }
+
+      const file = e.target.files[0];
+      console.log('Arquivo selecionado:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+
+      // Validar tipo e tamanho do arquivo
+      if (!file.type.startsWith('image/')) {
+        console.error('Tipo de arquivo inválido:', file.type);
+        throw new Error('Tipo de arquivo inválido. Apenas imagens são permitidas.');
+      }
+
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        console.error('Arquivo muito grande:', file.size);
+        throw new Error('Arquivo muito grande. Tamanho máximo permitido é 5MB.');
+      }
+
+      setIsUploading(true);
+      setError(null);
+
+      // Gerar um nome de arquivo único
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
+
+      console.log('Iniciando upload do avatar:', {
+        fileName,
+        userId: user?.id
+      });
+
+      // Primeiro, tentar remover o avatar antigo se existir
+      if (avatarUrl) {
+        try {
+          const oldPath = avatarUrl.split('/').pop()?.split('?')[0];
+          if (oldPath) {
+            const { error: deleteError } = await supabase.storage
+              .from('avatars')
+              .remove([oldPath]);
+            
+            if (deleteError) {
+              console.warn('Erro ao remover avatar antigo:', deleteError);
+            } else {
+              console.log('Avatar antigo removido com sucesso');
+            }
+          }
+        } catch (deleteError) {
+          console.warn('Erro ao tentar remover avatar antigo:', deleteError);
+        }
+      }
+
+      // Fazer upload do novo arquivo
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error('Erro no upload:', {
+          error: uploadError,
+          fileName,
+          userId: user?.id
+        });
+        throw new Error('Erro ao fazer upload da imagem');
+      }
+
+      // Obter a URL pública do arquivo
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      console.log('Upload concluído. URL pública:', publicUrl);
+
+      // Atualizar o perfil com a nova URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          avatar_url: fileName, // Armazenar apenas o nome do arquivo
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user?.id);
+
+      if (updateError) {
+        console.error('Erro ao atualizar perfil:', {
+          error: updateError,
+          userId: user?.id,
+          avatarUrl: publicUrl
+        });
+        throw new Error('Erro ao atualizar perfil');
+      }
+
+      console.log('Perfil atualizado com sucesso:', {
+        userId: user?.id,
+        avatarUrl: publicUrl
+      });
+
+      // Armazenar localmente para cache
+      try {
+        localStorage.setItem(`avatar_${user?.id}`, publicUrl);
+        console.log('Avatar armazenado localmente');
+      } catch (storageError) {
+        console.warn('Erro ao armazenar avatar localmente:', storageError);
+      }
+
+      // Atualizar o estado com a nova URL
+      setAvatarUrl(publicUrl);
+      toast.success('Avatar atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro no handleAvatarChange:', error);
+      setError(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
+      toast.error('Erro ao atualizar avatar. Tente novamente.');
     } finally {
-      setUploadingAvatar(false);
+      setIsUploading(false);
+    }
+  };
+
+  const handleNameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const newName = e.target.value.trim();
+      console.log('Atualizando nome para:', newName);
+
+      if (!newName) {
+        throw new Error('Nome não pode estar vazio');
+      }
+
+      if (newName.length > 100) {
+        throw new Error('Nome muito longo. Máximo de 100 caracteres.');
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          full_name: newName,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user?.id);
+
+      if (error) {
+        console.error('Erro ao atualizar nome:', {
+          error,
+          userId: user?.id,
+          newName
+        });
+        throw new Error('Erro ao atualizar nome');
+      }
+
+      console.log('Nome atualizado com sucesso:', {
+        userId: user?.id,
+        newName
+      });
+
+      setFullName(newName);
+      toast.success('Nome atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro no handleNameChange:', error);
+      setError(error instanceof Error ? error.message : 'Erro ao atualizar nome');
+      toast.error('Erro ao atualizar nome. Tente novamente.');
     }
   };
 
@@ -348,7 +573,9 @@ const Settings = () => {
       
       if (error) {
         console.error('Erro ao listar buckets:', error);
-        toast.error('Erro ao conectar com Supabase Storage');
+        toast.error(`Erro ao conectar com Supabase Storage: ${error.message}`);
+        // Mostar informações de fallback
+        toast.info('Usando modo de avatar local como alternativa');
         return;
       }
       
@@ -358,12 +585,35 @@ const Settings = () => {
       // Verificar se o bucket 'avatars' existe
       const avatarBucket = buckets.find(b => b.name === 'avatars');
       if (!avatarBucket) {
-        console.error('Bucket de avatares não encontrado!');
-        toast.error('Bucket de avatares não encontrado');
-        return;
+        console.error('Bucket de avatares não encontrado! Tentando criar...');
+        toast.info('Bucket de avatares não encontrado. Tentando criar...');
+        
+        try {
+          // Tentar criar o bucket
+          const { data: createData, error: createError } = await supabase.storage.createBucket('avatars', {
+            public: true,
+            fileSizeLimit: 2097152 // 2MB
+          });
+          
+          if (createError) {
+            console.error('Erro ao criar bucket de avatares:', createError);
+            toast.error(`Não foi possível criar o bucket de avatares: ${createError.message}`);
+            return;
+          }
+          
+          console.log('Bucket de avatares criado com sucesso:', createData);
+          toast.success('Bucket de avatares criado com sucesso!');
+          
+          // Atualizar a lista de buckets
+          setBucketsList(prev => [...prev, 'avatars']);
+        } catch (createErr) {
+          console.error('Exceção ao criar bucket:', createErr);
+          toast.error('Erro ao criar bucket de avatares');
+          return;
+        }
+      } else {
+        toast.success('Conexão com Supabase OK');
       }
-      
-      toast.success('Conexão com Supabase OK');
       
       // Listar arquivos no bucket de avatars
       const { data: files, error: filesError } = await supabase.storage
@@ -407,6 +657,11 @@ const Settings = () => {
         saveUsername();
       }
     };
+    
+    // Função para verificar se URL é base64
+    const isBase64Image = (url: string) => {
+      return url?.startsWith('data:image/');
+    };
 
     return (
       <div>
@@ -417,18 +672,10 @@ const Settings = () => {
               <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-800 border-2 border-purple-400 flex items-center justify-center">
                 {avatarUrl ? (
                   <img 
-                    src={avatarUrl}
+                    src={avatarUrl} 
                     alt="Avatar" 
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.error('Erro ao carregar imagem de avatar nas configurações:', e);
-                      const target = e.target as HTMLImageElement;
-                      target.src = '';
-                      setAvatarUrl(null);
-                      
-                      // Exibir mensagem de erro para o usuário
-                      toast.error('Não foi possível carregar seu avatar. Tente fazer upload novamente.');
-                    }}
+                    onError={handleAvatarError}
                     loading="lazy"
                   />
                 ) : (
@@ -445,14 +692,19 @@ const Settings = () => {
                   id="avatar-upload"
                   className="hidden"
                   accept="image/*"
-                  onChange={handleAvatarUpload}
-                  disabled={uploadingAvatar}
+                  onChange={handleAvatarChange}
+                  disabled={isUploading}
                 />
               </label>
             </div>
-            {uploadingAvatar && <p className="text-sm text-gray-400">Enviando...</p>}
+            {isUploading && <p className="text-sm text-gray-400">Enviando...</p>}
+            {avatarUrl && isBase64Image(avatarUrl) && (
+              <div className="text-amber-300 text-xs text-center max-w-xs">
+                <p>Avatar salvo localmente. Será perdido se você limpar o cache do navegador.</p>
+              </div>
+            )}
             
-            <div className="w-full flex justify-center mt-2">
+            <div className="w-full flex justify-center mt-2 gap-2">
               <Button 
                 variant="outline" 
                 size="sm"
@@ -469,6 +721,39 @@ const Settings = () => {
                   'Testar conexão'
                 )}
               </Button>
+              
+              {!bucketsList.includes('avatars') && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      setTestingConnection(true);
+                      const { data, error } = await supabase.storage.createBucket('avatars', {
+                        public: true,
+                        fileSizeLimit: 2097152 // 2MB
+                      });
+                      
+                      if (error) {
+                        console.error('Erro ao criar bucket:', error);
+                        toast.error('Não foi possível criar o bucket de avatares');
+                        return;
+                      }
+                      
+                      toast.success('Bucket avatars criado com sucesso!');
+                      setBucketsList(prev => [...prev, 'avatars']);
+                    } catch (error) {
+                      console.error('Erro ao criar bucket:', error);
+                      toast.error('Erro ao criar bucket de avatares');
+                    } finally {
+                      setTestingConnection(false);
+                    }
+                  }}
+                  className="text-xs"
+                >
+                  Criar Bucket
+                </Button>
+              )}
             </div>
             
             {bucketsList.length > 0 && (

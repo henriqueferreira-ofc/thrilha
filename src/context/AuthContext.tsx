@@ -151,78 +151,94 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('A imagem deve ter no máximo 2MB');
       }
 
-      // Gerar nome de arquivo único
-      const fileExt = file.name.split('.').pop();
-      const uniqueId = Math.random().toString(36).substring(2, 10);
-      const fileName = `${user.id}_${Date.now()}_${uniqueId}.${fileExt}`;
-
-      console.log('Iniciando upload do avatar:', fileName);
-
-      // Verificar se o bucket existe
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      // 1. Converter o arquivo para base64 para uso local
+      const base64 = await fileToBase64(file);
+      console.log('Arquivo convertido para base64', base64.substring(0, 50) + '...');
       
-      if (bucketsError) {
-        console.error('Erro ao verificar buckets:', bucketsError);
-        throw bucketsError;
-      }
-      
-      if (!buckets.some(b => b.name === 'avatars')) {
-        console.error('O bucket "avatars" não existe');
-        throw new Error('Bucket de avatares não encontrado');
+      // Sempre salvar em localStorage como fallback
+      try {
+        localStorage.setItem(`avatar_${user.id}`, base64);
+        console.log('Avatar salvo localmente no localStorage');
+      } catch (localError) {
+        console.warn('Não foi possível salvar o avatar localmente:', localError);
       }
 
-      // Upload do arquivo com retry
-      let uploadError = null;
-      let uploadAttempt = 0;
-      const maxAttempts = 3;
+      // 2. Tentar usar Supabase Storage se disponível
+      console.log('Tentando fazer upload da imagem para o Supabase Storage...');
       
-      while (uploadAttempt < maxAttempts) {
-        uploadAttempt++;
-        console.log(`Tentativa de upload ${uploadAttempt}/${maxAttempts}`);
+      try {
+        // Verificar se o bucket avatars já existe
+        const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
         
-        const { error } = await supabase.storage
+        if (bucketsError) {
+          console.error('Erro ao listar buckets:', bucketsError);
+          throw new Error('Não foi possível acessar o Supabase Storage');
+        }
+        
+        // Verificar se o bucket 'avatars' existe
+        const avatarBucket = buckets.find(b => b.name === 'avatars');
+        
+        if (!avatarBucket) {
+          console.warn('Bucket "avatars" não encontrado - é necessário criar pelo painel admin');
+          throw new Error('Bucket de avatares não está configurado');
+        }
+        
+        // Gerar nome de arquivo único
+        const fileExt = file.name.split('.').pop();
+        const uniqueId = Math.random().toString(36).substring(2, 10);
+        const fileName = `${user.id}_${Date.now()}_${uniqueId}.${fileExt}`;
+        
+        // Tentar fazer o upload direto
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(fileName, file, {
             cacheControl: 'no-cache',
             upsert: true
           });
           
-        if (!error) {
-          uploadError = null;
-          break;
+        if (uploadError) {
+          console.error('Erro ao fazer upload:', uploadError);
+          throw uploadError;
         }
+
+        // Obter URL pública com parâmetro de timestamp para evitar cache
+        const timestamp = new Date().getTime();
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+
+        // Adicionar timestamp à URL para evitar cache
+        const urlWithTimestamp = `${publicUrl}?t=${timestamp}`;
+        console.log('URL pública gerada:', urlWithTimestamp);
+
+        return urlWithTimestamp;
         
-        uploadError = error;
+      } catch (storageError) {
+        // Se falhar o upload para o Supabase, usar a URL alternativa
+        console.warn('Usando método alternativo para avatar devido a:', storageError);
         
-        // Esperar antes de tentar novamente
-        if (uploadAttempt < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+        // Criar uma URL temporária usando DiceBear
+        const fallbackUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${user.id}`;
+        console.log('URL alternativa gerada:', fallbackUrl);
+        
+        return fallbackUrl;
       }
       
-      if (uploadError) {
-        console.error('Falha no upload após múltiplas tentativas:', uploadError);
-        throw uploadError;
-      }
-
-      console.log('Upload concluído com sucesso, obtendo URL pública');
-
-      // Obter URL pública com parâmetro de timestamp para evitar cache
-      const timestamp = new Date().getTime();
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      // Adicionar timestamp à URL para evitar cache
-      const urlWithTimestamp = `${publicUrl}?t=${timestamp}`;
-      console.log('URL pública gerada:', urlWithTimestamp);
-
-      return urlWithTimestamp;
     } catch (error: unknown) {
       console.error('Erro detalhado ao fazer upload da imagem:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao fazer upload da imagem');
       throw error;
     }
+  };
+
+  // Função auxiliar para converter File para base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
   };
 
   const updateProfile = async (data: { avatar_url?: string }) => {
