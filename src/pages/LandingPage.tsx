@@ -26,6 +26,19 @@ const LandingPage = () => {
     window.location.href = "/#/auth";
   };
   
+  // Função para rolar suavemente até a seção de features
+  const scrollToFeatures = (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.getElementById('features')?.scrollIntoView({ 
+      behavior: 'smooth' 
+    });
+  };
+  
+  // Função para ir para o dashboard de tarefas
+  const goToTasks = () => {
+    window.location.href = "/#/tasks";
+  };
+  
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       {/* Navigation */}
@@ -37,9 +50,9 @@ const LandingPage = () => {
         <Button 
           variant="outline" 
           className="border-purple-300 text-purple-300 hover:bg-purple-300/10"
-          onClick={goToLoginPage}
+          onClick={user ? goToTasks : goToLoginPage}
         >
-          Login
+          {user ? 'Minhas Tarefas' : 'Login'}
         </Button>
       </nav>
 
@@ -56,15 +69,17 @@ const LandingPage = () => {
           <div className="flex gap-4 pt-4">
             <Button 
               className="purple-gradient-bg text-white px-8 py-6 text-lg"
-              onClick={goToLoginPage}
+              onClick={user ? goToTasks : goToLoginPage}
             >
-              Teste Grátis
+              {user ? 'Minhas Tarefas' : 'Teste Grátis'}
             </Button>
-            <a href="#features">
-              <Button variant="outline" className="text-white border-white/20 bg-white/5 px-8 py-6 text-lg">
-                Saiba Mais
-              </Button>
-            </a>
+            <Button 
+              variant="outline" 
+              className="text-white border-white/20 bg-white/5 px-8 py-6 text-lg"
+              onClick={scrollToFeatures}
+            >
+              Saiba Mais
+            </Button>
           </div>
         </div>
 
