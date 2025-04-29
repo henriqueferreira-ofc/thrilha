@@ -143,9 +143,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw bucketsError;
         }
         
-        if (!buckets.some(b => b.name === 'avatars')) {
-          console.log('Bucket avatars não encontrado, tentando criar...');
-          const { error: createBucketError } = await supabase.storage.createBucket('avatars', { 
+        if (!buckets.some(b => b.name === 'avatares')) {
+          console.log('Bucket avatares não encontrado, tentando criar...');
+          const { error: createBucketError } = await supabase.storage.createBucket('avatares', { 
             public: true,
             fileSizeLimit: 3145728
           });
@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log(`Tentativa de upload ${uploadAttempt}/${maxAttempts}`);
         
         const { error } = await supabase.storage
-          .from('avatars')
+          .from('avatares')
           .upload(filePath, file, {
             cacheControl: '3600',
             upsert: true
@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const timestamp = new Date().getTime();
       const { data: publicURLData } = supabase.storage
-        .from('avatars')
+        .from('avatares')
         .getPublicUrl(filePath);
 
       if (!publicURLData || !publicURLData.publicUrl) {

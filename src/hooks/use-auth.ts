@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase/client';
 
@@ -28,4 +29,4 @@ export function useAuth() {
       supabase.auth.signInWithPassword({ email, password }),
     signOut: () => supabase.auth.signOut(),
   };
-} 
+}

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
@@ -21,6 +21,13 @@ export function AvatarUpload({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(currentAvatarUrl);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const { uploadAvatar, updateProfile } = useAuth();
+
+  // Atualizar o avatarUrl quando o currentAvatarUrl mudar
+  useEffect(() => {
+    if (currentAvatarUrl !== avatarUrl) {
+      setAvatarUrl(currentAvatarUrl);
+    }
+  }, [currentAvatarUrl]);
 
   const sizeClasses = {
     sm: 'w-16 h-16',
@@ -105,7 +112,7 @@ export function AvatarUpload({
             src={avatarUrl} 
             alt="Avatar do usuário"
             className="object-cover"
-            onError={() => {
+            onError={(e) => {
               console.error('Erro ao carregar imagem do avatar');
               setAvatarUrl(null);
               toast.error('Não foi possível carregar a imagem');

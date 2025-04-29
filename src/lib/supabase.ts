@@ -1,15 +1,7 @@
 
-import { createClient } from '@supabase/supabase-js';
+// Este arquivo está sendo mantido para evitar quebrar imports existentes
+// Mas estamos usando o cliente do arquivo src/supabase/client.ts
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import { supabase } from '../supabase/client';
 
-// Criar uma única instância do cliente Supabase
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false,
-        storage: localStorage
-    }
-});
+export { supabase };
