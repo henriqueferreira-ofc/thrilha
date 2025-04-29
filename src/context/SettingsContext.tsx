@@ -22,7 +22,7 @@ interface SettingsContextType {
   avatarUrl: string | null;
   loading: boolean;
   saving: boolean;
-  user: User | null; // Add user property
+  user: User | null; // Added user property to match what AccountSettings expects
   saveUserPreference: (key: string, value: boolean) => Promise<void>;
   saveUsername: () => Promise<void>;
   setUsername: React.Dispatch<React.SetStateAction<string>>;

@@ -18,7 +18,7 @@ export function AccountSettings() {
     testSupabaseConnection, 
     testingConnection, 
     bucketsList,
-    user
+    user // This should now be recognized correctly
   } = useSettings();
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
