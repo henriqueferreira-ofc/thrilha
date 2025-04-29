@@ -21,14 +21,5 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-cache',
     },
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 5
-    },
-    timeout: 30000
-  },
-  db: {
-    schema: 'public'
   }
 });
