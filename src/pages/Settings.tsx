@@ -199,17 +199,16 @@ const Settings = () => {
 
       if (profileData.avatar_url) {
         console.log('Avatar URL encontrada:', profileData.avatar_url);
-        const avatarWithTimestamp = profileData.avatar_url + '?t=' + new Date().getTime();
-        console.log('Avatar URL com timestamp:', avatarWithTimestamp);
-        setAvatarUrl(avatarWithTimestamp);
+        const cleanUrl = profileData.avatar_url.split('?')[0];
+        console.log('URL limpa:', cleanUrl);
+        setAvatarUrl(cleanUrl);
       } else {
         const metadataAvatar = user.user_metadata?.avatar_url;
         console.log('Avatar do metadata:', metadataAvatar);
         if (metadataAvatar) {
-          const metadataAvatarWithTimestamp = metadataAvatar + '?t=' + new Date().getTime();
-          setAvatarUrl(metadataAvatarWithTimestamp);
-        } else {
-          setAvatarUrl(null);
+          const cleanUrl = metadataAvatar.split('?')[0];
+          console.log('URL limpa do metadata:', cleanUrl);
+          setAvatarUrl(cleanUrl);
         }
       }
     } catch (error: unknown) {

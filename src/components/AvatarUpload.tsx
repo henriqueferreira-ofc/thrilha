@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { User, Upload, Loader2 } from 'lucide-react';
+import { ImageTest } from './ImageTest';
 
 interface AvatarUploadProps {
   currentAvatarUrl: string | null;
@@ -79,31 +79,27 @@ export function AvatarUpload({
       try {
         const publicUrl = await uploadAvatar(file);
         
-        // Atualizar o perfil com a URL do avatar
-        await updateProfile({ avatar_url: publicUrl });
-        
         // Revogar a URL local para liberar memória
         URL.revokeObjectURL(localPreview);
         
         // Atualizar a URL com a versão do servidor
         setAvatarUrl(publicUrl);
-        
         if (onAvatarChange) {
           onAvatarChange(publicUrl);
         }
         
         toast.success('Avatar atualizado com sucesso');
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Erro ao fazer upload:', error);
         // Não revogar a URL local em caso de erro para manter a visualização
         
-        setUploadError(error.message || 'Erro ao atualizar avatar');
-        toast.error(error.message || 'Erro ao atualizar avatar');
+        setUploadError(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
+        toast.error(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao fazer upload:', error);
-      setUploadError(error.message || 'Erro ao atualizar avatar');
-      toast.error(error.message || 'Erro ao atualizar avatar');
+      setUploadError(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
+      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
       
       // Restaurar avatar anterior em caso de erro
       setAvatarUrl(currentAvatarUrl);
@@ -114,28 +110,19 @@ export function AvatarUpload({
 
   return (
     <div className="relative inline-block">
-      <Avatar className={`${sizeClasses[size]} bg-black border-2 border-purple-500`}>
+      <div className={`${sizeClasses[size]} relative rounded-full overflow-hidden bg-black border-2 border-purple-500`}>
         {avatarUrl ? (
-          <AvatarImage 
-            src={avatarUrl} 
-            alt="Avatar do usuário"
-            className="object-cover"
-            onError={(e) => {
-              console.error('Erro ao carregar imagem do avatar');
-              // Não limpar o avatar, apenas logar o erro
-              toast.error('Não foi possível carregar a imagem');
-            }}
-          />
+          <ImageTest imageUrl={avatarUrl} />
         ) : (
-          <AvatarFallback className="bg-gray-800">
+          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
             {uploading ? (
               <Loader2 className={`${iconSizes[size]} text-gray-400 animate-spin`} />
             ) : (
               <User className={`${iconSizes[size]} text-gray-400`} />
             )}
-          </AvatarFallback>
+          </div>
         )}
-      </Avatar>
+      </div>
       
       <label 
         htmlFor="avatar-upload" 

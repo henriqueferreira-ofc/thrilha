@@ -169,9 +169,7 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
         }
         
         if (profile.avatar_url) {
-          const avatarWithTimestamp = profile.avatar_url + '?t=' + new Date().getTime();
-          console.log('Avatar URL com timestamp:', avatarWithTimestamp);
-          setAvatarUrl(avatarWithTimestamp);
+          setAvatarUrl(profile.avatar_url);
         } else {
           setAvatarUrl(null);
         }
