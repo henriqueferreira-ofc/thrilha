@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../supabase/client';
@@ -153,22 +154,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Gerar nome de arquivo único
       const fileExt = file.name.split('.').pop();
-      const uniqueId = Math.random().toString(36).substring(2, 10);
-      const fileName = `${user.id}_${Date.now()}_${uniqueId}.${fileExt}`;
+      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
-      console.log('Iniciando upload do avatar:', fileName);
+      console.log('Iniciando upload do avatar:', filePath);
 
-      // Verificar se o bucket existe
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      
-      if (bucketsError) {
-        console.error('Erro ao verificar buckets:', bucketsError);
-        throw bucketsError;
-      }
-      
-      if (!buckets.some(b => b.name === 'avatars')) {
-        console.error('O bucket "avatars" não existe');
-        throw new Error('Bucket de avatares não encontrado');
+      // Criar bucket se não existir
+      try {
+        const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+        
+        if (bucketsError) {
+          console.error('Erro ao verificar buckets:', bucketsError);
+          throw bucketsError;
+        }
+        
+        // Se o bucket 'avatars' não existir, tentar criá-lo
+        if (!buckets.some(b => b.name === 'avatars')) {
+          console.log('Bucket avatars não encontrado, tentando criar...');
+          try {
+            // Tentar criar bucket (isso requer permissões admin/service_role)
+            const { error: createBucketError } = await supabase.storage.createBucket('avatars', { 
+              public: true,
+              fileSizeLimit: 3145728 // 3MB
+            });
+            
+            if (createBucketError) {
+              console.error('Erro ao criar bucket:', createBucketError);
+              throw new Error('Não foi possível criar o bucket de avatares. Entre em contato com o administrador.');
+            }
+          } catch (createError) {
+            console.error('Erro ao tentar criar bucket:', createError);
+            throw new Error('Bucket de avatares não encontrado e não foi possível criá-lo.');
+          }
+        }
+      } catch (bucketCheckError) {
+        console.error('Erro ao verificar/criar bucket:', bucketCheckError);
+        // Continuar tentando fazer upload mesmo assim
       }
 
       // Upload do arquivo com retry
@@ -182,8 +203,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const { error } = await supabase.storage
           .from('avatars')
-          .upload(fileName, file, {
-            cacheControl: 'no-cache',
+          .upload(filePath, file, {
+            cacheControl: '3600',
             upsert: true
           });
           
@@ -193,6 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         uploadError = error;
+        console.error(`Erro na tentativa ${uploadAttempt}:`, error);
         
         // Esperar antes de tentar novamente
         if (uploadAttempt < maxAttempts) {
@@ -209,12 +231,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Obter URL pública com parâmetro de timestamp para evitar cache
       const timestamp = new Date().getTime();
-      const { data: { publicUrl } } = supabase.storage
+      const { data: publicURLData } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
+
+      if (!publicURLData || !publicURLData.publicUrl) {
+        throw new Error('Erro ao gerar URL pública para o avatar');
+      }
 
       // Adicionar timestamp à URL para evitar cache
-      const urlWithTimestamp = `${publicUrl}?t=${timestamp}`;
+      const urlWithTimestamp = `${publicURLData.publicUrl}?t=${timestamp}`;
       console.log('URL pública gerada:', urlWithTimestamp);
 
       return urlWithTimestamp;
@@ -229,19 +255,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       if (!user) throw new Error('Usuário não autenticado');
 
-      const { error } = await supabase
+      // Verificar se o perfil já existe
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          avatar_url: data.avatar_url,
-          updated_at: new Date().toISOString(),
-        });
-
-      if (error) throw error;
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Erro ao verificar perfil:', fetchError);
+        throw fetchError;
+      }
+      
+      let operation;
+      
+      // Se o perfil existe, atualizar. Caso contrário, criar novo
+      if (existingProfile) {
+        operation = supabase
+          .from('profiles')
+          .update({
+            avatar_url: data.avatar_url,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', user.id);
+      } else {
+        // Criar novo perfil se não existir
+        operation = supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            avatar_url: data.avatar_url,
+            username: user.email?.split('@')[0] || `user_${user.id.substring(0, 8)}`,
+            updated_at: new Date().toISOString(),
+          });
+      }
+      
+      const { error: updateError } = await operation;
+      
+      if (updateError) {
+        console.error('Erro ao atualizar/criar perfil:', updateError);
+        throw updateError;
+      }
 
       toast.success('Perfil atualizado com sucesso!');
     } catch (error: unknown) {
-      toast.error('Erro ao atualizar perfil');
+      console.error('Erro completo ao atualizar perfil:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar perfil');
       throw error;
     }
   };

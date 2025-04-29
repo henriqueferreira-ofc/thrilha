@@ -15,8 +15,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Card } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { CollaborationSettings } from '../components/CollaborationSettings';
+import { AvatarUpload } from "@/components/AvatarUpload";
 
-// As preferências padrão do usuário
 const defaultPreferences: UserPreferences = {
   darkMode: true,
   compactMode: false,
@@ -58,14 +58,12 @@ const Settings = () => {
     }
   }, [user, isInitialLoad]);
   
-  // Adicionar listener para mudanças no perfil
   useEffect(() => {
     if (!user) return;
 
     let channel;
     const setupChannel = async () => {
       try {
-        // Limpar qualquer canal existente antes de criar um novo
         if (channel) {
           await supabase.removeChannel(channel);
         }
@@ -90,7 +88,6 @@ const Settings = () => {
             }
           );
 
-        // Iniciar a assinatura do canal
         const status = await channel.subscribe((status) => {
           console.log(`Status do canal settings: ${status}`);
           if (status === 'CHANNEL_ERROR') {
@@ -107,7 +104,6 @@ const Settings = () => {
 
     setupChannel();
 
-    // Limpeza quando o componente é desmontado
     return () => {
       if (channel) {
         supabase.removeChannel(channel).catch(err => {
@@ -127,7 +123,6 @@ const Settings = () => {
       setLoading(true);
       console.log('Iniciando carregamento das preferências para o usuário:', user.id);
       
-      // Primeiro, carregar os dados do perfil
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('preferences, username, avatar_url')
@@ -136,7 +131,6 @@ const Settings = () => {
       
       if (profileError) {
         console.error('Erro ao buscar perfil:', profileError);
-        // Se for erro de perfil não encontrado, criar um novo
         if (profileError.code === 'PGRST116') {
           console.log('Perfil não encontrado, criando novo perfil');
           const { error: insertError } = await supabase
@@ -183,7 +177,6 @@ const Settings = () => {
       
       console.log('Dados do perfil carregados:', profileData);
       
-      // Parse das preferências com tratamento de erro
       let userPrefs = defaultPreferences;
       try {
         if (profileData.preferences) {
@@ -204,14 +197,12 @@ const Settings = () => {
       
       setUsername(profileData.username || '');
 
-      // Se tiver avatar_url no perfil, usar ela
       if (profileData.avatar_url) {
         console.log('Avatar URL encontrada:', profileData.avatar_url);
         const avatarWithTimestamp = profileData.avatar_url + '?t=' + new Date().getTime();
         console.log('Avatar URL com timestamp:', avatarWithTimestamp);
         setAvatarUrl(avatarWithTimestamp);
       } else {
-        // Se não tiver, tentar pegar do user metadata
         const metadataAvatar = user.user_metadata?.avatar_url;
         console.log('Avatar do metadata:', metadataAvatar);
         if (metadataAvatar) {
@@ -224,7 +215,6 @@ const Settings = () => {
     } catch (error: unknown) {
       console.error('Erro detalhado ao carregar preferências:', error);
       toast.error('Não foi possível carregar suas preferências. Por favor, tente novamente.');
-      // Não tentar recarregar automaticamente para evitar loops
     } finally {
       setLoading(false);
     }
@@ -236,7 +226,6 @@ const Settings = () => {
     try {
       setSaving(true);
       
-      // Atualizar estado local primeiro
       setPreferences(prev => ({
         ...prev,
         [key]: value
@@ -247,7 +236,6 @@ const Settings = () => {
         [key]: value
       };
       
-      // Tentar salvar no banco de dados
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -257,7 +245,6 @@ const Settings = () => {
       
       if (error) {
         console.error('Erro ao salvar preferência:', error);
-        // Reverter estado local em caso de erro
         setPreferences(prev => ({
           ...prev,
           [key]: !value
@@ -298,43 +285,11 @@ const Settings = () => {
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUrlChange = async (url: string) => {
     try {
-      setUploadingAvatar(true);
-      
-      const file = event.target.files?.[0];
-      if (!file || !user) return;
-
-      // Validar tipo de arquivo
-      if (!file.type.startsWith('image/')) {
-        toast.error('Por favor, selecione uma imagem válida');
-        return;
-      }
-
-      // Validar tamanho (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error('A imagem deve ter no máximo 2MB');
-        return;
-      }
-
-      toast.info('Fazendo upload do avatar...');
-      
-      // Fazer upload do avatar usando a função do contexto
-      const publicUrl = await uploadAvatar(file);
-      console.log('Avatar enviado com sucesso, URL:', publicUrl);
-      
-      // Atualizar o perfil com a nova URL
-      await updateProfile({ avatar_url: publicUrl });
-      
-      // Atualizar o estado local
-      setAvatarUrl(publicUrl);
-      
-      toast.success('Avatar atualizado com sucesso');
+      setAvatarUrl(url);
     } catch (error) {
-      console.error('Erro detalhado ao atualizar avatar:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
-    } finally {
-      setUploadingAvatar(false);
+      console.error('Erro ao atualizar avatar URL no state:', error);
     }
   };
 
@@ -343,7 +298,6 @@ const Settings = () => {
       setTestingConnection(true);
       
       console.log('Testando conexão com Supabase...');
-      // Verificar buckets disponíveis
       const { data: buckets, error } = await supabase.storage.listBuckets();
       
       if (error) {
@@ -355,7 +309,6 @@ const Settings = () => {
       console.log('Buckets disponíveis:', buckets);
       setBucketsList(buckets.map(b => b.name));
       
-      // Verificar se o bucket 'avatars' existe
       const avatarBucket = buckets.find(b => b.name === 'avatars');
       if (!avatarBucket) {
         console.error('Bucket de avatares não encontrado!');
@@ -365,7 +318,6 @@ const Settings = () => {
       
       toast.success('Conexão com Supabase OK');
       
-      // Listar arquivos no bucket de avatars
       const { data: files, error: filesError } = await supabase.storage
         .from('avatars')
         .list();
@@ -413,44 +365,11 @@ const Settings = () => {
         <h2 className="text-xl text-purple-400 mb-6">Configurações da Conta</h2>
         <div className="space-y-6">
           <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-800 border-2 border-purple-400 flex items-center justify-center">
-                {avatarUrl ? (
-                  <img 
-                    src={avatarUrl}
-                    alt="Avatar" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.error('Erro ao carregar imagem de avatar nas configurações:', e);
-                      const target = e.target as HTMLImageElement;
-                      target.src = '';
-                      setAvatarUrl(null);
-                      
-                      // Exibir mensagem de erro para o usuário
-                      toast.error('Não foi possível carregar seu avatar. Tente fazer upload novamente.');
-                    }}
-                    loading="lazy"
-                  />
-                ) : (
-                  <User className="w-12 h-12 text-gray-400" />
-                )}
-              </div>
-              <label 
-                htmlFor="avatar-upload" 
-                className="absolute bottom-0 right-0 p-1 bg-purple-600 rounded-full cursor-pointer hover:bg-purple-700 transition-colors"
-              >
-                <Upload className="w-4 h-4 text-white" />
-                <input
-                  type="file"
-                  id="avatar-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  disabled={uploadingAvatar}
-                />
-              </label>
-            </div>
-            {uploadingAvatar && <p className="text-sm text-gray-400">Enviando...</p>}
+            <AvatarUpload 
+              currentAvatarUrl={avatarUrl} 
+              onAvatarChange={handleAvatarUrlChange} 
+              size="lg" 
+            />
             
             <div className="w-full flex justify-center mt-2">
               <Button 

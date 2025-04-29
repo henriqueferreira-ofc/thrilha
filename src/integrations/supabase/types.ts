@@ -9,6 +9,119 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      collaborators: {
+        Row: {
+          collaborator_id: string
+          created_at: string | null
+          id: string
+          owner_id: string
+        }
+        Insert: {
+          collaborator_id: string
+          created_at?: string | null
+          id?: string
+          owner_id: string
+        }
+        Update: {
+          collaborator_id?: string
+          created_at?: string | null
+          id?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "work_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          owner_id: string
+          status: string
+          token: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          owner_id: string
+          status?: string
+          token: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          owner_id?: string
+          status?: string
+          token?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          content: Json
+          created_at: string | null
+          id: string
+          read: boolean | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string | null
+          id?: string
+          read?: boolean | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          id?: string
+          read?: boolean | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -65,6 +178,45 @@ export type Database = {
           },
         ]
       }
+      task_permissions: {
+        Row: {
+          created_at: string | null
+          group_id: string
+          id: string
+          permission_level: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          group_id: string
+          id?: string
+          permission_level: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string
+          id?: string
+          permission_level?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_permissions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "work_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_permissions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           created_at: string
@@ -98,13 +250,64 @@ export type Database = {
         }
         Relationships: []
       }
+      work_groups: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      collaborators_with_profiles: {
+        Row: {
+          collaborator_id: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          owner_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_task_collaborator: {
         Args: { p_task_id: string; p_user_id: string; p_added_by: string }
+        Returns: string
+      }
+      create_user_profile: {
+        Args: { user_id: string; user_name: string }
+        Returns: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          preferences: Json | null
+          updated_at: string
+          username: string | null
+        }
+      }
+      generate_invite_token: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       get_task_collaborators: {
