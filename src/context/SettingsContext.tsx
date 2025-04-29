@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { supabase } from '../supabase/client';
 import { useAuth } from './AuthContext';
 import { UserPreferences } from '@/types/common';
+import { User } from '@supabase/supabase-js';
 
 const defaultPreferences: UserPreferences = {
   darkMode: true,
@@ -21,6 +22,7 @@ interface SettingsContextType {
   avatarUrl: string | null;
   loading: boolean;
   saving: boolean;
+  user: User | null; // Add user property
   saveUserPreference: (key: string, value: boolean) => Promise<void>;
   saveUsername: () => Promise<void>;
   setUsername: React.Dispatch<React.SetStateAction<string>>;
@@ -282,6 +284,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     avatarUrl,
     loading,
     saving,
+    user, // Pass user to context
     saveUserPreference,
     saveUsername,
     setUsername,
