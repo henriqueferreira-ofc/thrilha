@@ -30,9 +30,5 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   db: {
     schema: 'public'
-  },
-  storage: {
-    retryAttempts: 3,
-    multipartMinSize: 5 * 1024 * 1024 // 5MB por parte no upload multipart
   }
 }); 

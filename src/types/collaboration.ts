@@ -1,3 +1,4 @@
+
 export type GroupRole = 'owner' | 'admin' | 'member';
 export type PermissionLevel = 'read' | 'write' | 'admin';
 
@@ -50,5 +51,15 @@ export interface Collaborator {
     collaborator_id: string;
     created_at: string;
     full_name: string;
+    email: string; // Added this missing property
+}
+
+export interface Invite {
+    id: string;
     email: string;
-} 
+    status: string;
+    created_at: string;
+    expires_at: string;
+    owner_id: string;
+    token: string;
+}

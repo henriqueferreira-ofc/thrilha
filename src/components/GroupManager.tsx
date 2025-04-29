@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useCollaboration } from '../hooks/useCollaboration';
 import { WorkGroup, GroupMember } from '../types/collaboration';
@@ -8,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 
 export function GroupManager() {
-    const { groups, loading, error, createGroup, addMember } = useCollaboration();
+    const { groups = [], loading, error, createGroup, addMember } = useCollaboration();
     const [newGroupName, setNewGroupName] = useState('');
     const [newGroupDescription, setNewGroupDescription] = useState('');
     const [selectedGroup, setSelectedGroup] = useState<WorkGroup | null>(null);
@@ -97,4 +98,4 @@ export function GroupManager() {
             )}
         </div>
     );
-} 
+}

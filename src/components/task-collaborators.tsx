@@ -28,7 +28,17 @@ export function TaskCollaborators({ taskId }: TaskCollaboratorsProps) {
   const loadCollaborators = async () => {
     try {
       const data = await getTaskCollaborators(taskId);
-      setCollaborators(data || []);
+      // Convert data to match TaskCollaborator type
+      const formattedCollaborators: TaskCollaborator[] = data.map(collab => ({
+        id: collab.id,
+        task_id: taskId,
+        user_id: collab.id,
+        added_at: new Date().toISOString(), // Use current date if not provided
+        added_by: '', // Use empty string if not provided
+        userEmail: collab.email,
+        userName: collab.full_name || collab.email.split('@')[0]
+      }));
+      setCollaborators(formattedCollaborators);
     } catch (error) {
       console.error('Erro ao carregar colaboradores:', error);
       toast.error('Não foi possível carregar os colaboradores');

@@ -1,25 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase/client';
-
-interface Collaborator {
-    id: string;
-    owner_id: string;
-    collaborator_id: string;
-    created_at: string;
-    full_name: string;
-}
-
-interface Invite {
-    id: string;
-    email: string;
-    status: string;
-    created_at: string;
-    expires_at: string;
-}
+import { WorkGroup, Collaborator, Invite } from '../types/collaboration';
 
 export function useCollaboration() {
     const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
     const [invites, setInvites] = useState<Invite[]>([]);
+    const [groups, setGroups] = useState<WorkGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -45,7 +31,7 @@ export function useCollaboration() {
             }
 
             // Agora buscar os colaboradores usando a view
-            const { data: collaborators, error } = await supabase
+            const { data: collaboratorsData, error } = await supabase
                 .from('collaborators_with_profiles')
                 .select('*')
                 .eq('owner_id', user.data.user.id);
@@ -55,8 +41,14 @@ export function useCollaboration() {
                 throw error;
             }
 
-            console.log('Colaboradores carregados:', collaborators);
-            setCollaborators(collaborators || []);
+            // Verificar se os dados dos colaboradores incluem o email
+            const processedCollaborators = (collaboratorsData || []).map((collab: any) => ({
+                ...collab,
+                email: collab.email || `usuário-${collab.collaborator_id.substring(0, 6)}@exemplo.com`
+            }));
+
+            console.log('Colaboradores carregados:', processedCollaborators);
+            setCollaborators(processedCollaborators || []);
         } catch (err) {
             console.error('Erro detalhado:', err);
             setError(err instanceof Error ? err.message : 'Erro ao carregar colaboradores');
@@ -73,7 +65,7 @@ export function useCollaboration() {
                 throw new Error('Usuário não autenticado');
             }
 
-            const { data: invites, error } = await supabase
+            const { data: invitesData, error } = await supabase
                 .from('invites')
                 .select('*')
                 .eq('owner_id', user.data.user.id)
@@ -84,9 +76,33 @@ export function useCollaboration() {
                 throw error;
             }
 
-            setInvites(invites || []);
+            setInvites(invitesData || []);
         } catch (err) {
             console.error('Erro ao carregar convites:', err);
+        }
+    };
+
+    // Carregar grupos de trabalho
+    const loadWorkGroups = async () => {
+        try {
+            const user = await supabase.auth.getUser();
+            if (!user.data.user) {
+                throw new Error('Usuário não autenticado');
+            }
+
+            const { data: groupsData, error } = await supabase
+                .from('work_groups')
+                .select('*')
+                .eq('created_by', user.data.user.id);
+
+            if (error) {
+                console.error('Erro ao carregar grupos:', error);
+                throw error;
+            }
+
+            setGroups(groupsData || []);
+        } catch (err) {
+            console.error('Erro ao carregar grupos:', err);
         }
     };
 
@@ -167,6 +183,59 @@ export function useCollaboration() {
         }
     };
 
+    // Criar novo grupo de trabalho
+    const createGroup = async (name: string, description?: string) => {
+        try {
+            const user = await supabase.auth.getUser();
+            if (!user.data.user) {
+                throw new Error('Usuário não autenticado');
+            }
+
+            const { data: group, error } = await supabase
+                .from('work_groups')
+                .insert({
+                    name,
+                    description,
+                    created_by: user.data.user.id
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // Atualizar a lista de grupos
+            setGroups(prev => [...prev, group]);
+            
+            return group;
+        } catch (err) {
+            console.error('Erro ao criar grupo:', err);
+            setError(err instanceof Error ? err.message : 'Erro ao criar grupo');
+            return null;
+        }
+    };
+
+    // Adicionar membro a um grupo
+    const addMember = async (groupId: string, userId: string, role: 'member' | 'admin' = 'member') => {
+        try {
+            const { data: member, error } = await supabase
+                .from('group_members')
+                .insert({
+                    group_id: groupId,
+                    user_id: userId,
+                    role
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return member;
+        } catch (err) {
+            console.error('Erro ao adicionar membro:', err);
+            setError(err instanceof Error ? err.message : 'Erro ao adicionar membro');
+            return null;
+        }
+    };
+
     // Remover colaborador
     const removeMember = async (collaboratorId: string) => {
         try {
@@ -197,15 +266,19 @@ export function useCollaboration() {
     useEffect(() => {
         loadCollaborators();
         loadInvites();
+        loadWorkGroups();
     }, []);
 
     return {
         collaborators,
         invites,
+        groups,
         loading,
         error,
         sendInvite,
         removeMember,
-        loadCollaborators
+        loadCollaborators,
+        createGroup,
+        addMember
     };
-} 
+}

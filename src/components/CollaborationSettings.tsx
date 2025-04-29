@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { X } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../supabase/client';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { Invite } from '@/types/collaboration';
 
 // Componente para reenviar convites
 const ResendInvites = () => {
@@ -168,7 +169,7 @@ export function CollaborationSettings() {
     const { collaborators, invites, loading, error, sendInvite, removeMember } = useCollaboration();
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-    const [pendingInvites, setPendingInvites] = useState([]);
+    const [pendingInvites, setPendingInvites] = useState<Invite[]>([]);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
     const [deletedInvites, setDeletedInvites] = useState<Set<string>>(() => {
         if (typeof window !== 'undefined') {
@@ -266,7 +267,7 @@ export function CollaborationSettings() {
     const loadCollaborationData = async () => {
         try {
             // Carregar convites pendentes
-            const { data: invitesData, error: invitesError } = await supabase()
+            const { data: invitesData, error: invitesError } = await supabase
                 .from('invites')
                 .select('*')
                 .eq('status', 'pending');
@@ -276,7 +277,8 @@ export function CollaborationSettings() {
             // Filtrar os convites excluídos e expirados
             const filteredInvites = (invitesData || []).filter(invite => {
                 const isDeleted = deletedInvites.has(invite.id);
-                const isExpired = new Date(invite.expires_at) < new Date();
+                const expiresAt = invite.expires_at as string;
+                const isExpired = new Date(expiresAt) < new Date();
                 return !isDeleted && !isExpired;
             });
             
@@ -420,7 +422,7 @@ export function CollaborationSettings() {
                                         <Avatar>
                                             <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${collaborator.email}`} />
                                             <AvatarFallback>
-                                                {collaborator.email[0].toUpperCase()}
+                                                {collaborator.email ? collaborator.email[0].toUpperCase() : 'U'}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div>
@@ -453,4 +455,4 @@ export function CollaborationSettings() {
             <ResendInvites />
         </div>
     );
-} 
+}

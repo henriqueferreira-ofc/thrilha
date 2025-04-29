@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../supabase/client';
 
 export default function AcceptInvite() {
     const [searchParams] = useSearchParams();
@@ -159,4 +159,4 @@ export default function AcceptInvite() {
             </div>
         </div>
     );
-} 
+}
