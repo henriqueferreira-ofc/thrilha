@@ -2,28 +2,15 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Mountain } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
-  const { user, forceLogout } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
-  // Função de redirecionamento direto que não depende de nenhuma outra função
+  // Função simplificada para ir para a página de login
   const goToLoginPage = () => {
-    // Limpar dados de autenticação manualmente
-    localStorage.removeItem('supabase.auth.token');
-    localStorage.removeItem('supabase.auth.refreshToken');
-    localStorage.removeItem('sb-yieihrvcbshzmxieflsv-auth-token');
-    sessionStorage.clear();
-    
-    // Limpar cookies relacionados à autenticação
-    document.cookie.split(';').forEach(cookie => {
-      const [name] = cookie.split('=').map(c => c.trim());
-      if (name.includes('supabase') || name.includes('sb-')) {
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-      }
-    });
-    
-    // Redirecionar de forma direta e imediata
-    window.location.href = "/#/auth";
+    navigate('/auth');
   };
   
   // Função para rolar suavemente até a seção de features
@@ -36,7 +23,7 @@ const LandingPage = () => {
   
   // Função para ir para o dashboard de tarefas
   const goToTasks = () => {
-    window.location.href = "/#/tasks";
+    navigate('/tasks');
   };
   
   return (
