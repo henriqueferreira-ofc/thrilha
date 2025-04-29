@@ -1,7 +1,6 @@
-
 import { toast } from 'sonner';
 import { Task, TaskStatus, TaskFormData } from '@/types/task';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 
 export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.SetStateAction<Task[]>>) {

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Task, TaskStatus } from '@/types/task';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { TaskRow } from '@/types/supabase';
 
