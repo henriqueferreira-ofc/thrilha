@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Mountain } from 'lucide-react';
@@ -8,7 +9,7 @@ const LandingPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  // Função simplificada para ir para a página de login
+  // Função corrigida para ir para a página de login
   const goToLoginPage = () => {
     navigate('/auth');
   };
@@ -21,7 +22,7 @@ const LandingPage = () => {
     });
   };
   
-  // Função para ir para o dashboard de tarefas
+  // Função corrigida para ir para o dashboard de tarefas
   const goToTasks = () => {
     navigate('/tasks');
   };

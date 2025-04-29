@@ -1,6 +1,7 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../supabase/client';
+import { supabase, checkAndCreateAvatarsBucket } from '../supabase/client';
 import { toast } from 'sonner';
 import { ErrorType } from '@/types/common';
 import { useNavigate } from 'react-router-dom';
@@ -53,6 +54,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user || null);
         setLoading(false);
+        
+        // Verificar e criar bucket se necessário quando o usuário faz login
+        if (session?.user) {
+          checkAndCreateAvatarsBucket();
+        }
       }
     );
 
@@ -60,10 +66,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user || null);
       setLoading(false);
+      
+      // Verificar e criar bucket se necessário ao iniciar
+      if (session?.user) {
+        checkAndCreateAvatarsBucket();
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Função para garantir que o bucket de avatares existe
+  const ensureAvatarBucketExists = async (): Promise<boolean> => {
+    return await checkAndCreateAvatarsBucket();
+  };
 
   const signUp = async (email: string, password: string, username?: string): Promise<void> => {
     try {
@@ -90,6 +106,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success('Login realizado com sucesso!');
+      
+      // Redirecionar para a página de tarefas após o login bem-sucedido
+      navigate('/tasks');
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Erro ao fazer login');
       throw error;
@@ -120,6 +139,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const uploadAvatar = async (file: File): Promise<string> => {
     if (!user) throw new Error('Usuário não autenticado');
     
+    // Verificar se o bucket existe antes de continuar
+    const bucketExists = await ensureAvatarBucketExists();
+    if (!bucketExists) {
+      throw new Error('Não foi possível acessar o bucket de avatares');
+    }
+    
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}_${Date.now()}.${fileExt}`;
     const filePath = `${user.id}/${fileName}`;
@@ -129,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Fazer o upload
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from('avatares') // Nome correto do bucket em português
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true
@@ -142,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Verificar se o arquivo foi realmente enviado
       const { data: checkData, error: checkError } = await supabase.storage
-        .from('avatars')
+        .from('avatares')
         .download(filePath);
 
       if (checkError || !checkData) {
@@ -150,17 +175,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Arquivo não encontrado após upload');
       }
 
-      // Construir URL manualmente
-      const supabaseUrl = supabase.storage.from('avatars').getPublicUrl(filePath).data.publicUrl;
-      const baseUrl = supabaseUrl.split('/storage/v1/')[0];
-      const cdnUrl = `${baseUrl}/storage/v1/object/public/avatars/${filePath}`;
+      // Obter URL pública do Supabase
+      const { data: urlData } = supabase.storage
+        .from('avatares')
+        .getPublicUrl(filePath);
       
-      console.log('URL CDN gerada:', cdnUrl);
+      if (!urlData || !urlData.publicUrl) {
+        throw new Error('Não foi possível gerar URL pública');
+      }
       
-      // Atualizar o perfil com a URL do CDN
+      const publicUrl = urlData.publicUrl;
+      console.log('URL pública gerada:', publicUrl);
+      
+      // Atualizar o perfil com a URL pública
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: cdnUrl })
+        .update({ avatar_url: publicUrl })
         .eq('id', user.id);
         
       if (updateError) {
@@ -168,10 +198,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw updateError;
       }
       
-      // Atualizar o estado do usuário
-      setUser(prev => prev ? { ...prev, avatar_url: cdnUrl } : null);
-      
-      return cdnUrl;
+      // Adicionar timestamp para evitar problemas de cache
+      const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
+      return urlWithTimestamp;
     } catch (error) {
       console.error('Erro completo no upload:', error);
       throw error;
@@ -196,7 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       toast.success('Perfil atualizado com sucesso!');
-      return data.avatar_url;
+      return data.avatar_url || '';
     } catch (error: unknown) {
       console.error('Erro completo ao atualizar perfil:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao atualizar perfil');

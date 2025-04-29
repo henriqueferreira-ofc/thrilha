@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabase/client';
+import { supabase, checkAndCreateAvatarsBucket } from '../supabase/client';
 
 export function useAuth() {
   const [user, setUser] = useState(null);
@@ -11,6 +11,11 @@ export function useAuth() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Verificar e criar bucket se necessário
+      if (session?.user) {
+        checkAndCreateAvatarsBucket();
+      }
     });
 
     // Ouvir mudanças na autenticação

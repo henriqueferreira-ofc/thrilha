@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -20,6 +21,14 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
     setLoading(true);
     setError(null);
     setRetryCount(0);
+    
+    // Assegurar que a URL não é nula ou vazia
+    if (!imageUrl) {
+      setError('URL de imagem não fornecida');
+      setLoading(false);
+      return;
+    }
+    
     setCurrentSrc(imageUrl);
 
     // Se a URL já foi carregada com sucesso antes, não precisa tentar novamente
@@ -52,10 +61,13 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
       }
       // Segunda tentativa: usar URL com /public/
       else if (retryCount === 1 && !currentSrc.includes('/public/')) {
-        newUrl = currentSrc.replace('/object/', '/public/');
-        console.log('Tentativa 2: URL com /public/:', newUrl);
+        // Substituir object por public na URL
+        if (currentSrc.includes('/object/')) {
+          newUrl = currentSrc.replace('/object/', '/public/');
+          console.log('Tentativa 2: URL com /public/:', newUrl);
+        }
       }
-      // Terceira tentativa: adicionar timestamp
+      // Terceira tentativa: adicionar timestamp para evitar cache
       else if (retryCount === 2) {
         newUrl = `${currentSrc}?t=${Date.now()}`;
         console.log('Tentativa 3: URL com timestamp:', newUrl);
@@ -79,16 +91,18 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
         </div>
       )}
-      <img
-        src={currentSrc}
-        alt="Avatar do usuário"
-        className={`w-full h-full object-cover transition-opacity duration-200 ${loading ? 'opacity-0' : 'opacity-100'}`}
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-        crossOrigin="anonymous"
-        referrerPolicy="no-referrer"
-        loading="eager"
-      />
+      {currentSrc && (
+        <img
+          src={currentSrc}
+          alt="Avatar do usuário"
+          className={`w-full h-full object-cover transition-opacity duration-200 ${loading ? 'opacity-0' : 'opacity-100'}`}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
+          loading="eager"
+        />
+      )}
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-red-500 bg-opacity-20">
           <p className="text-red-500 text-sm">{error}</p>
@@ -96,4 +110,4 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
       )}
     </div>
   );
-} 
+}

@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { User, Upload, Loader2 } from 'lucide-react';
 import { ImageTest } from './ImageTest';
+import { supabase, checkAndCreateAvatarsBucket } from '../supabase/client';
 
 interface AvatarUploadProps {
   currentAvatarUrl: string | null;
@@ -20,7 +21,21 @@ export function AvatarUpload({
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(currentAvatarUrl);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const { uploadAvatar, updateProfile } = useAuth();
+  const [bucketChecked, setBucketChecked] = useState(false);
+  const { uploadAvatar } = useAuth();
+
+  // Verificar o bucket ao carregar o componente
+  useEffect(() => {
+    const verifyBucket = async () => {
+      const exists = await checkAndCreateAvatarsBucket();
+      setBucketChecked(exists);
+      if (!exists) {
+        setUploadError('Não foi possível acessar o bucket de avatares');
+      }
+    };
+    
+    verifyBucket();
+  }, []);
 
   // Atualizar o avatarUrl quando o currentAvatarUrl mudar
   useEffect(() => {
@@ -55,18 +70,23 @@ export function AvatarUpload({
       setUploading(true);
       setUploadError(null);
       
+      // Verificar se o bucket está disponível
+      if (!bucketChecked) {
+        const bucketAvailable = await checkAndCreateAvatarsBucket();
+        if (!bucketAvailable) {
+          throw new Error('Bucket de avatares não disponível');
+        }
+        setBucketChecked(true);
+      }
+      
       // Prevenir envio de arquivos muito grandes
       if (file.size > 2 * 1024 * 1024) {
-        setUploadError('A imagem deve ter no máximo 2MB');
-        toast.error('A imagem deve ter no máximo 2MB');
-        return;
+        throw new Error('A imagem deve ter no máximo 2MB');
       }
       
       // Validar tipos de arquivo permitidos
       if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
-        setUploadError('Formato não suportado. Use JPEG, PNG, WEBP ou GIF.');
-        toast.error('Formato não suportado. Use JPEG, PNG, WEBP ou GIF.');
-        return;
+        throw new Error('Formato não suportado. Use JPEG, PNG, WEBP ou GIF.');
       }
       
       toast.info('Enviando imagem...');
@@ -83,7 +103,9 @@ export function AvatarUpload({
         URL.revokeObjectURL(localPreview);
         
         // Atualizar a URL com a versão do servidor
+        console.log('URL pública recebida:', publicUrl);
         setAvatarUrl(publicUrl);
+        
         if (onAvatarChange) {
           onAvatarChange(publicUrl);
         }
@@ -91,13 +113,13 @@ export function AvatarUpload({
         toast.success('Avatar atualizado com sucesso');
       } catch (error: unknown) {
         console.error('Erro ao fazer upload:', error);
-        // Não revogar a URL local em caso de erro para manter a visualização
         
+        // Não revogar a URL local em caso de erro para manter a visualização
         setUploadError(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
         toast.error(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
       }
     } catch (error: unknown) {
-      console.error('Erro ao fazer upload:', error);
+      console.error('Erro durante o processo de upload:', error);
       setUploadError(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
       toast.error(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
       
