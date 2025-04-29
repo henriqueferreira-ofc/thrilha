@@ -46,11 +46,25 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
   // Função para fazer logout e redirecionar para a página inicial
   const handleLogout = () => {
     try {
-      signOut();
+      // Limpar dados de autenticação manualmente
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('supabase.auth.refreshToken');
+      localStorage.removeItem('sb-yieihrvcbshzmxieflsv-auth-token');
+      sessionStorage.clear();
+      
+      // Limpar cookies relacionados à autenticação
+      document.cookie.split(';').forEach(cookie => {
+        const [name] = cookie.split('=').map(c => c.trim());
+        if (name.includes('supabase') || name.includes('sb-')) {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+      });
+      
+      // Redirecionar diretamente para a página inicial
+      window.location.href = "/";
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
-      // Em caso de erro, usar forceLogout como fallback
-      forceLogout();
+      window.location.href = "/";
     }
   };
 
@@ -62,23 +76,27 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
 
   // Adicionar um listener para mudanças no perfil
   useEffect(() => {
-    if (!user) return;
+    if (!user || isSettingUpChannel.current) return;
 
-    let channel;
+    // Marcar que estamos configurando o canal para evitar múltiplas tentativas
+    isSettingUpChannel.current = true;
+
     const setupChannel = async () => {
       try {
         // Limpar qualquer canal existente antes de criar um novo
-        if (channel) {
-          try {
-            await supabase.removeChannel(channel);
-            console.log('Canal anterior removido com sucesso (sidebar)');
-          } catch (removeError) {
-            console.warn('Erro ao remover canal anterior (sidebar):', removeError);
-          }
+        if (channelRef.current) {
+          await supabase.removeChannel(channelRef.current).catch(e => {
+            console.warn('Erro ao remover canal existente:', e);
+          });
+          channelRef.current = null;
         }
 
-        channel = supabase
-          .channel('profile-changes-sidebar')
+        // Criar um canal com ID único para cada usuário
+        const channelId = `profile-changes-${user.id.slice(0, 8)}-${Date.now()}`;
+        console.log('Criando canal com ID:', channelId);
+
+        channelRef.current = supabase
+          .channel(channelId)
           .on(
             'postgres_changes',
             {
@@ -88,39 +106,41 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
               filter: `id=eq.${user.id}`,
             },
             (payload: RealtimePostgresChangesPayload<ProfilePayload>) => {
-              try {
-                const newProfile = payload.new as ProfilePayload;
-                if (newProfile && newProfile.avatar_url !== undefined) {
-                  const newUrl = newProfile.avatar_url + '?t=' + new Date().getTime();
-                  console.log('Avatar atualizado via realtime (sidebar):', newUrl);
-                  setAvatarUrl(newUrl);
+              console.log('Recebida atualização de perfil:', payload);
+              
+              // Força a limpeza do cache de imagem adicionando timestamp
+              const newProfile = payload.new as ProfilePayload;
+              if (newProfile && newProfile.avatar_url) {
+                const newUrl = newProfile.avatar_url + '?t=' + new Date().getTime();
+                setAvatarUrl(newUrl);
+                
+                if (newProfile.username) {
+                  setUsername(newProfile.username);
                 }
-              } catch (error) {
-                console.error('Erro ao processar payload do canal (sidebar):', error);
+              } else {
+                loadUserProfile();
               }
             }
           );
 
         // Iniciar a assinatura do canal
         try {
-          const status = await channel.subscribe((status) => {
-            console.log(`Status do canal sidebar: ${status}`);
-            if (status === 'CHANNEL_ERROR') {
-              console.error('Erro no canal realtime sidebar, tentando reconectar...');
-              setTimeout(() => setupChannel(), 5000);
-            }
-          });
-
-          console.log('Status da inscrição sidebar:', status);
-        } catch (subscribeError) {
-          console.error('Erro ao inscrever no canal (sidebar):', subscribeError);
+          await channelRef.current.subscribe();
+          console.log('Canal inscrito com sucesso:', channelId);
+        } catch (err) {
+          console.error('Erro ao inscrever no canal:', err);
+          
+          // Limpar a referência e permitir nova tentativa depois
+          channelRef.current = null;
+          isSettingUpChannel.current = false;
+          
           // Tentar novamente após um tempo
           setTimeout(() => setupChannel(), 5000);
         }
       } catch (error) {
-        console.error('Erro ao configurar canal realtime sidebar:', error);
-        // Tentar novamente após um tempo
-        setTimeout(() => setupChannel(), 5000);
+        console.error('Erro ao configurar canal realtime:', error);
+        // Permitir nova tentativa
+        isSettingUpChannel.current = false;
       }
     };
 
@@ -128,11 +148,14 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
 
     // Limpeza quando o componente é desmontado
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel).catch(err => {
+      if (channelRef.current) {
+        console.log('Removendo canal:', channelRef.current.topic);
+        supabase.removeChannel(channelRef.current).catch(err => {
           console.error('Erro ao remover canal sidebar:', err);
         });
+        channelRef.current = null;
       }
+      isSettingUpChannel.current = false;
     };
   }, [user]);
 
@@ -166,13 +189,7 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
         
         // Atualizar avatar
         if (profile.avatar_url) {
-          // Verificar se a URL já contém o caminho completo
-          const avatarUrl = profile.avatar_url.startsWith('http') 
-            ? profile.avatar_url 
-            : `https://yieihrvcbshzmxieflsv.supabase.co/storage/v1/object/public/avatars/${profile.avatar_url}`;
-          
-          // Adicionar timestamp para evitar cache
-          const avatarWithTimestamp = `${avatarUrl}?t=${new Date().getTime()}`;
+          const avatarWithTimestamp = profile.avatar_url + '?t=' + new Date().getTime();
           console.log('Avatar URL com timestamp:', avatarWithTimestamp);
           setAvatarUrl(avatarWithTimestamp);
         } else {
@@ -224,43 +241,6 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
                     onError={(e) => {
                       console.error('Erro ao carregar imagem do avatar:', e);
                       const target = e.target as HTMLImageElement;
-                      
-                      // Logging da URL que falhou
-                      console.log('URL que falhou:', target.src);
-                      
-                      // Tentar adicionar um novo timestamp à URL para evitar cache
-                      if (target.src.includes('supabase') && !target.src.includes('retry')) {
-                        console.log('Tentando recarregar com novo timestamp...');
-                        const newTimestamp = new Date().getTime();
-                        const newUrl = target.src.split('?')[0] + `?t=${newTimestamp}&retry=true`;
-                        console.log('Nova URL com timestamp:', newUrl);
-                        target.src = newUrl;
-                        return;
-                      }
-                      
-                      // Verificar se existe um avatar em localStorage
-                      try {
-                        const localAvatar = localStorage.getItem(`avatar_${user?.id}`);
-                        if (localAvatar) {
-                          console.log('Usando avatar local após erro');
-                          target.src = localAvatar;
-                          setAvatarUrl(localAvatar);
-                          return;
-                        }
-                      } catch (localError) {
-                        console.warn('Erro ao recuperar avatar local:', localError);
-                      }
-                      
-                      // Se não houver avatar local, tentar usar DiceBear
-                      if (user?.id) {
-                        const diceBearUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${user.id}`;
-                        console.log('Usando avatar DiceBear:', diceBearUrl);
-                        target.src = diceBearUrl;
-                        setAvatarUrl(diceBearUrl);
-                        return;
-                      }
-                      
-                      // Se tudo falhar, limpar a URL e tentar recarregar o perfil
                       target.src = '';
                       setAvatarUrl(null);
                       

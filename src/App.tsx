@@ -1,7 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/components/ui/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { 
   BrowserRouter, 
@@ -121,33 +120,31 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="dark">
-      <Router>
-        <AuthProvider>
-          <TooltipProvider>
-            <ConnectionManager />
-            <Toaster />
-            <Sonner />
-            <NavigationHandler>
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/auth" element={<Auth />} />
-                
-                {/* Rotas protegidas com verificação de autenticação */}
-                <Route path="/tasks" element={<ProtectedRoute element={<Index />} />} />
-                <Route path="/calendar" element={<ProtectedRoute element={<Calendar />} />} />
-                <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
-                <Route path="/about" element={<ProtectedRoute element={<About />} />} />
+    <Router>
+      <AuthProvider>
+        <TooltipProvider>
+          <ConnectionManager />
+          <Toaster />
+          <Sonner />
+          <NavigationHandler>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/auth" element={<Auth />} />
+              
+              {/* Rotas protegidas com verificação de autenticação */}
+              <Route path="/tasks" element={<ProtectedRoute element={<Index />} />} />
+              <Route path="/calendar" element={<ProtectedRoute element={<Calendar />} />} />
+              <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
+              <Route path="/about" element={<ProtectedRoute element={<About />} />} />
 
-                {/* Rota para qualquer outra URL */}
-                <Route path="/404" element={<NotFound />} />
-                <Route path="*" element={<Navigate to="/404" replace />} />
-              </Routes>
-            </NavigationHandler>
-          </TooltipProvider>
-        </AuthProvider>
-      </Router>
-    </ThemeProvider>
+              {/* Rota para qualquer outra URL */}
+              <Route path="/404" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
+            </Routes>
+          </NavigationHandler>
+        </TooltipProvider>
+      </AuthProvider>
+    </Router>
   </QueryClientProvider>
 );
 
