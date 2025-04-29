@@ -5,7 +5,12 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { User, Upload, Loader2 } from 'lucide-react';
 import { ImageTest } from './ImageTest';
-import { supabase, checkAndCreateAvatarsBucket, AVATARS_BUCKET } from '../supabase/client';
+import { 
+  checkAndCreateAvatarsBucket, 
+  AVATARS_BUCKET, 
+  getAvatarPublicUrl,
+  uploadToAvatarsBucket
+} from '../supabase/client';
 
 interface AvatarUploadProps {
   currentAvatarUrl: string | null;
@@ -19,28 +24,19 @@ export function AvatarUpload({
   size = 'md'
 }: AvatarUploadProps) {
   const [uploading, setUploading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(currentAvatarUrl);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [bucketChecked, setBucketChecked] = useState(false);
-  const { uploadAvatar } = useAuth();
+  const { user, uploadAvatar } = useAuth();
 
   // Verificar o bucket ao carregar o componente
   useEffect(() => {
     const verifyBucket = async () => {
       try {
+        console.log('Verificando bucket para AvatarUpload...');
         const exists = await checkAndCreateAvatarsBucket();
         setBucketChecked(exists);
-        if (!exists) {
-          console.warn('Bucket de avatares não acessível. Verificando buckets disponíveis...');
-          
-          // Listar buckets disponíveis para diagnóstico
-          const { data: buckets } = await supabase.storage.listBuckets();
-          if (buckets && buckets.length > 0) {
-            console.info('Buckets disponíveis:', buckets.map(b => b.name).join(', '));
-          }
-          
-          setUploadError('Não foi possível acessar o bucket de avatares');
-        }
+        console.log('Bucket verificado:', exists);
       } catch (error) {
         console.error('Erro ao verificar bucket:', error);
       }
@@ -49,10 +45,13 @@ export function AvatarUpload({
     verifyBucket();
   }, []);
 
-  // Atualizar o avatarUrl quando o currentAvatarUrl mudar
+  // Processar a URL do avatar quando o componente monta ou quando currentAvatarUrl muda
   useEffect(() => {
-    if (currentAvatarUrl !== avatarUrl) {
+    if (currentAvatarUrl) {
+      console.log('AvatarUpload recebeu URL:', currentAvatarUrl);
       setAvatarUrl(currentAvatarUrl);
+    } else {
+      setAvatarUrl(null);
     }
   }, [currentAvatarUrl]);
 
@@ -82,15 +81,6 @@ export function AvatarUpload({
       setUploading(true);
       setUploadError(null);
       
-      // Verificar se o bucket está disponível
-      if (!bucketChecked) {
-        const bucketAvailable = await checkAndCreateAvatarsBucket();
-        if (!bucketAvailable) {
-          throw new Error(`Bucket ${AVATARS_BUCKET} não disponível`);
-        }
-        setBucketChecked(true);
-      }
-      
       // Prevenir envio de arquivos muito grandes
       if (file.size > 2 * 1024 * 1024) {
         throw new Error('A imagem deve ter no máximo 2MB');
@@ -108,27 +98,33 @@ export function AvatarUpload({
       setAvatarUrl(localPreview);
       
       // Upload para o storage
-      try {
-        const publicUrl = await uploadAvatar(file);
-        
-        // Revogar a URL local para liberar memória
-        URL.revokeObjectURL(localPreview);
-        
-        // Atualizar a URL com a versão do servidor
-        console.log('URL pública recebida:', publicUrl);
-        setAvatarUrl(publicUrl);
-        
-        if (onAvatarChange) {
-          onAvatarChange(publicUrl);
+      if (user) {
+        try {
+          const publicUrl = await uploadAvatar(file);
+          
+          // Revogar a URL local para liberar memória
+          URL.revokeObjectURL(localPreview);
+          
+          // Atualizar a URL com a versão do servidor
+          console.log('Upload concluído com sucesso. URL:', publicUrl);
+          setAvatarUrl(publicUrl);
+          
+          if (onAvatarChange) {
+            onAvatarChange(publicUrl);
+          }
+          
+          toast.success('Avatar atualizado com sucesso');
+        } catch (error: unknown) {
+          console.error('Erro ao fazer upload:', error);
+          
+          setUploadError(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
+          toast.error(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
+          
+          // Em caso de erro, manter a URL original
+          setAvatarUrl(currentAvatarUrl);
         }
-        
-        toast.success('Avatar atualizado com sucesso');
-      } catch (error: unknown) {
-        console.error('Erro ao fazer upload:', error);
-        
-        // Não revogar a URL local em caso de erro para manter a visualização
-        setUploadError(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
-        toast.error(error instanceof Error ? error.message : 'Erro ao atualizar avatar');
+      } else {
+        throw new Error('Usuário não autenticado');
       }
     } catch (error: unknown) {
       console.error('Erro durante o processo de upload:', error);

@@ -26,6 +26,8 @@ export const AVATARS_BUCKET = 'avatars';
 // Verificar se o bucket avatars existe e criar se não existir
 export async function checkAndCreateAvatarsBucket() {
   try {
+    console.log('Verificando se o bucket avatars existe...');
+    
     // Verificar se o bucket existe
     const { data: buckets, error } = await supabase.storage.listBuckets();
     
@@ -34,23 +36,29 @@ export async function checkAndCreateAvatarsBucket() {
       return false;
     }
     
+    console.log('Buckets disponíveis:', buckets);
     const avatarsBucket = buckets?.find(bucket => bucket.name === AVATARS_BUCKET);
     
     // Se o bucket não existir, tentar criá-lo
     if (!avatarsBucket) {
       console.log(`Bucket "${AVATARS_BUCKET}" não encontrado, tentando criar...`);
-      const { data, error: createError } = await supabase.storage.createBucket(AVATARS_BUCKET, {
-        public: true,
-        fileSizeLimit: 2 * 1024 * 1024 // 2MB limite
-      });
-      
-      if (createError) {
-        console.error(`Erro ao criar bucket ${AVATARS_BUCKET}:`, createError);
+      try {
+        const { data, error: createError } = await supabase.storage.createBucket(AVATARS_BUCKET, {
+          public: true,
+          fileSizeLimit: 2 * 1024 * 1024 // 2MB limite
+        });
+        
+        if (createError) {
+          console.error(`Erro ao criar bucket ${AVATARS_BUCKET}:`, createError);
+          return false;
+        }
+        
+        console.log(`Bucket "${AVATARS_BUCKET}" criado com sucesso`);
+        return true;
+      } catch (e) {
+        console.error('Exceção ao criar bucket:', e);
         return false;
       }
-      
-      console.log(`Bucket "${AVATARS_BUCKET}" criado com sucesso`);
-      return true;
     }
     
     console.log(`Bucket "${AVATARS_BUCKET}" já existe`);
@@ -63,9 +71,55 @@ export async function checkAndCreateAvatarsBucket() {
 
 // Função auxiliar para gerar URLs públicas de avatar
 export function getAvatarPublicUrl(filePath: string): string {
-  const { data } = supabase.storage
-    .from(AVATARS_BUCKET)
-    .getPublicUrl(filePath);
+  if (!filePath) return '';
   
-  return data.publicUrl;
+  // Limpeza básica do caminho
+  const cleanPath = filePath.replace(/^\/|\/$/g, '');
+  
+  try {
+    // Se já é uma URL completa, retorná-la limpa
+    if (filePath.startsWith('http')) {
+      return filePath.split('?')[0];
+    }
+    
+    // Gerar URL pública via Supabase
+    const { data } = supabase.storage
+      .from(AVATARS_BUCKET)
+      .getPublicUrl(cleanPath);
+    
+    console.log('URL pública gerada:', data.publicUrl);
+    return data.publicUrl;
+  } catch (error) {
+    console.error('Erro ao gerar URL pública:', error);
+    return filePath; // Retornar a original se houver erro
+  }
+}
+
+// Função para upload de arquivos que retorna uma URL pública
+export async function uploadToAvatarsBucket(
+  file: File, 
+  filePath: string
+): Promise<string> {
+  try {
+    // Assegurar que o bucket existe
+    await checkAndCreateAvatarsBucket();
+    
+    // Upload do arquivo
+    const { data, error } = await supabase.storage
+      .from(AVATARS_BUCKET)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Retornar a URL pública
+    return getAvatarPublicUrl(data.path);
+  } catch (error) {
+    console.error('Erro ao fazer upload:', error);
+    throw error;
+  }
 }

@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import { AVATARS_BUCKET } from '../supabase/client';
@@ -15,7 +14,7 @@ const successfulUrls = new Set<string>();
 export function ImageTest({ imageUrl }: ImageTestProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentSrc, setCurrentSrc] = useState(imageUrl);
+  const [currentSrc, setCurrentSrc] = useState('');
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
@@ -32,18 +31,44 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
       return;
     }
     
+    console.log('ImageTest recebeu URL:', imageUrl);
+    
     // Verificar se a URL está utilizando o nome correto do bucket
     let updatedUrl = imageUrl;
     
     // Usar o nome correto do bucket (avatars)
     if (updatedUrl.includes('/avatares/')) {
       updatedUrl = updatedUrl.replace('/avatares/', `/${AVATARS_BUCKET}/`);
+      console.log('URL corrigida (nome do bucket):', updatedUrl);
     }
     
+    // Se a URL contém parâmetros de query, remova-os para evitar problemas de cache
+    if (updatedUrl.includes('?')) {
+      updatedUrl = updatedUrl.split('?')[0];
+      console.log('URL sem parâmetros:', updatedUrl);
+    }
+    
+    // Certificar que a URL usa /public/ para acesso público
+    if (updatedUrl.includes('/object/') && !updatedUrl.includes('/public/')) {
+      updatedUrl = updatedUrl.replace('/object/', '/public/');
+      console.log('URL corrigida (usando /public/):', updatedUrl);
+    } else if (!updatedUrl.includes('/public/') && updatedUrl.includes(`/${AVATARS_BUCKET}/`)) {
+      const urlParts = updatedUrl.split(`/${AVATARS_BUCKET}/`);
+      if (urlParts.length === 2) {
+        updatedUrl = `${urlParts[0]}/public/${AVATARS_BUCKET}/${urlParts[1]}`;
+        console.log('URL corrigida (adicionando /public/):', updatedUrl);
+      }
+    }
+    
+    // Adicionar timestamp para evitar cache
+    updatedUrl = `${updatedUrl}?t=${Date.now()}`;
+    console.log('URL final com timestamp:', updatedUrl);
+    
     setCurrentSrc(updatedUrl);
-
+    
     // Se a URL já foi carregada com sucesso antes, não precisa tentar novamente
-    if (successfulUrls.has(updatedUrl)) {
+    if (successfulUrls.has(updatedUrl.split('?')[0])) {
+      console.log('URL já carregada anteriormente com sucesso');
       setLoading(false);
       setError(null);
     }
@@ -53,41 +78,38 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
     setLoading(false);
     setError(null);
     console.log('Imagem carregada com sucesso:', currentSrc);
-    successfulUrls.add(currentSrc);
+    // Armazenar a URL base (sem parâmetros) no cache
+    const baseUrl = currentSrc.split('?')[0];
+    successfulUrls.add(baseUrl);
   };
 
-  const handleImageError = async (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.error('Erro ao carregar imagem:', e);
-    console.error('URL que falhou:', currentSrc);
+  const handleImageError = async () => {
+    console.error('Erro ao carregar imagem:', currentSrc);
     
     // Tentar diferentes variações da URL
     if (retryCount < maxRetries) {
       setRetryCount(prev => prev + 1);
       let newUrl = currentSrc;
 
-      // Primeira tentativa: remover parâmetros de query
-      if (retryCount === 0 && currentSrc.includes('?')) {
-        newUrl = currentSrc.split('?')[0];
-        console.log('Tentativa 1: URL sem parâmetros:', newUrl);
-      }
-      // Segunda tentativa: usar URL com /public/
-      else if (retryCount === 1) {
-        if (currentSrc.includes('/object/')) {
-          newUrl = currentSrc.replace('/object/', '/public/');
-          console.log('Tentativa 2: URL com /public/:', newUrl);
-        } else if (!currentSrc.includes('/public/')) {
-          // Tentar adicionar /public/ se não estiver presente
-          const urlParts = currentSrc.split(`/${AVATARS_BUCKET}/`);
-          if (urlParts.length === 2) {
-            newUrl = `${urlParts[0]}/public/${AVATARS_BUCKET}/${urlParts[1]}`;
-            console.log('Tentativa alternativa: URL com path /public/:', newUrl);
-          }
+      if (retryCount === 0) {
+        // Primeira tentativa: tentar URL com formato alternativo de caminho
+        if (currentSrc.includes('/storage/v1/')) {
+          newUrl = currentSrc.replace('/storage/v1/', '/storage/v1/public/');
+          console.log('Tentativa 1: URL com formato alternativo:', newUrl);
         }
+      } 
+      else if (retryCount === 1) {
+        // Segunda tentativa: tentar URL sem timestamp
+        newUrl = currentSrc.split('?')[0];
+        console.log('Tentativa 2: URL sem timestamp:', newUrl);
       }
-      // Terceira tentativa: adicionar timestamp para evitar cache
       else if (retryCount === 2) {
-        newUrl = `${currentSrc}?t=${Date.now()}`;
-        console.log('Tentativa 3: URL com timestamp:', newUrl);
+        // Terceira tentativa: adicionar proxy CORS se possível
+        const baseUrl = currentSrc.split('?')[0];
+        // Usar um proxy CORS se estiver em produção
+        // Por exemplo: newUrl = `https://cors-anywhere.herokuapp.com/${baseUrl}`;
+        newUrl = baseUrl + `?bypass=${Date.now()}`;
+        console.log('Tentativa 3: URL com bypass:', newUrl);
       }
 
       if (newUrl !== currentSrc) {
