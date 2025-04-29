@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { User, Upload, Loader2 } from 'lucide-react';
 import { ImageTest } from './ImageTest';
-import { supabase, checkAndCreateAvatarsBucket } from '../supabase/client';
+import { supabase, checkAndCreateAvatarsBucket, AVATARS_BUCKET } from '../supabase/client';
 
 interface AvatarUploadProps {
   currentAvatarUrl: string | null;
@@ -27,10 +27,22 @@ export function AvatarUpload({
   // Verificar o bucket ao carregar o componente
   useEffect(() => {
     const verifyBucket = async () => {
-      const exists = await checkAndCreateAvatarsBucket();
-      setBucketChecked(exists);
-      if (!exists) {
-        setUploadError('Não foi possível acessar o bucket de avatares');
+      try {
+        const exists = await checkAndCreateAvatarsBucket();
+        setBucketChecked(exists);
+        if (!exists) {
+          console.warn('Bucket de avatares não acessível. Verificando buckets disponíveis...');
+          
+          // Listar buckets disponíveis para diagnóstico
+          const { data: buckets } = await supabase.storage.listBuckets();
+          if (buckets && buckets.length > 0) {
+            console.info('Buckets disponíveis:', buckets.map(b => b.name).join(', '));
+          }
+          
+          setUploadError('Não foi possível acessar o bucket de avatares');
+        }
+      } catch (error) {
+        console.error('Erro ao verificar bucket:', error);
       }
     };
     
@@ -74,7 +86,7 @@ export function AvatarUpload({
       if (!bucketChecked) {
         const bucketAvailable = await checkAndCreateAvatarsBucket();
         if (!bucketAvailable) {
-          throw new Error('Bucket de avatares não disponível');
+          throw new Error(`Bucket ${AVATARS_BUCKET} não disponível`);
         }
         setBucketChecked(true);
       }

@@ -20,7 +20,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Verificar se o bucket avatares existe e criar se não existir
+// Nome consistente do bucket para todo o aplicativo
+export const AVATARS_BUCKET = 'avatars';
+
+// Verificar se o bucket avatars existe e criar se não existir
 export async function checkAndCreateAvatarsBucket() {
   try {
     // Verificar se o bucket existe
@@ -31,29 +34,38 @@ export async function checkAndCreateAvatarsBucket() {
       return false;
     }
     
-    const avatarsBucket = buckets?.find(bucket => bucket.name === 'avatares');
+    const avatarsBucket = buckets?.find(bucket => bucket.name === AVATARS_BUCKET);
     
     // Se o bucket não existir, tentar criá-lo
     if (!avatarsBucket) {
-      console.log('Bucket "avatares" não encontrado, tentando criar...');
-      const { data, error: createError } = await supabase.storage.createBucket('avatares', {
+      console.log(`Bucket "${AVATARS_BUCKET}" não encontrado, tentando criar...`);
+      const { data, error: createError } = await supabase.storage.createBucket(AVATARS_BUCKET, {
         public: true,
         fileSizeLimit: 2 * 1024 * 1024 // 2MB limite
       });
       
       if (createError) {
-        console.error('Erro ao criar bucket avatares:', createError);
+        console.error(`Erro ao criar bucket ${AVATARS_BUCKET}:`, createError);
         return false;
       }
       
-      console.log('Bucket "avatares" criado com sucesso');
+      console.log(`Bucket "${AVATARS_BUCKET}" criado com sucesso`);
       return true;
     }
     
-    console.log('Bucket "avatares" já existe');
+    console.log(`Bucket "${AVATARS_BUCKET}" já existe`);
     return true;
   } catch (error) {
     console.error('Erro ao verificar/criar bucket:', error);
     return false;
   }
+}
+
+// Função auxiliar para gerar URLs públicas de avatar
+export function getAvatarPublicUrl(filePath: string): string {
+  const { data } = supabase.storage
+    .from(AVATARS_BUCKET)
+    .getPublicUrl(filePath);
+  
+  return data.publicUrl;
 }

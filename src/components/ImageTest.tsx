@@ -1,6 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { User } from 'lucide-react';
+import { AVATARS_BUCKET } from '../supabase/client';
 
 interface ImageTestProps {
   imageUrl: string;
@@ -29,10 +32,18 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
       return;
     }
     
-    setCurrentSrc(imageUrl);
+    // Verificar se a URL está utilizando o nome correto do bucket
+    let updatedUrl = imageUrl;
+    
+    // Usar o nome correto do bucket (avatars)
+    if (updatedUrl.includes('/avatares/')) {
+      updatedUrl = updatedUrl.replace('/avatares/', `/${AVATARS_BUCKET}/`);
+    }
+    
+    setCurrentSrc(updatedUrl);
 
     // Se a URL já foi carregada com sucesso antes, não precisa tentar novamente
-    if (successfulUrls.has(imageUrl)) {
+    if (successfulUrls.has(updatedUrl)) {
       setLoading(false);
       setError(null);
     }
@@ -60,11 +71,17 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
         console.log('Tentativa 1: URL sem parâmetros:', newUrl);
       }
       // Segunda tentativa: usar URL com /public/
-      else if (retryCount === 1 && !currentSrc.includes('/public/')) {
-        // Substituir object por public na URL
+      else if (retryCount === 1) {
         if (currentSrc.includes('/object/')) {
           newUrl = currentSrc.replace('/object/', '/public/');
           console.log('Tentativa 2: URL com /public/:', newUrl);
+        } else if (!currentSrc.includes('/public/')) {
+          // Tentar adicionar /public/ se não estiver presente
+          const urlParts = currentSrc.split(`/${AVATARS_BUCKET}/`);
+          if (urlParts.length === 2) {
+            newUrl = `${urlParts[0]}/public/${AVATARS_BUCKET}/${urlParts[1]}`;
+            console.log('Tentativa alternativa: URL com path /public/:', newUrl);
+          }
         }
       }
       // Terceira tentativa: adicionar timestamp para evitar cache
@@ -81,7 +98,6 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
     
     setLoading(false);
     setError('Erro ao carregar imagem');
-    toast.error('Não foi possível carregar a imagem');
   };
 
   return (
@@ -104,9 +120,11 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
         />
       )}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-red-500 bg-opacity-20">
-          <p className="text-red-500 text-sm">{error}</p>
-        </div>
+        <Avatar className="w-full h-full bg-gray-800">
+          <AvatarFallback className="bg-gray-800 text-gray-400">
+            <User className="w-1/2 h-1/2" />
+          </AvatarFallback>
+        </Avatar>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '../supabase/client';
+import { supabase, AVATARS_BUCKET, getAvatarPublicUrl } from '../supabase/client';
 import { checkAndCreateAvatarsBucket } from '../supabase/client';
 import { toast } from 'sonner';
 import { User } from '@supabase/supabase-js';
@@ -38,7 +38,7 @@ export function useAvatarUpload(user: User | null) {
       
       // Fazer o upload
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('avatares')
+        .from(AVATARS_BUCKET)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true
@@ -51,7 +51,7 @@ export function useAvatarUpload(user: User | null) {
 
       // Verificar se o arquivo foi realmente enviado
       const { data: checkData, error: checkError } = await supabase.storage
-        .from('avatares')
+        .from(AVATARS_BUCKET)
         .download(filePath);
 
       if (checkError || !checkData) {
@@ -60,15 +60,12 @@ export function useAvatarUpload(user: User | null) {
       }
 
       // Obter URL pública do Supabase
-      const { data: urlData } = supabase.storage
-        .from('avatares')
-        .getPublicUrl(filePath);
+      const publicUrl = getAvatarPublicUrl(filePath);
       
-      if (!urlData || !urlData.publicUrl) {
+      if (!publicUrl) {
         throw new Error('Não foi possível gerar URL pública');
       }
       
-      const publicUrl = urlData.publicUrl;
       console.log('URL pública gerada:', publicUrl);
       
       // Atualizar o perfil com a URL pública
