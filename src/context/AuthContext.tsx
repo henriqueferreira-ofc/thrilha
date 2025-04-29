@@ -1,7 +1,6 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase, checkAndCreateAvatarsBucket } from '../supabase/client';
+import { supabase } from '../supabase/client';
 import { useAuthService } from '../hooks/use-auth-service';
 import { useAvatarUpload } from '../hooks/use-avatar-upload';
 import { clearAuthData } from '../utils/auth-utils';
@@ -34,11 +33,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user || null);
         setLoading(false);
-        
-        // Verificar e criar bucket se necessário quando o usuário faz login
-        if (session?.user) {
-          checkAndCreateAvatarsBucket();
-        }
       }
     );
 
@@ -46,11 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user || null);
       setLoading(false);
-      
-      // Verificar e criar bucket se necessário ao iniciar
-      if (session?.user) {
-        checkAndCreateAvatarsBucket();
-      }
     });
 
     return () => subscription.unsubscribe();

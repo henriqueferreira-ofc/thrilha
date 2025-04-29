@@ -1,161 +1,173 @@
-
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
-import { AVATARS_BUCKET } from '../supabase/client';
 
 interface ImageTestProps {
   imageUrl: string;
 }
 
-// Cache de imagens bem-sucedidas
+// Cache de URLs que já foram carregadas com sucesso
 const successfulUrls = new Set<string>();
 
 export function ImageTest({ imageUrl }: ImageTestProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentSrc, setCurrentSrc] = useState('');
+  const [src, setSrc] = useState('');
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
   useEffect(() => {
-    // Reset states when URL changes
-    setLoading(true);
-    setError(null);
-    setRetryCount(0);
-    
-    // Assegurar que a URL não é nula ou vazia
-    if (!imageUrl) {
-      setError('URL de imagem não fornecida');
-      setLoading(false);
-      return;
-    }
-    
-    console.log('ImageTest recebeu URL:', imageUrl);
-    
-    // Verificar se a URL está utilizando o nome correto do bucket
-    let updatedUrl = imageUrl;
-    
-    // Usar o nome correto do bucket (avatars)
-    if (updatedUrl.includes('/avatares/')) {
-      updatedUrl = updatedUrl.replace('/avatares/', `/${AVATARS_BUCKET}/`);
-      console.log('URL corrigida (nome do bucket):', updatedUrl);
-    }
-    
-    // Se a URL contém parâmetros de query, remova-os para evitar problemas de cache
-    if (updatedUrl.includes('?')) {
-      updatedUrl = updatedUrl.split('?')[0];
-      console.log('URL sem parâmetros:', updatedUrl);
-    }
-    
-    // Certificar que a URL usa /public/ para acesso público
-    if (updatedUrl.includes('/object/') && !updatedUrl.includes('/public/')) {
-      updatedUrl = updatedUrl.replace('/object/', '/public/');
-      console.log('URL corrigida (usando /public/):', updatedUrl);
-    } else if (!updatedUrl.includes('/public/') && updatedUrl.includes(`/${AVATARS_BUCKET}/`)) {
-      const urlParts = updatedUrl.split(`/${AVATARS_BUCKET}/`);
-      if (urlParts.length === 2) {
-        updatedUrl = `${urlParts[0]}/public/${AVATARS_BUCKET}/${urlParts[1]}`;
-        console.log('URL corrigida (adicionando /public/):', updatedUrl);
-      }
-    }
+    let isMounted = true;
+    let timeoutId: NodeJS.Timeout;
 
-    // Adicionar parâmetro para contornar o cache
-    const timestamp = Date.now();
-    updatedUrl = `${updatedUrl}?nocache=${timestamp}`;
-    console.log('URL final para carregar:', updatedUrl);
-    
-    setCurrentSrc(updatedUrl);
-    
-    // Se a URL já foi carregada com sucesso antes, não precisa tentar novamente
-    if (successfulUrls.has(updatedUrl.split('?')[0])) {
-      console.log('URL já carregada anteriormente com sucesso');
-      setLoading(false);
-      setError(null);
-    }
-  }, [imageUrl]);
-
-  const handleImageLoad = () => {
-    setLoading(false);
-    setError(null);
-    console.log('Imagem carregada com sucesso:', currentSrc);
-    // Armazenar a URL base (sem parâmetros) no cache
-    const baseUrl = currentSrc.split('?')[0];
-    successfulUrls.add(baseUrl);
-  };
-
-  const handleImageError = async () => {
-    console.error('Erro ao carregar imagem:', currentSrc);
-    
-    // Tentar diferentes variações da URL
-    if (retryCount < maxRetries) {
-      setRetryCount(prev => prev + 1);
-      let newUrl = currentSrc;
-
-      if (retryCount === 0) {
-        // Primeira tentativa: tentar URL com formato alternativo de caminho
-        if (newUrl.includes('/storage/v1/')) {
-          if (!newUrl.includes('/public/')) {
-            newUrl = newUrl.replace('/storage/v1/', '/storage/v1/public/');
-            console.log('Tentativa 1: URL com formato alternativo:', newUrl);
-          }
-        }
-      } 
-      else if (retryCount === 1) {
-        // Segunda tentativa: tentar URL com caminho direto
-        const baseUrl = 'https://yieihrvcbshzmxieflsv.supabase.co';
-        const path = currentSrc.split('/storage/')[1]?.split('?')[0];
-        if (path) {
-          newUrl = `${baseUrl}/storage/v1/object/public/${path}?t=${Date.now()}`;
-          console.log('Tentativa 2: URL com caminho direto:', newUrl);
-        }
-      }
-      else if (retryCount === 2) {
-        // Terceira tentativa: usar CDN do Supabase se disponível
-        const cdnUrl = 'https://yieihrvcbshzmxieflsv.supabase.co/storage/v1/object/public/';
-        const path = imageUrl.split('/avatars/')[1];
-        if (path) {
-          newUrl = `${cdnUrl}avatars/${path}?t=${Date.now()}`;
-          console.log('Tentativa 3: URL via CDN:', newUrl);
-        }
-      }
-
-      if (newUrl !== currentSrc) {
-        setCurrentSrc(newUrl);
+    const loadImage = async () => {
+      if (!imageUrl) {
+        console.log('ImageTest: URL não fornecida');
+        setError('URL de imagem não fornecida');
+        setLoading(false);
         return;
       }
-    }
-    
-    setLoading(false);
-    setError('Erro ao carregar imagem');
-  };
 
+      console.log('ImageTest: Iniciando carregamento da URL:', imageUrl);
+      setLoading(true);
+      setError(null);
+
+      // Se for uma URL blob, use diretamente
+      if (imageUrl.startsWith('blob:')) {
+        console.log('ImageTest: Usando URL blob');
+        setSrc(imageUrl);
+        setLoading(false);
+        return;
+      }
+
+      // Se a URL já foi carregada com sucesso antes, use-a diretamente
+      if (successfulUrls.has(imageUrl)) {
+        console.log('ImageTest: Usando URL do cache:', imageUrl);
+        setSrc(imageUrl);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Verificar se a URL é válida
+        const response = await fetch(imageUrl, { 
+          method: 'HEAD',
+          cache: 'no-cache',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Verificar se o conteúdo é uma imagem
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.startsWith('image/')) {
+          throw new Error('O arquivo não é uma imagem válida');
+        }
+
+        // Para URLs públicas, adicionar timestamp para evitar cache
+        const urlWithTimestamp = `${imageUrl}?t=${Date.now()}`;
+        console.log('ImageTest: URL com timestamp:', urlWithTimestamp);
+
+        const img = new Image();
+        
+        const loadPromise = new Promise((resolve, reject) => {
+          img.onload = () => {
+            console.log('ImageTest: Imagem carregada com sucesso');
+            successfulUrls.add(imageUrl); // Adicionar ao cache
+            resolve(urlWithTimestamp);
+          };
+          
+          img.onerror = (e) => {
+            console.error('ImageTest: Erro ao carregar imagem:', e);
+            reject(new Error('Erro ao carregar imagem'));
+          };
+        });
+
+        // Adicionar timeout para o carregamento
+        timeoutId = setTimeout(() => {
+          img.src = ''; // Cancela o carregamento
+          reject(new Error('Timeout ao carregar imagem'));
+        }, 10000); // 10 segundos de timeout
+
+        img.src = urlWithTimestamp;
+        await loadPromise;
+
+        if (isMounted) {
+          setSrc(urlWithTimestamp);
+          setLoading(false);
+          setError(null);
+          setRetryCount(0); // Reset retry count on success
+        }
+      } catch (error) {
+        console.error('ImageTest: Erro ao carregar imagem:', error);
+        if (isMounted) {
+          if (retryCount < maxRetries) {
+            console.log(`ImageTest: Tentativa ${retryCount + 1} de ${maxRetries}`);
+            setRetryCount(prev => prev + 1);
+            // Tentar novamente após um pequeno delay
+            setTimeout(() => {
+              if (isMounted) {
+                loadImage();
+              }
+            }, 1000 * (retryCount + 1)); // Delay crescente
+          } else {
+            setLoading(false);
+            setError('Erro ao carregar imagem');
+            setSrc('');
+          }
+        }
+      }
+    };
+
+    loadImage();
+
+    return () => {
+      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      console.log('ImageTest: Limpando effect');
+    };
+  }, [imageUrl, retryCount]);
+
+  if (loading) {
+    console.log('ImageTest: Renderizando loader');
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-800">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  if (error || !src) {
+    console.log('ImageTest: Renderizando fallback, error:', error);
+    return (
+      <Avatar className="w-full h-full bg-gray-800">
+        <AvatarFallback className="bg-gray-800 text-gray-400">
+          <User className="w-1/2 h-1/2" />
+        </AvatarFallback>
+      </Avatar>
+    );
+  }
+
+  console.log('ImageTest: Renderizando imagem com src:', src);
   return (
-    <div className="relative w-full h-full">
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-        </div>
-      )}
-      {currentSrc && (
-        <img
-          src={currentSrc}
-          alt="Avatar do usuário"
-          className={`w-full h-full object-cover transition-opacity duration-200 ${loading ? 'opacity-0' : 'opacity-100'}`}
-          onLoad={handleImageLoad}
-          onError={handleImageError}
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
-          loading="eager"
-        />
-      )}
-      {error && (
-        <Avatar className="w-full h-full bg-gray-800">
-          <AvatarFallback className="bg-gray-800 text-gray-400">
-            <User className="w-1/2 h-1/2" />
-          </AvatarFallback>
-        </Avatar>
-      )}
-    </div>
+    <img
+      src={src}
+      alt="Avatar do usuário"
+      className="w-full h-full object-cover"
+      crossOrigin="anonymous"
+      referrerPolicy="no-referrer"
+      onError={(e) => {
+        console.error('ImageTest: Erro na tag img:', e);
+        setError('Erro ao carregar imagem');
+        setSrc('');
+      }}
+    />
   );
 }
