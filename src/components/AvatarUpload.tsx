@@ -9,7 +9,8 @@ import {
   checkAndCreateAvatarsBucket, 
   AVATARS_BUCKET, 
   getAvatarPublicUrl,
-  uploadToAvatarsBucket
+  uploadToAvatarsBucket,
+  supabase
 } from '../supabase/client';
 
 interface AvatarUploadProps {
@@ -29,6 +30,12 @@ export function AvatarUpload({
   const [bucketChecked, setBucketChecked] = useState(false);
   const { user, uploadAvatar } = useAuth();
 
+  // Log para depuração
+  useEffect(() => {
+    console.log('AvatarUpload montado com usuário:', user?.id);
+    console.log('URL inicial do avatar:', currentAvatarUrl);
+  }, []);
+
   // Verificar o bucket ao carregar o componente
   useEffect(() => {
     const verifyBucket = async () => {
@@ -37,6 +44,27 @@ export function AvatarUpload({
         const exists = await checkAndCreateAvatarsBucket();
         setBucketChecked(exists);
         console.log('Bucket verificado:', exists);
+        
+        // Listar buckets para debug
+        const { data: buckets } = await supabase.storage.listBuckets();
+        console.log('Buckets disponíveis:', buckets?.map(b => b.name));
+        
+        // Tentar listar arquivos
+        if (exists) {
+          try {
+            const { data: files, error } = await supabase.storage
+              .from(AVATARS_BUCKET)
+              .list();
+              
+            if (error) {
+              console.error('Erro ao listar arquivos:', error);
+            } else {
+              console.log('Arquivos no bucket:', files);
+            }
+          } catch (e) {
+            console.error('Erro ao listar arquivos:', e);
+          }
+        }
       } catch (error) {
         console.error('Erro ao verificar bucket:', error);
       }
@@ -82,8 +110,8 @@ export function AvatarUpload({
       setUploadError(null);
       
       // Prevenir envio de arquivos muito grandes
-      if (file.size > 2 * 1024 * 1024) {
-        throw new Error('A imagem deve ter no máximo 2MB');
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('A imagem deve ter no máximo 5MB');
       }
       
       // Validar tipos de arquivo permitidos
@@ -100,17 +128,67 @@ export function AvatarUpload({
       // Upload para o storage
       if (user) {
         try {
-          const publicUrl = await uploadAvatar(file);
+          // Assegurar que o bucket existe
+          const bucketExists = await checkAndCreateAvatarsBucket();
+          if (!bucketExists) {
+            throw new Error('Não foi possível acessar o bucket de avatares');
+          }
+          
+          // Preparar o caminho do arquivo
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+          const filePath = `${user.id}/${fileName}`;
+          
+          console.log('Iniciando upload para:', filePath);
+          
+          // Fazer upload direto pelo cliente Supabase
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from(AVATARS_BUCKET)
+            .upload(filePath, file, {
+              cacheControl: '0',
+              upsert: true
+            });
+            
+          if (uploadError) {
+            console.error('Erro no upload:', uploadError);
+            throw uploadError;
+          }
+          
+          console.log('Upload concluído:', uploadData);
+          
+          // Obter URL pública
+          const publicUrl = getAvatarPublicUrl(filePath);
+          
+          if (!publicUrl) {
+            throw new Error('Não foi possível gerar URL pública');
+          }
+          
+          console.log('URL pública gerada:', publicUrl);
+          
+          // Atualizar o perfil do usuário
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ 
+              avatar_url: publicUrl,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+            
+          if (updateError) {
+            console.error('Erro ao atualizar perfil:', updateError);
+            throw updateError;
+          }
           
           // Revogar a URL local para liberar memória
           URL.revokeObjectURL(localPreview);
           
           // Atualizar a URL com a versão do servidor
-          console.log('Upload concluído com sucesso. URL:', publicUrl);
-          setAvatarUrl(publicUrl);
+          const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
+          console.log('URL final com timestamp:', urlWithTimestamp);
+          setAvatarUrl(urlWithTimestamp);
           
           if (onAvatarChange) {
-            onAvatarChange(publicUrl);
+            onAvatarChange(urlWithTimestamp);
           }
           
           toast.success('Avatar atualizado com sucesso');
@@ -176,6 +254,12 @@ export function AvatarUpload({
       {uploadError && (
         <div className="mt-2 text-xs text-red-400">
           {uploadError}
+        </div>
+      )}
+
+      {bucketChecked === false && (
+        <div className="mt-2 text-xs text-yellow-400">
+          Verificando acesso ao armazenamento...
         </div>
       )}
     </div>

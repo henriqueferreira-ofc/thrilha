@@ -1,8 +1,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://yieihrvcbshzmxieflsv.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpZWlocnZjYnNoem14aWVmbHN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwMjU2MDYsImV4cCI6MjA1OTYwMTYwNn0.fOBINx1LP_fxvnboVkJEAYTI_GVcI9gzKBhVAqXPrsY';
+// Usar as variáveis de ambiente para configuração
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://yieihrvcbshzmxieflsv.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpZWlocnZjYnNoem14aWVmbHN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwMjU2MDYsImV4cCI6MjA1OTYwMTYwNn0.fOBINx1LP_fxvnboVkJEAYTI_GVcI9gzKBhVAqXPrsY';
 
 // Criar uma única instância do cliente Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -45,7 +46,7 @@ export async function checkAndCreateAvatarsBucket() {
       try {
         const { data, error: createError } = await supabase.storage.createBucket(AVATARS_BUCKET, {
           public: true,
-          fileSizeLimit: 2 * 1024 * 1024 // 2MB limite
+          fileSizeLimit: 5 * 1024 * 1024 // 5MB limite
         });
         
         if (createError) {
@@ -54,6 +55,15 @@ export async function checkAndCreateAvatarsBucket() {
         }
         
         console.log(`Bucket "${AVATARS_BUCKET}" criado com sucesso`);
+        
+        // Definir políticas de acesso público para o bucket recém-criado
+        try {
+          await definePublicBucketPolicy();
+          console.log('Políticas de acesso público aplicadas com sucesso');
+        } catch (policyError) {
+          console.error('Erro ao definir políticas de acesso:', policyError);
+        }
+        
         return true;
       } catch (e) {
         console.error('Exceção ao criar bucket:', e);
@@ -66,6 +76,40 @@ export async function checkAndCreateAvatarsBucket() {
   } catch (error) {
     console.error('Erro ao verificar/criar bucket:', error);
     return false;
+  }
+}
+
+// Função para definir políticas de acesso público para o bucket
+async function definePublicBucketPolicy() {
+  try {
+    // Política para permitir leitura pública (SELECT)
+    const { error: selectError } = await supabase.rpc('create_storage_policy', {
+      bucket_id: AVATARS_BUCKET,
+      name: 'Public Read Access',
+      definition: 'true', // Qualquer um pode ler
+      operation: 'SELECT',
+      actions: ['SELECT']
+    });
+    
+    if (selectError) {
+      console.warn('Erro ao definir política SELECT:', selectError);
+    }
+    
+    // Política para permitir que usuários autenticados façam upload (INSERT)
+    const { error: insertError } = await supabase.rpc('create_storage_policy', {
+      bucket_id: AVATARS_BUCKET,
+      name: 'Authenticated Insert Access',
+      definition: 'auth.role() = \'authenticated\'', // Apenas usuários autenticados
+      operation: 'INSERT',
+      actions: ['INSERT']
+    });
+    
+    if (insertError) {
+      console.warn('Erro ao definir política INSERT:', insertError);
+    }
+  } catch (error) {
+    console.error('Erro ao definir políticas:', error);
+    throw error;
   }
 }
 
@@ -82,13 +126,20 @@ export function getAvatarPublicUrl(filePath: string): string {
       return filePath.split('?')[0];
     }
     
-    // Gerar URL pública via Supabase
+    // Gerar URL direta (não API) para garantir acesso público
     const { data } = supabase.storage
       .from(AVATARS_BUCKET)
       .getPublicUrl(cleanPath);
     
     console.log('URL pública gerada:', data.publicUrl);
-    return data.publicUrl;
+    
+    // Garantir que a URL use o formato public para acesso direto
+    let publicUrl = data.publicUrl;
+    if (!publicUrl.includes('/public/')) {
+      publicUrl = publicUrl.replace('/object/', '/public/');
+    }
+    
+    return publicUrl;
   } catch (error) {
     console.error('Erro ao gerar URL pública:', error);
     return filePath; // Retornar a original se houver erro

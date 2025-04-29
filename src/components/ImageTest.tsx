@@ -59,10 +59,11 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
         console.log('URL corrigida (adicionando /public/):', updatedUrl);
       }
     }
-    
-    // Adicionar timestamp para evitar cache
-    updatedUrl = `${updatedUrl}?t=${Date.now()}`;
-    console.log('URL final com timestamp:', updatedUrl);
+
+    // Adicionar parâmetro para contornar o cache
+    const timestamp = Date.now();
+    updatedUrl = `${updatedUrl}?nocache=${timestamp}`;
+    console.log('URL final para carregar:', updatedUrl);
     
     setCurrentSrc(updatedUrl);
     
@@ -93,23 +94,30 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
 
       if (retryCount === 0) {
         // Primeira tentativa: tentar URL com formato alternativo de caminho
-        if (currentSrc.includes('/storage/v1/')) {
-          newUrl = currentSrc.replace('/storage/v1/', '/storage/v1/public/');
-          console.log('Tentativa 1: URL com formato alternativo:', newUrl);
+        if (newUrl.includes('/storage/v1/')) {
+          if (!newUrl.includes('/public/')) {
+            newUrl = newUrl.replace('/storage/v1/', '/storage/v1/public/');
+            console.log('Tentativa 1: URL com formato alternativo:', newUrl);
+          }
         }
       } 
       else if (retryCount === 1) {
-        // Segunda tentativa: tentar URL sem timestamp
-        newUrl = currentSrc.split('?')[0];
-        console.log('Tentativa 2: URL sem timestamp:', newUrl);
+        // Segunda tentativa: tentar URL com caminho direto
+        const baseUrl = 'https://yieihrvcbshzmxieflsv.supabase.co';
+        const path = currentSrc.split('/storage/')[1]?.split('?')[0];
+        if (path) {
+          newUrl = `${baseUrl}/storage/v1/object/public/${path}?t=${Date.now()}`;
+          console.log('Tentativa 2: URL com caminho direto:', newUrl);
+        }
       }
       else if (retryCount === 2) {
-        // Terceira tentativa: adicionar proxy CORS se possível
-        const baseUrl = currentSrc.split('?')[0];
-        // Usar um proxy CORS se estiver em produção
-        // Por exemplo: newUrl = `https://cors-anywhere.herokuapp.com/${baseUrl}`;
-        newUrl = baseUrl + `?bypass=${Date.now()}`;
-        console.log('Tentativa 3: URL com bypass:', newUrl);
+        // Terceira tentativa: usar CDN do Supabase se disponível
+        const cdnUrl = 'https://yieihrvcbshzmxieflsv.supabase.co/storage/v1/object/public/';
+        const path = imageUrl.split('/avatars/')[1];
+        if (path) {
+          newUrl = `${cdnUrl}avatars/${path}?t=${Date.now()}`;
+          console.log('Tentativa 3: URL via CDN:', newUrl);
+        }
       }
 
       if (newUrl !== currentSrc) {
