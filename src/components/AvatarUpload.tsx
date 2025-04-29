@@ -76,22 +76,30 @@ export function AvatarUpload({
       setAvatarUrl(localPreview);
       
       // Upload para o storage
-      const publicUrl = await uploadAvatar(file);
-      
-      // Atualizar o perfil com a URL do avatar
-      await updateProfile({ avatar_url: publicUrl });
-      
-      // Revogar a URL local para liberar memória
-      URL.revokeObjectURL(localPreview);
-      
-      // Atualizar a URL com a versão do servidor
-      setAvatarUrl(publicUrl);
-      
-      if (onAvatarChange) {
-        onAvatarChange(publicUrl);
+      try {
+        const publicUrl = await uploadAvatar(file);
+        
+        // Atualizar o perfil com a URL do avatar
+        await updateProfile({ avatar_url: publicUrl });
+        
+        // Revogar a URL local para liberar memória
+        URL.revokeObjectURL(localPreview);
+        
+        // Atualizar a URL com a versão do servidor
+        setAvatarUrl(publicUrl);
+        
+        if (onAvatarChange) {
+          onAvatarChange(publicUrl);
+        }
+        
+        toast.success('Avatar atualizado com sucesso');
+      } catch (error: any) {
+        console.error('Erro ao fazer upload:', error);
+        // Não revogar a URL local em caso de erro para manter a visualização
+        
+        setUploadError(error.message || 'Erro ao atualizar avatar');
+        toast.error(error.message || 'Erro ao atualizar avatar');
       }
-      
-      toast.success('Avatar atualizado com sucesso');
     } catch (error: any) {
       console.error('Erro ao fazer upload:', error);
       setUploadError(error.message || 'Erro ao atualizar avatar');
@@ -114,7 +122,7 @@ export function AvatarUpload({
             className="object-cover"
             onError={(e) => {
               console.error('Erro ao carregar imagem do avatar');
-              setAvatarUrl(null);
+              // Não limpar o avatar, apenas logar o erro
               toast.error('Não foi possível carregar a imagem');
             }}
           />

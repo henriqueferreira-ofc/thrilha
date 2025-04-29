@@ -135,28 +135,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('Iniciando upload do avatar:', filePath);
 
-      try {
-        const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.error('Erro ao verificar buckets:', bucketsError);
+        throw bucketsError;
+      }
+      
+      if (!buckets.some(b => b.name === 'avatares')) {
+        console.log('Bucket avatares não encontrado, criando...');
+        const { error: createBucketError } = await supabase.storage.createBucket('avatares', {
+          public: true,
+          fileSizeLimit: 3145728,
+        });
         
-        if (bucketsError) {
-          console.error('Erro ao verificar buckets:', bucketsError);
-          throw bucketsError;
+        if (createBucketError) {
+          console.error('Erro ao criar bucket:', createBucketError);
+          throw new Error(`Não foi possível criar o bucket de avatares: ${createBucketError.message}`);
         }
         
-        if (!buckets.some(b => b.name === 'avatares')) {
-          console.log('Bucket avatares não encontrado, tentando criar...');
-          const { error: createBucketError } = await supabase.storage.createBucket('avatares', { 
-            public: true,
-            fileSizeLimit: 3145728
-          });
-          
-          if (createBucketError) {
-            console.error('Erro ao criar bucket:', createBucketError);
-            throw new Error('Não foi possível criar o bucket de avatares');
-          }
-        }
-      } catch (bucketCheckError) {
-        console.error('Erro ao verificar/criar bucket:', bucketCheckError);
+        console.log('Bucket avatares criado com sucesso');
+      } else {
+        console.log('Bucket avatares já existe');
       }
 
       let uploadError = null;
