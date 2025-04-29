@@ -12,12 +12,12 @@ export function useCollaboration() {
     // Carregar colaboradores
     const loadCollaborators = async () => {
         try {
-            const user = await supabase.auth.getUser();
-            if (!user.data.user) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
                 throw new Error('Usuário não autenticado');
             }
 
-            console.log('Carregando colaboradores para o usuário:', user.data.user.id);
+            console.log('Carregando colaboradores para o usuário:', user.id);
 
             // Primeiro, verificar se a tabela existe
             const { data: tableExists, error: tableError } = await supabase
@@ -34,7 +34,7 @@ export function useCollaboration() {
             const { data: collaboratorsData, error } = await supabase
                 .from('collaborators_with_profiles')
                 .select('*')
-                .eq('owner_id', user.data.user.id);
+                .eq('owner_id', user.id);
 
             if (error) {
                 console.error('Erro ao carregar colaboradores:', error);
@@ -60,15 +60,15 @@ export function useCollaboration() {
     // Carregar convites pendentes
     const loadInvites = async () => {
         try {
-            const user = await supabase.auth.getUser();
-            if (!user.data.user) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
                 throw new Error('Usuário não autenticado');
             }
 
             const { data: invitesData, error } = await supabase
                 .from('invites')
                 .select('*')
-                .eq('owner_id', user.data.user.id)
+                .eq('owner_id', user.id)
                 .eq('status', 'pending');
 
             if (error) {
@@ -85,15 +85,15 @@ export function useCollaboration() {
     // Carregar grupos de trabalho
     const loadWorkGroups = async () => {
         try {
-            const user = await supabase.auth.getUser();
-            if (!user.data.user) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
                 throw new Error('Usuário não autenticado');
             }
 
             const { data: groupsData, error } = await supabase
                 .from('work_groups')
                 .select('*')
-                .eq('created_by', user.data.user.id);
+                .eq('created_by', user.id);
 
             if (error) {
                 console.error('Erro ao carregar grupos:', error);
@@ -109,8 +109,8 @@ export function useCollaboration() {
     // Enviar convite
     const sendInvite = async (email: string) => {
         try {
-            const user = await supabase.auth.getUser();
-            if (!user.data.user) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
                 throw new Error('Usuário não autenticado');
             }
 
@@ -118,7 +118,7 @@ export function useCollaboration() {
             const { data: existingInvite, error: checkError } = await supabase
                 .from('invites')
                 .select('id')
-                .eq('owner_id', user.data.user.id)
+                .eq('owner_id', user.id)
                 .eq('email', email)
                 .eq('status', 'pending')
                 .single();
@@ -144,7 +144,7 @@ export function useCollaboration() {
                 .from('invites')
                 .insert([
                     {
-                        owner_id: user.data.user.id,
+                        owner_id: user.id,
                         email,
                         token,
                         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 dias
@@ -165,7 +165,7 @@ export function useCollaboration() {
                         email,
                         inviteId: invite.id,
                         token,
-                        ownerId: user.data.user.id
+                        ownerId: user.id
                     }
                 });
 
@@ -186,8 +186,8 @@ export function useCollaboration() {
     // Criar novo grupo de trabalho
     const createGroup = async (name: string, description?: string) => {
         try {
-            const user = await supabase.auth.getUser();
-            if (!user.data.user) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
                 throw new Error('Usuário não autenticado');
             }
 
@@ -196,7 +196,7 @@ export function useCollaboration() {
                 .insert({
                     name,
                     description,
-                    created_by: user.data.user.id
+                    created_by: user.id
                 })
                 .select()
                 .single();
@@ -239,8 +239,8 @@ export function useCollaboration() {
     // Remover colaborador
     const removeMember = async (collaboratorId: string) => {
         try {
-            const user = await supabase.auth.getUser();
-            if (!user.data.user) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
                 throw new Error('Usuário não autenticado');
             }
 
@@ -248,7 +248,7 @@ export function useCollaboration() {
                 .from('collaborators')
                 .delete()
                 .eq('collaborator_id', collaboratorId)
-                .eq('owner_id', user.data.user.id);
+                .eq('owner_id', user.id);
 
             if (error) {
                 console.error('Erro ao remover colaborador:', error);

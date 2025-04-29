@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useCollaboration } from '../hooks/useCollaboration';
 import { Button } from './ui/button';
@@ -21,7 +22,7 @@ const ResendInvites = () => {
             setIsResending(true);
             
             // Buscar os convites pendentes
-            const { data: pendingInvites, error: invitesError } = await supabase()
+            const { data: pendingInvites, error: invitesError } = await supabase
                 .from('invites')
                 .select('*')
                 .eq('status', 'pending');
@@ -240,7 +241,7 @@ export function CollaborationSettings() {
         try {
             setIsDeleting(inviteId);
             
-            const { error: deleteError } = await supabase()
+            const { error: deleteError } = await supabase
                 .from('invites')
                 .delete()
                 .eq('id', inviteId);
@@ -286,7 +287,7 @@ export function CollaborationSettings() {
 
             // Verificar se há convites aceitos que precisam ser atualizados
             for (const invite of filteredInvites) {
-                const { data: inviteStatus, error: statusError } = await supabase()
+                const { data: inviteStatus, error: statusError } = await supabase
                     .from('invites')
                     .select('status')
                     .eq('id', invite.id)

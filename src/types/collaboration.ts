@@ -51,7 +51,7 @@ export interface Collaborator {
     collaborator_id: string;
     created_at: string;
     full_name: string;
-    email: string; // Added this missing property
+    email: string; 
 }
 
 export interface Invite {
