@@ -20,7 +20,7 @@ import LandingPage from "./pages/LandingPage";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from './supabase/client';
 
 // Componente para lidar com navegação e erros
@@ -87,14 +87,22 @@ const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) 
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [authChecked, setAuthChecked] = useState(false);
   
   useEffect(() => {
     // Quando o componente montar ou atualizar, verificar autenticação
     const checkAuth = async () => {
+      console.log('ProtectedRoute - Verificando autenticação:', { 
+        user: user ? 'usuário presente' : 'usuário ausente',
+        loading,
+        path: location.pathname
+      });
+      
       if (!loading) {
+        setAuthChecked(true);
         if (!user) {
-          console.log('Usuário não autenticado, redirecionando para /', { user, loading });
-          navigate('/', { replace: true });
+          console.log('Usuário não autenticado, redirecionando para /auth');
+          navigate('/auth', { replace: true });
         } else {
           console.log('Usuário autenticado:', user.email);
         }
@@ -105,10 +113,10 @@ const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) 
   }, [user, loading, navigate, location.pathname]);
   
   // Exibir carregamento enquanto verifica usuário
-  if (loading) {
+  if (loading || !authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-xl text-purple-400">Carregando...</div>
+        <div className="animate-pulse text-xl text-purple-400">Verificando autenticação...</div>
       </div>
     );
   }
@@ -117,7 +125,7 @@ const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) 
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-purple-400">Redirecionando...</div>
+        <div className="text-xl text-purple-400">Redirecionando para login...</div>
       </div>
     );
   }

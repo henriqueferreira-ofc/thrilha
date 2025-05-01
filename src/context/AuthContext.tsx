@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../supabase/client';
@@ -28,17 +29,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize authentication state
   useEffect(() => {
+    console.log('AuthProvider - Inicializando estado de autenticação');
+    
+    // Primeiro configurar o listener de mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user || null);
+      (event, currentSession) => {
+        console.log('AuthProvider - Evento de autenticação:', event);
+        setSession(currentSession);
+        setUser(currentSession?.user || null);
         setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user || null);
+    // Em seguida, verificar a sessão atual
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log('AuthProvider - Sessão obtida:', currentSession ? 'Válida' : 'Nenhuma');
+      setSession(currentSession);
+      setUser(currentSession?.user || null);
       setLoading(false);
     });
 

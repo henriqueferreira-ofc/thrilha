@@ -41,16 +41,25 @@ export function useAuthService() {
   const signIn = async (email: string, password: string): Promise<void> => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      console.log('Iniciando processo de login para:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        console.error('Erro de autenticação:', error.message);
+        throw error;
+      }
+      
+      console.log('Login realizado com sucesso:', data.session ? 'Sessão válida' : 'Sem sessão');
       toast.success('Login realizado com sucesso!');
       
-      // Navegar para página de tarefas depois de uma pequena pausa
-      // para permitir que o estado de autenticação seja atualizado
+      // Aumentar o timeout para garantir que o estado de autenticação seja atualizado
       setTimeout(() => {
+        console.log('Redirecionando para /tasks');
         navigate('/tasks', { replace: true });
-      }, 500);
+      }, 1000); // Aumentado para 1s para dar mais tempo para o estado ser atualizado
     } catch (error: unknown) {
+      console.error('Erro capturado durante login:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao fazer login');
       throw error;
     } finally {
@@ -63,6 +72,7 @@ export function useAuthService() {
    */
   const signOut = async () => {
     try {
+      console.log('Iniciando processo de logout');
       // Primeiro limpar o estado local e redirecionar
       navigate('/', { replace: true });
       setTimeout(async () => {
