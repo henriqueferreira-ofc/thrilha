@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
@@ -75,7 +76,7 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
 
         const img = new Image();
         
-        const loadPromise = new Promise((resolve, reject) => {
+        const loadPromise = new Promise<string>((resolve, reject) => {
           img.onload = () => {
             console.log('ImageTest: Imagem carregada com sucesso');
             successfulUrls.add(imageUrl); // Adicionar ao cache
@@ -89,16 +90,22 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
         });
 
         // Adicionar timeout para o carregamento
-        timeoutId = setTimeout(() => {
-          img.src = ''; // Cancela o carregamento
-          reject(new Error('Timeout ao carregar imagem'));
-        }, 10000); // 10 segundos de timeout
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            img.src = ''; // Cancela o carregamento
+            reject(new Error('Timeout ao carregar imagem'));
+          }, 10000); // 10 segundos de timeout
+        });
 
         img.src = urlWithTimestamp;
-        await loadPromise;
+        const result = await Promise.race([loadPromise, timeoutPromise]);
+
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
 
         if (isMounted) {
-          setSrc(urlWithTimestamp);
+          setSrc(result);
           setLoading(false);
           setError(null);
           setRetryCount(0); // Reset retry count on success
