@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { User } from 'lucide-react';
-import { ImageTest } from '../ImageTest';
+import { ImageLoader } from '../ui/image-loader';
 
 interface AvatarDisplayProps {
   avatarUrl: string | null;
@@ -9,7 +9,7 @@ interface AvatarDisplayProps {
 }
 
 export function AvatarDisplay({ avatarUrl, size }: AvatarDisplayProps) {
-  // Configuração de tamanhos
+  // Size configuration
   const sizeClasses = {
     sm: 'w-16 h-16',
     md: 'w-24 h-24',
@@ -25,7 +25,7 @@ export function AvatarDisplay({ avatarUrl, size }: AvatarDisplayProps) {
   return (
     <div className={`${sizeClasses[size]} relative rounded-full overflow-hidden bg-gray-800`}>
       {avatarUrl ? (
-        <ImageTest imageUrl={avatarUrl} />
+        <ImageLoader imageUrl={avatarUrl} alt="Avatar do usuário" />
       ) : (
         <div className="w-full h-full flex items-center justify-center">
           <User className={`${iconSizes[size]} text-gray-400`} />
