@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +15,7 @@ const Auth = () => {
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { user, signIn, signUp, forceLogout } = useAuth();
+  const navigate = useNavigate();
 
   // Força a limpar qualquer resíduo de autenticação ao carregar a página
   useEffect(() => {
@@ -35,20 +37,16 @@ const Auth = () => {
   // Usar useEffect para redirecionar se o usuário já estiver autenticado
   useEffect(() => {
     if (user) {
-      // Usando window.location diretamente para um redirecionamento completo
-      window.location.replace('#/tasks');
+      navigate('/tasks', { replace: true });
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       await signIn(email, password);
-      // Após login bem-sucedido, redirecionar para tarefas
-      setTimeout(() => {
-        window.location.replace('#/tasks');
-      }, 200);
+      // O redirecionamento é feito pelo próprio hook use-auth-service
     } catch (error) {
       console.error("Erro no login:", error);
     } finally {

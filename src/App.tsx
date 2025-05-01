@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -85,13 +86,23 @@ function ConnectionManager() {
 const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
-    if (!loading && !user) {
-      // Redirecionamento usando o hook de navegação do React Router
-      navigate('/', { replace: true });
-    }
-  }, [user, loading, navigate]);
+    // Quando o componente montar ou atualizar, verificar autenticação
+    const checkAuth = async () => {
+      if (!loading) {
+        if (!user) {
+          console.log('Usuário não autenticado, redirecionando para /', { user, loading });
+          navigate('/', { replace: true });
+        } else {
+          console.log('Usuário autenticado:', user.email);
+        }
+      }
+    };
+    
+    checkAuth();
+  }, [user, loading, navigate, location.pathname]);
   
   // Exibir carregamento enquanto verifica usuário
   if (loading) {
@@ -104,8 +115,11 @@ const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) 
   
   // Se o usuário não estiver autenticado, não renderizar nada enquanto redireciona
   if (!user) {
-    // Já estamos redirecionando no useEffect
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl text-purple-400">Redirecionando...</div>
+      </div>
+    );
   }
   
   // Se o usuário está autenticado, renderiza o elemento

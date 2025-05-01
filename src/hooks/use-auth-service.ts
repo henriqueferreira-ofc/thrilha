@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { supabase } from '../supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { checkAndCreateAvatarsBucket } from '../supabase/client';
 import { clearAuthData } from '../utils/auth-utils';
 
 export function useAuthService() {
@@ -46,8 +45,11 @@ export function useAuthService() {
       if (error) throw error;
       toast.success('Login realizado com sucesso!');
       
-      // Redirecionar para a página de tarefas após o login bem-sucedido
-      navigate('/tasks');
+      // Navegar para página de tarefas depois de uma pequena pausa
+      // para permitir que o estado de autenticação seja atualizado
+      setTimeout(() => {
+        navigate('/tasks', { replace: true });
+      }, 500);
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Erro ao fazer login');
       throw error;
@@ -61,10 +63,12 @@ export function useAuthService() {
    */
   const signOut = async () => {
     try {
+      // Primeiro limpar o estado local e redirecionar
       navigate('/', { replace: true });
       setTimeout(async () => {
         try {
           await supabase.auth.signOut();
+          clearAuthData();
           console.log('User signed out successfully');
         } catch (error) {
           console.error('Error signing out:', error);

@@ -1,15 +1,22 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mountain } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   
-  // Função corrigida para ir para a página de login
+  // Redirecionar para tarefas se o usuário já estiver autenticado
+  useEffect(() => {
+    if (user && !loading) {
+      navigate('/tasks', { replace: true });
+    }
+  }, [user, loading, navigate]);
+  
+  // Função para ir para a página de login
   const goToLoginPage = () => {
     navigate('/auth');
   };
@@ -22,10 +29,21 @@ const LandingPage = () => {
     });
   };
   
-  // Função corrigida para ir para o dashboard de tarefas
+  // Função para ir para o dashboard de tarefas
   const goToTasks = () => {
     navigate('/tasks');
   };
+  
+  // Se estiver carregando, mostre um indicador
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-xl text-purple-400 animate-pulse">Carregando...</div>
+      </div>
+    );
+  }
+  
+  // Se o usuário estiver logado, ele será redirecionado pelo useEffect
   
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
