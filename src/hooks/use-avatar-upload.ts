@@ -32,7 +32,7 @@ export function useAvatarUpload(user: User | null) {
       
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}_${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      const filePath = `${user.id}/${fileName}`; // Nota: sem o prefixo "avatars/"
       
       console.log('Iniciando upload do avatar:', filePath);
       
@@ -40,7 +40,7 @@ export function useAvatarUpload(user: User | null) {
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(AVATARS_BUCKET)
         .upload(filePath, file, {
-          cacheControl: '3600',
+          cacheControl: '0', // Sem cache
           upsert: true
         });
         
@@ -60,7 +60,7 @@ export function useAvatarUpload(user: User | null) {
       }
 
       // Obter URL pública do Supabase
-      const publicUrl = getAvatarPublicUrl(filePath);
+      const publicUrl = await getAvatarPublicUrl(filePath);
       
       if (!publicUrl) {
         throw new Error('Não foi possível gerar URL pública');
@@ -79,9 +79,7 @@ export function useAvatarUpload(user: User | null) {
         throw updateError;
       }
       
-      // Adicionar timestamp para evitar problemas de cache
-      const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
-      return urlWithTimestamp;
+      return publicUrl;
     } catch (error) {
       console.error('Erro completo no upload:', error);
       throw error;

@@ -123,7 +123,14 @@ export function useSidebarProfile(user: User | null) {
         }
         
         if (profile.avatar_url) {
-          setAvatarUrl(profile.avatar_url);
+          // Limpar a URL e adicionar timestamp para prevenir cache
+          let url = profile.avatar_url;
+          if (url.includes('avatars/avatars/')) {
+            url = url.replace('avatars/avatars/', 'avatars/');
+          }
+          // Adicionar timestamp para evitar problemas de cache
+          url = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
+          setAvatarUrl(url);
         } else {
           setAvatarUrl(null);
         }

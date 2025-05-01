@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -38,12 +39,20 @@ export function AvatarUpload({
   useEffect(() => {
     console.log('AvatarUpload: currentAvatarUrl mudou:', currentAvatarUrl);
     if (currentAvatarUrl) {
-      setAvatarUrl(currentAvatarUrl);
+      // Normalizar a URL para evitar problemas
+      let url = currentAvatarUrl;
+      if (url.includes('avatars/avatars/')) {
+        url = url.replace('avatars/avatars/', 'avatars/');
+      }
+      // Adicionar timestamp para forçar recarregamento
+      url = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
+      setAvatarUrl(url);
     } else {
       setAvatarUrl(null);
     }
   }, [currentAvatarUrl]);
 
+  // Configuração de tamanhos
   const sizeClasses = {
     sm: 'w-16 h-16',
     md: 'w-24 h-24',
@@ -102,7 +111,7 @@ export function AvatarUpload({
           // Preparar o caminho do arquivo
           const fileExt = file.name.split('.').pop();
           const fileName = `${user.id}_${Date.now()}.${fileExt}`;
-          const filePath = `${user.id}/${fileName}`;
+          const filePath = `${user.id}/${fileName}`; // Remover prefixo avatars/
           
           console.log('AvatarUpload: Iniciando upload para:', filePath);
           
@@ -110,7 +119,7 @@ export function AvatarUpload({
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from(AVATARS_BUCKET)
             .upload(filePath, file, {
-              cacheControl: '0',
+              cacheControl: '0', // Sem cache
               upsert: true
             });
             
@@ -120,7 +129,7 @@ export function AvatarUpload({
           }
           
           // Gerar URL pública
-          const publicUrl = await getAvatarPublicUrl(filePath);
+          const publicUrl = getAvatarPublicUrl(filePath);
           console.log('AvatarUpload: URL pública gerada:', publicUrl);
           
           // Atualizar o perfil com a nova URL

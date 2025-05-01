@@ -113,31 +113,34 @@ async function definePublicBucketPolicy() {
   }
 }
 
-// Função auxiliar para gerar URLs públicas de avatar
+// Função auxiliar para gerar URLs públicas de avatar - CORRIGIDA
 export function getAvatarPublicUrl(filePath: string): string {
   if (!filePath) return '';
-  
-  // Limpeza básica do caminho
-  const cleanPath = filePath.replace(/^\/|\/$/g, '');
   
   try {
     // Se já é uma URL completa, retorná-la limpa
     if (filePath.startsWith('http')) {
+      // Remover possíveis parâmetros de query
       return filePath.split('?')[0];
     }
     
-    // Gerar URL direta (não API) para garantir acesso público
+    // Garantir que o caminho não tem "avatars/avatars/" duplicado
+    let cleanPath = filePath;
+    if (cleanPath.startsWith(`${AVATARS_BUCKET}/${AVATARS_BUCKET}/`)) {
+      cleanPath = cleanPath.replace(`${AVATARS_BUCKET}/${AVATARS_BUCKET}/`, `${AVATARS_BUCKET}/`);
+    }
+    
+    // Remover barras iniciais e finais
+    cleanPath = cleanPath.replace(/^\/|\/$/g, '');
+    
+    // Usar o método do Supabase para obter a URL CDN pública
     const { data } = supabase.storage
       .from(AVATARS_BUCKET)
       .getPublicUrl(cleanPath);
     
-    console.log('URL pública gerada:', data.publicUrl);
-    
-    // Garantir que a URL use o formato public para acesso direto
-    let publicUrl = data.publicUrl;
-    if (!publicUrl.includes('/public/')) {
-      publicUrl = publicUrl.replace('/object/', '/public/');
-    }
+    // Adicionar timestamp para evitar cache
+    const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
+    console.log('URL pública gerada:', publicUrl);
     
     return publicUrl;
   } catch (error) {

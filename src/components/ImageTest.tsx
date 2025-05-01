@@ -33,45 +33,31 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
       setLoading(true);
       setError(null);
 
+      // Normalizar a URL para evitar problemas com caminhos duplicados
+      let normalizedUrl = imageUrl;
+      if (normalizedUrl.includes('avatars/avatars/')) {
+        normalizedUrl = normalizedUrl.replace('avatars/avatars/', 'avatars/');
+      }
+
       // Se for uma URL blob, use diretamente
-      if (imageUrl.startsWith('blob:')) {
+      if (normalizedUrl.startsWith('blob:')) {
         console.log('ImageTest: Usando URL blob');
-        setSrc(imageUrl);
+        setSrc(normalizedUrl);
         setLoading(false);
         return;
       }
 
       // Se a URL já foi carregada com sucesso antes, use-a diretamente
-      if (successfulUrls.has(imageUrl)) {
-        console.log('ImageTest: Usando URL do cache:', imageUrl);
-        setSrc(imageUrl);
+      if (successfulUrls.has(normalizedUrl)) {
+        console.log('ImageTest: Usando URL do cache:', normalizedUrl);
+        setSrc(normalizedUrl);
         setLoading(false);
         return;
       }
 
       try {
-        // Verificar se a URL é válida
-        const response = await fetch(imageUrl, { 
-          method: 'HEAD',
-          cache: 'no-cache',
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        // Verificar se o conteúdo é uma imagem
-        const contentType = response.headers.get('content-type');
-        if (!contentType?.startsWith('image/')) {
-          throw new Error('O arquivo não é uma imagem válida');
-        }
-
         // Para URLs públicas, adicionar timestamp para evitar cache
-        const urlWithTimestamp = `${imageUrl}?t=${Date.now()}`;
+        const urlWithTimestamp = `${normalizedUrl}${normalizedUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
         console.log('ImageTest: URL com timestamp:', urlWithTimestamp);
 
         const img = new Image();
@@ -79,7 +65,7 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
         const loadPromise = new Promise<string>((resolve, reject) => {
           img.onload = () => {
             console.log('ImageTest: Imagem carregada com sucesso');
-            successfulUrls.add(imageUrl); // Adicionar ao cache
+            successfulUrls.add(normalizedUrl); // Adicionar ao cache
             resolve(urlWithTimestamp);
           };
           
@@ -97,7 +83,10 @@ export function ImageTest({ imageUrl }: ImageTestProps) {
           }, 10000); // 10 segundos de timeout
         });
 
+        img.crossOrigin = "anonymous";
+        img.referrerPolicy = "no-referrer";
         img.src = urlWithTimestamp;
+        
         const result = await Promise.race([loadPromise, timeoutPromise]);
 
         if (timeoutId) {
