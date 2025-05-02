@@ -72,7 +72,7 @@ const LandingPage = () => {
             <Button className="purple-gradient-bg text-white px-8 py-6 text-lg" onClick={user ? goToTasks : goToLoginPage}>
               {user ? 'Minhas Tarefas' : 'Teste Grátis'}
             </Button>
-            <Button variant="outline" onClick={scrollToFeatures} className="text-white border-white/20 bg-white/5 px-8 py-6 text-lg font-normal">
+            <Button variant="outline" onClick={scrollToFeatures} className="border-white/20 bg-white/5 px-8 py-6 text-lg font-normal text-purple-400">
               Saiba Mais
             </Button>
           </div>
