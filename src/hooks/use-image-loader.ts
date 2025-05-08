@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
-// Cache of URLs that have been successfully loaded
+// Cache de URLs que foram carregadas com sucesso
 const successfulUrls = new Set<string>();
 
 interface UseImageLoaderOptions {
@@ -39,17 +39,17 @@ export function useImageLoader(
         return;
       }
 
-      console.log('ImageLoader: Iniciando carregamento da URL:', imageUrl);
+      console.log('ImageLoader: Carregando URL:', imageUrl);
       setLoading(true);
       setError(null);
 
-      // Normalize the URL to avoid problems with duplicate paths
+      // Normalizar URL para evitar problemas com caminhos duplicados
       let normalizedUrl = imageUrl;
       if (normalizedUrl.includes('avatars/avatars/')) {
         normalizedUrl = normalizedUrl.replace('avatars/avatars/', 'avatars/');
       }
 
-      // If it's a blob URL, use it directly
+      // Se for uma URL blob, usar diretamente
       if (normalizedUrl.startsWith('blob:')) {
         console.log('ImageLoader: Usando URL blob');
         setSrc(normalizedUrl);
@@ -57,7 +57,7 @@ export function useImageLoader(
         return;
       }
 
-      // If the URL has been successfully loaded before, use it directly
+      // Se a URL já foi carregada com sucesso antes, usar diretamente
       if (successfulUrls.has(normalizedUrl)) {
         console.log('ImageLoader: Usando URL do cache:', normalizedUrl);
         setSrc(normalizedUrl);
@@ -66,7 +66,7 @@ export function useImageLoader(
       }
 
       try {
-        // For public URLs, add timestamp to prevent caching
+        // Para URLs públicas, adicionar timestamp para evitar cache
         const urlWithTimestamp = `${normalizedUrl}${normalizedUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
         console.log('ImageLoader: URL com timestamp:', urlWithTimestamp);
 
@@ -75,7 +75,7 @@ export function useImageLoader(
         const loadPromise = new Promise<string>((resolve, reject) => {
           img.onload = () => {
             console.log('ImageLoader: Imagem carregada com sucesso');
-            successfulUrls.add(normalizedUrl); // Add to cache
+            successfulUrls.add(normalizedUrl); // Adicionar ao cache
             resolve(urlWithTimestamp);
           };
           
@@ -85,10 +85,10 @@ export function useImageLoader(
           };
         });
 
-        // Add timeout for loading
+        // Adicionar timeout para o carregamento
         const timeoutPromise = new Promise<never>((_, reject) => {
           timeoutId = setTimeout(() => {
-            img.src = ''; // Cancel loading
+            img.src = ''; // Cancelar carregamento
             reject(new Error('Timeout ao carregar imagem'));
           }, timeout);
         });
@@ -107,7 +107,7 @@ export function useImageLoader(
           setSrc(result);
           setLoading(false);
           setError(null);
-          setRetryCount(0); // Reset retry count on success
+          setRetryCount(0); // Resetar contagem de tentativas em caso de sucesso
         }
       } catch (error) {
         console.error('ImageLoader: Erro ao carregar imagem:', error);
@@ -115,12 +115,12 @@ export function useImageLoader(
           if (retryCount < maxRetries) {
             console.log(`ImageLoader: Tentativa ${retryCount + 1} de ${maxRetries}`);
             setRetryCount(prev => prev + 1);
-            // Try again after a small delay
+            // Tentar novamente após um pequeno atraso
             setTimeout(() => {
               if (isMounted) {
                 loadImage();
               }
-            }, 1000 * (retryCount + 1)); // Increasing delay
+            }, 1000 * (retryCount + 1)); // Atraso crescente
           } else {
             setLoading(false);
             setError('Erro ao carregar imagem');

@@ -1,9 +1,10 @@
+
 import { supabase } from './client';
 
 /**
  * Verifica se o perfil do usuário existe e cria um novo se não existir
  * @param userId ID do usuário autenticado
- * @param username Nome de usuário para o perfil (optional)
+ * @param username Nome de usuário para o perfil (opcional)
  * @returns O perfil do usuário, existente ou recém-criado
  */
 export async function getOrCreateProfile(userId: string, username?: string) {
@@ -13,11 +14,11 @@ export async function getOrCreateProfile(userId: string, username?: string) {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .maybeSingle();
+      .single();
     
-    if (fetchError) {
+    if (fetchError && fetchError.code !== 'PGRST116') {
       console.error('Erro ao buscar perfil:', fetchError);
-      // Não lançamos erro aqui para continuar a lógica de fallback
+      // Não lanço erro para continuar com a lógica de fallback
     }
     
     // 2. Se o perfil existir, retorná-lo
@@ -26,81 +27,34 @@ export async function getOrCreateProfile(userId: string, username?: string) {
       return { profile: existingProfile, isNew: false };
     }
     
-    // 3. Se não existir, determinar o nome de usuário padrão
+    // 3. Se não existir, criar um novo
     const userResponse = await supabase.auth.getUser();
     const defaultUsername = username || 
       userResponse?.data?.user?.email?.split('@')[0] || 
       `user_${userId.substring(0, 8)}`;
     
-    // Perfil local como fallback em caso de erros
+    // Perfil local como fallback
     const fallbackProfile = {
       id: userId,
       username: defaultUsername,
       avatar_url: null,
       updated_at: new Date().toISOString()
     };
-      
-    // 4. Tentar criar o perfil usando metadados do usuário
+    
+    // 4. Tentar inserir o perfil diretamente
     try {
-      // Atualizar metadados do usuário primeiro, que não têm RLS
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: {
+      const { data: newProfile, error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
           username: defaultUsername,
-          full_name: defaultUsername
-        }
-      });
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
       
-      if (updateError) {
-        console.error('Erro ao atualizar metadados do usuário:', updateError);
-        // Continuar com tentativas alternativas
-      }
-      
-      // 5. Tentar criar usando função de admin (se disponível)
-      try {
-        const { data: newProfile, error: insertError } = await supabase.rpc('create_user_profile', {
-          user_id: userId,
-          user_name: defaultUsername
-        });
-        
-        if (insertError) {
-          console.warn('Erro ao criar perfil via RPC:', insertError);
-          // Não lançamos erro para continuar com outras tentativas
-        } else if (newProfile) {
-          console.log('Perfil criado com sucesso via RPC:', newProfile);
-          return { profile: newProfile, isNew: true };
-        }
-      } catch (rpcError) {
-        console.warn('Função RPC para criar perfil não disponível:', rpcError);
-        // Se RPC falhar, continuamos para tentar inserção direta
-      }
-      
-      // 6. Tentar inserção direta como último recurso
-      try {
-        const { data: directProfile, error: directError } = await supabase
-          .from('profiles')
-          .insert({
-            id: userId,
-            username: defaultUsername,
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-        
-        if (directError) {
-          console.error('Erro ao criar perfil via inserção direta:', directError);
-          return {
-            profile: fallbackProfile,
-            isNew: true,
-            error: directError
-          };
-        }
-        
-        if (directProfile) {
-          console.log('Perfil criado com sucesso via inserção direta:', directProfile);
-          return { profile: directProfile, isNew: true };
-        }
-      } catch (insertError) {
-        console.error('Exceção ao inserir perfil:', insertError);
+      if (insertError) {
+        console.error('Erro ao criar perfil:', insertError);
         return {
           profile: fallbackProfile,
           isNew: true,
@@ -108,23 +62,26 @@ export async function getOrCreateProfile(userId: string, username?: string) {
         };
       }
       
-      // 7. Fallback final se nenhuma operação retornou ou falhou explicitamente
-      console.warn('Todas as tentativas de criar perfil falharam silenciosamente, usando fallback');
-      return {
-        profile: fallbackProfile,
-        isNew: true,
-        error: new Error('Todas as tentativas de criar perfil falharam')
-      };
+      if (newProfile) {
+        console.log('Perfil criado com sucesso:', newProfile);
+        return { profile: newProfile, isNew: true };
+      }
     } catch (error) {
-      console.error('Erro não tratado ao criar perfil:', error);
-      
-      // 8. Em caso de erro, retornar perfil falso para interface não quebrar
+      console.error('Exceção ao inserir perfil:', error);
       return {
         profile: fallbackProfile,
         isNew: true,
         error
       };
     }
+    
+    // 5. Fallback final
+    console.warn('Todas as tentativas de criar perfil falharam, usando fallback');
+    return {
+      profile: fallbackProfile,
+      isNew: true,
+      error: new Error('Todas as tentativas de criar perfil falharam')
+    };
   } catch (error) {
     console.error('Erro geral ao verificar/criar perfil:', error);
     
@@ -141,4 +98,4 @@ export async function getOrCreateProfile(userId: string, username?: string) {
       error
     };
   }
-} 
+}

@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { AVATARS_BUCKET, getAvatarPublicUrl, supabase } from '../supabase/client';
 import { User } from '@supabase/supabase-js';
+import { checkAndCreateAvatarsBucket } from '../supabase/client';
 
 export function useAvatarUploader(user: User | null, currentAvatarUrl: string | null, onAvatarChange?: (url: string) => void) {
   const [uploading, setUploading] = useState(false);
@@ -17,40 +18,41 @@ export function useAvatarUploader(user: User | null, currentAvatarUrl: string | 
       setUploading(true);
       setUploadError(null);
       
-      // Prevenir envio de arquivos muito grandes
+      // Verificar tamanho do arquivo
       if (file.size > 5 * 1024 * 1024) {
         throw new Error('A imagem deve ter no máximo 5MB');
       }
       
-      // Validar tipos de arquivo permitidos
+      // Validar tipos de arquivo
       if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
         throw new Error('Formato não suportado. Use JPEG, PNG, WEBP ou GIF.');
       }
       
       toast.info('Enviando imagem...');
       
-      // Mostrar prévia local antes do upload completo
+      // Mostrar prévia local durante o upload
       if (localPreviewRef.current) {
         URL.revokeObjectURL(localPreviewRef.current);
       }
       localPreviewRef.current = URL.createObjectURL(file);
-      console.log('AvatarUploader: Prévia local criada:', localPreviewRef.current);
       
-      // Upload para o storage
       if (user) {
         try {
+          // Garantir que o bucket exista
+          await checkAndCreateAvatarsBucket();
+          
           // Preparar o caminho do arquivo
           const fileExt = file.name.split('.').pop();
           const fileName = `${user.id}_${Date.now()}.${fileExt}`;
-          const filePath = `${user.id}/${fileName}`; // Remover prefixo avatars/
+          const filePath = `${user.id}/${fileName}`;
           
           console.log('AvatarUploader: Iniciando upload para:', filePath);
           
-          // Fazer upload direto pelo cliente Supabase
+          // Fazer upload para o Supabase
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from(AVATARS_BUCKET)
             .upload(filePath, file, {
-              cacheControl: '0', // Sem cache
+              cacheControl: '0',
               upsert: true
             });
             
@@ -66,7 +68,10 @@ export function useAvatarUploader(user: User | null, currentAvatarUrl: string | 
           // Atualizar o perfil com a nova URL
           const { error: updateError } = await supabase
             .from('profiles')
-            .update({ avatar_url: publicUrl })
+            .update({ 
+              avatar_url: publicUrl,
+              updated_at: new Date().toISOString()
+            })
             .eq('id', user.id);
             
           if (updateError) {
@@ -74,7 +79,7 @@ export function useAvatarUploader(user: User | null, currentAvatarUrl: string | 
             throw updateError;
           }
           
-          // Limpar a prévia local após o upload bem-sucedido
+          // Limpar preview local após sucesso
           if (localPreviewRef.current) {
             URL.revokeObjectURL(localPreviewRef.current);
             localPreviewRef.current = null;
@@ -100,7 +105,7 @@ export function useAvatarUploader(user: User | null, currentAvatarUrl: string | 
     }
   };
 
-  // Cleanup function for URL objects
+  // Limpeza de URLs de objetos
   const cleanupLocalPreview = () => {
     if (localPreviewRef.current) {
       URL.revokeObjectURL(localPreviewRef.current);

@@ -9,7 +9,7 @@ interface AvatarDisplayProps {
 }
 
 export function AvatarDisplay({ avatarUrl, size }: AvatarDisplayProps) {
-  // Size configuration
+  // Configuração de tamanho
   const sizeClasses = {
     sm: 'w-16 h-16',
     md: 'w-24 h-24',
@@ -25,7 +25,15 @@ export function AvatarDisplay({ avatarUrl, size }: AvatarDisplayProps) {
   return (
     <div className={`${sizeClasses[size]} relative rounded-full overflow-hidden bg-gray-800`}>
       {avatarUrl ? (
-        <ImageLoader imageUrl={avatarUrl} alt="Avatar do usuário" />
+        <ImageLoader 
+          imageUrl={avatarUrl} 
+          alt="Avatar do usuário" 
+          fallback={
+            <div className="w-full h-full flex items-center justify-center">
+              <User className={`${iconSizes[size]} text-gray-400`} />
+            </div>
+          }
+        />
       ) : (
         <div className="w-full h-full flex items-center justify-center">
           <User className={`${iconSizes[size]} text-gray-400`} />

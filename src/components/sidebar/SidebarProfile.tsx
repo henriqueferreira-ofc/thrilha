@@ -4,59 +4,23 @@ import { User } from '@supabase/supabase-js';
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { Mountain } from 'lucide-react';
 import { getOrCreateProfile } from '@/supabase/helper';
+import { useSidebarProfile } from '@/hooks/use-sidebar-profile';
 
 interface SidebarProfileProps {
   user: User | null;
   loading: boolean;
 }
 
-export function SidebarProfile({ user, loading }: SidebarProfileProps) {
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [username, setUsername] = useState<string>('');
+export function SidebarProfile({ user, loading: authLoading }: SidebarProfileProps) {
+  const { avatarUrl, username, loading: profileLoading, loadUserProfile } = useSidebarProfile(user);
   
-  useEffect(() => {
+  const handleAvatarUrlChange = (url: string) => {
+    console.log('Avatar URL alterada:', url);
+    // O hook use-sidebar-profile já atualiza automaticamente via realtime
+    // mas podemos forçar uma nova verificação
     if (user) {
       loadUserProfile();
     }
-  }, [user]);
-  
-  const loadUserProfile = async () => {
-    if (!user) return;
-    
-    try {
-      const { profile, error } = await getOrCreateProfile(user.id);
-      
-      if (profile) {
-        if (profile.username) {
-          setUsername(profile.username);
-        } else {
-          const defaultName = user.email 
-            ? user.email.split('@')[0] 
-            : `user_${user.id.substring(0, 8)}`;
-          setUsername(defaultName);
-        }
-        
-        if (profile.avatar_url) {
-          setAvatarUrl(profile.avatar_url);
-        } else {
-          setAvatarUrl(null);
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao carregar/criar perfil:', error);
-      if (user?.email) {
-        setUsername(user.email.split('@')[0]);
-      } else if (user?.id) {
-        setUsername(`user_${user.id.substring(0, 8)}`);
-      } else {
-        setUsername('Usuário');
-      }
-      setAvatarUrl(null);
-    }
-  };
-
-  const handleAvatarUrlChange = (url: string) => {
-    setAvatarUrl(url);
   };
 
   return (
@@ -74,7 +38,7 @@ export function SidebarProfile({ user, loading }: SidebarProfileProps) {
             onAvatarChange={handleAvatarUrlChange}
             size="sm"
           />
-          {!loading && username && (
+          {!profileLoading && username && (
             <p className="text-sm font-medium text-purple-300">
               {username}
             </p>

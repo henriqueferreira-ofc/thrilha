@@ -33,7 +33,6 @@ export function ImageLoader({
   );
 
   if (loading) {
-    console.log('ImageLoader: Renderizando loader');
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-800">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -42,11 +41,10 @@ export function ImageLoader({
   }
 
   if (error || !src) {
-    console.log('ImageLoader: Renderizando fallback, error:', error);
+    console.log('ImageLoader: Renderizando fallback devido a erro:', error);
     return fallback || defaultFallback;
   }
 
-  console.log('ImageLoader: Renderizando imagem com src:', src);
   return (
     <img
       src={src}
@@ -55,7 +53,7 @@ export function ImageLoader({
       crossOrigin="anonymous"
       referrerPolicy="no-referrer"
       onError={(e) => {
-        console.error('ImageLoader: Erro na tag img:', e);
+        console.error('ImageLoader: Erro ao carregar imagem:', e);
       }}
     />
   );

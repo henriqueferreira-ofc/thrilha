@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { AvatarDisplay } from './avatar/AvatarDisplay';
 import { UploadOverlay } from './avatar/UploadOverlay';
 import { useAvatarUploader } from '@/hooks/use-avatar-uploader';
+import { toast } from 'sonner';
 
 interface AvatarUploadProps {
   currentAvatarUrl: string | null;
@@ -24,7 +25,7 @@ export function AvatarUpload({
     onAvatarChange
   );
 
-  // Cleanup the URL when component unmounts
+  // Limpar a URL quando o componente for desmontado
   useEffect(() => {
     return () => {
       cleanupLocalPreview();
@@ -32,6 +33,11 @@ export function AvatarUpload({
   }, []);
 
   const handleClick = () => {
+    if (!user) {
+      toast.error('Você precisa estar logado para alterar seu avatar');
+      return;
+    }
+    
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }

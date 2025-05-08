@@ -55,15 +55,6 @@ export async function checkAndCreateAvatarsBucket() {
         }
         
         console.log(`Bucket "${AVATARS_BUCKET}" criado com sucesso`);
-        
-        // Definir políticas de acesso público para o bucket recém-criado
-        try {
-          await definePublicBucketPolicy();
-          console.log('Políticas de acesso público aplicadas com sucesso');
-        } catch (policyError) {
-          console.error('Erro ao definir políticas de acesso:', policyError);
-        }
-        
         return true;
       } catch (e) {
         console.error('Exceção ao criar bucket:', e);
@@ -79,41 +70,7 @@ export async function checkAndCreateAvatarsBucket() {
   }
 }
 
-// Função para definir políticas de acesso público para o bucket
-async function definePublicBucketPolicy() {
-  try {
-    // Política para permitir leitura pública (SELECT)
-    const { error: selectError } = await supabase.rpc('create_storage_policy', {
-      bucket_id: AVATARS_BUCKET,
-      name: 'Public Read Access',
-      definition: 'true', // Qualquer um pode ler
-      operation: 'SELECT',
-      actions: ['SELECT']
-    });
-    
-    if (selectError) {
-      console.warn('Erro ao definir política SELECT:', selectError);
-    }
-    
-    // Política para permitir que usuários autenticados façam upload (INSERT)
-    const { error: insertError } = await supabase.rpc('create_storage_policy', {
-      bucket_id: AVATARS_BUCKET,
-      name: 'Authenticated Insert Access',
-      definition: 'auth.role() = \'authenticated\'', // Apenas usuários autenticados
-      operation: 'INSERT',
-      actions: ['INSERT']
-    });
-    
-    if (insertError) {
-      console.warn('Erro ao definir política INSERT:', insertError);
-    }
-  } catch (error) {
-    console.error('Erro ao definir políticas:', error);
-    throw error;
-  }
-}
-
-// Função auxiliar para gerar URLs públicas de avatar - CORRIGIDA
+// Função para gerar URLs públicas de avatar - CORRIGIDA
 export function getAvatarPublicUrl(filePath: string): string {
   if (!filePath) return '';
   
@@ -124,7 +81,7 @@ export function getAvatarPublicUrl(filePath: string): string {
       return filePath.split('?')[0];
     }
     
-    // Garantir que o caminho não tem "avatars/avatars/" duplicado
+    // Garantir que o caminho não tem duplicações
     let cleanPath = filePath;
     if (cleanPath.startsWith(`${AVATARS_BUCKET}/${AVATARS_BUCKET}/`)) {
       cleanPath = cleanPath.replace(`${AVATARS_BUCKET}/${AVATARS_BUCKET}/`, `${AVATARS_BUCKET}/`);
@@ -138,11 +95,9 @@ export function getAvatarPublicUrl(filePath: string): string {
       .from(AVATARS_BUCKET)
       .getPublicUrl(cleanPath);
     
-    // Adicionar timestamp para evitar cache
-    const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
-    console.log('URL pública gerada:', publicUrl);
+    console.log('URL pública gerada:', data.publicUrl);
     
-    return publicUrl;
+    return data.publicUrl;
   } catch (error) {
     console.error('Erro ao gerar URL pública:', error);
     return filePath; // Retornar a original se houver erro
