@@ -116,13 +116,44 @@ export function useSidebarProfile(user: User | null) {
       setLoading(true);
       console.log('Carregando perfil do usuário:', user.id);
       
-      const { profile, error } = await getOrCreateProfile(user.id);
+      // Buscar perfil do usuário diretamente da tabela profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', user.id)
+        .single();
       
-      if (profile) {
-        console.log('Perfil carregado:', profile);
+      if (profileError) {
+        console.error('Erro ao buscar perfil:', profileError);
         
-        if (profile.username) {
-          setUsername(profile.username);
+        // Tentar criar o perfil se não existir
+        if (profileError.code === 'PGRST116') {
+          console.log('Perfil não encontrado, criando...');
+          const defaultUsername = user.email ? user.email.split('@')[0] : `user_${user.id.substring(0, 8)}`;
+          
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              username: defaultUsername,
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+          
+          if (insertError) {
+            console.error('Erro ao criar perfil:', insertError);
+          } else if (newProfile) {
+            console.log('Novo perfil criado:', newProfile);
+            setUsername(newProfile.username || defaultUsername);
+            setAvatarUrl(null);
+          }
+        }
+      } else if (profileData) {
+        console.log('Perfil carregado:', profileData);
+        
+        if (profileData.username) {
+          setUsername(profileData.username);
         } else {
           const defaultName = user.email 
             ? user.email.split('@')[0] 
@@ -130,9 +161,9 @@ export function useSidebarProfile(user: User | null) {
           setUsername(defaultName);
         }
         
-        if (profile.avatar_url) {
+        if (profileData.avatar_url) {
           // Adicionar timestamp para evitar problemas de cache
-          const url = profile.avatar_url + '?t=' + Date.now();
+          const url = profileData.avatar_url + '?t=' + Date.now();
           console.log('URL de avatar definida:', url);
           setAvatarUrl(url);
         } else {

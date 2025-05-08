@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Cache de URLs que foram carregadas com sucesso
 const successfulUrls = new Set<string>();
@@ -7,6 +7,7 @@ const successfulUrls = new Set<string>();
 interface UseImageLoaderOptions {
   maxRetries?: number;
   timeout?: number;
+  preventCache?: boolean;
 }
 
 interface UseImageLoaderResult {
@@ -14,6 +15,7 @@ interface UseImageLoaderResult {
   loading: boolean;
   error: string | null;
   retryCount: number;
+  refresh: () => void;
 }
 
 export function useImageLoader(
@@ -24,14 +26,44 @@ export function useImageLoader(
   const [error, setError] = useState<string | null>(null);
   const [src, setSrc] = useState('');
   const [retryCount, setRetryCount] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const maxRetries = options.maxRetries ?? 3;
   const timeout = options.timeout ?? 10000;
+  const preventCache = options.preventCache ?? true;
+  const isMounted = useRef(true);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const refresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+    setRetryCount(0);
+    setError(null);
+    setLoading(true);
+  };
+
+  // Limpar timeout ao desmontar
+  useEffect(() => {
+    isMounted.current = true;
+    
+    return () => {
+      isMounted.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-    let timeoutId: NodeJS.Timeout;
+    if (!isMounted.current) return;
+    
+    // Limpar timeout anterior
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
 
     const loadImage = async () => {
+      // Verificar se tem URL
       if (!imageUrl) {
         console.log('ImageLoader: URL não fornecida');
         setError('URL de imagem não fornecida');
@@ -58,8 +90,8 @@ export function useImageLoader(
         return;
       }
 
-      // Se a URL já foi carregada com sucesso antes, usar diretamente
-      if (successfulUrls.has(cleanUrl)) {
+      // Se a URL já foi carregada com sucesso antes e não estamos prevenindo cache
+      if (!preventCache && successfulUrls.has(cleanUrl)) {
         console.log('ImageLoader: Usando URL do cache:', cleanUrl);
         setSrc(cleanUrl);
         setLoading(false);
@@ -69,11 +101,18 @@ export function useImageLoader(
       try {
         // Para URLs públicas, adicionar timestamp para evitar cache
         const timestamp = Date.now();
-        const urlWithTimestamp = `${cleanUrl}?t=${timestamp}`;
-        console.log('ImageLoader: URL com timestamp:', urlWithTimestamp);
-
-        const img = new Image();
+        const urlWithTimestamp = preventCache 
+          ? `${cleanUrl}${cleanUrl.includes('?') ? '&' : '?'}t=${timestamp}`
+          : cleanUrl;
         
+        console.log('ImageLoader: URL para carregamento:', urlWithTimestamp);
+
+        // Criar elemento de imagem para pré-carregamento
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.referrerPolicy = "no-referrer";
+
+        // Configurar promessa para carregar a imagem
         const loadPromise = new Promise<string>((resolve, reject) => {
           img.onload = () => {
             console.log('ImageLoader: Imagem carregada com sucesso:', urlWithTimestamp);
@@ -85,27 +124,30 @@ export function useImageLoader(
             console.error('ImageLoader: Erro ao carregar imagem:', e);
             reject(new Error('Erro ao carregar imagem'));
           };
+          
+          // Iniciar carregamento
+          img.src = urlWithTimestamp;
         });
 
-        // Adicionar timeout para o carregamento
+        // Configurar timeout
         const timeoutPromise = new Promise<never>((_, reject) => {
-          timeoutId = setTimeout(() => {
+          timeoutRef.current = setTimeout(() => {
             img.src = ''; // Cancelar carregamento
             reject(new Error('Timeout ao carregar imagem'));
           }, timeout);
         });
 
-        img.crossOrigin = "anonymous";
-        img.referrerPolicy = "no-referrer";
-        img.src = urlWithTimestamp;
-        
+        // Corrida entre carregamento e timeout
         const result = await Promise.race([loadPromise, timeoutPromise]);
 
-        if (timeoutId) {
-          clearTimeout(timeoutId);
+        // Limpar timeout se a imagem carregou
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
         }
 
-        if (isMounted) {
+        // Atualizar estado se componente ainda está montado
+        if (isMounted.current) {
           setSrc(result);
           setLoading(false);
           setError(null);
@@ -113,13 +155,16 @@ export function useImageLoader(
         }
       } catch (error) {
         console.error('ImageLoader: Erro ao carregar imagem:', error);
-        if (isMounted) {
+        
+        // Tentar novamente se o componente ainda está montado
+        if (isMounted.current) {
           if (retryCount < maxRetries) {
             console.log(`ImageLoader: Tentativa ${retryCount + 1} de ${maxRetries}`);
             setRetryCount(prev => prev + 1);
+            
             // Tentar novamente após um pequeno atraso
-            setTimeout(() => {
-              if (isMounted) {
+            timeoutRef.current = setTimeout(() => {
+              if (isMounted.current) {
                 loadImage();
               }
             }, 1000 * (retryCount + 1)); // Atraso crescente
@@ -133,15 +178,7 @@ export function useImageLoader(
     };
 
     loadImage();
+  }, [imageUrl, retryCount, maxRetries, timeout, preventCache, refreshTrigger]);
 
-    return () => {
-      isMounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      console.log('ImageLoader: Limpando effect');
-    };
-  }, [imageUrl, retryCount, maxRetries, timeout]);
-
-  return { loading, error, src, retryCount };
+  return { loading, error, src, retryCount, refresh };
 }

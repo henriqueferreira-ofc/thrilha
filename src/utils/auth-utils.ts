@@ -3,6 +3,8 @@
  * Utility functions for auth-related operations
  */
 
+import { supabase } from '../supabase/client';
+
 /**
  * Clears all authentication data from localStorage, sessionStorage, and cookies
  */

@@ -110,7 +110,7 @@ export function useAuth() {
   return context;
 }
 
-export function isAuthenticated(): boolean {
-  const { data } = supabase.auth.getSession();
+export async function isAuthenticated(): Promise<boolean> {
+  const { data } = await supabase.auth.getSession();
   return !!data.session;
 }

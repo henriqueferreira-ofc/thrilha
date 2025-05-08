@@ -38,8 +38,17 @@ export function useAvatarUploader(user: User | null, currentAvatarUrl: string | 
       
       if (user) {
         try {
-          // Garantir que o bucket exista
-          await checkAndCreateAvatarsBucket();
+          // Verificar se o bucket existe para evitar erros RLS
+          console.log('AvatarUploader: Verificando se o bucket existe');
+          const { data: buckets } = await supabase.storage.listBuckets();
+          const avatarBucketExists = buckets?.some(bucket => bucket.name === AVATARS_BUCKET);
+          
+          if (!avatarBucketExists) {
+            console.log('AvatarUploader: Bucket não existe, verificando permissões');
+            // Não tente criar o bucket aqui - ele deve ser criado pelo admin
+            toast.error('Bucket de avatares não está configurado. Contate o administrador.');
+            throw new Error('Bucket de avatares não encontrado');
+          }
           
           // Preparar o caminho do arquivo
           const fileExt = file.name.split('.').pop();
@@ -62,7 +71,11 @@ export function useAvatarUploader(user: User | null, currentAvatarUrl: string | 
           }
           
           // Gerar URL pública
-          const publicUrl = getAvatarPublicUrl(filePath);
+          const { data } = supabase.storage
+            .from(AVATARS_BUCKET)
+            .getPublicUrl(filePath);
+          
+          const publicUrl = data.publicUrl;
           console.log('AvatarUploader: URL pública gerada:', publicUrl);
           
           // Atualizar o perfil com a nova URL

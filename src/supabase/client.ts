@@ -1,9 +1,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Usar as variáveis de ambiente para configuração
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://yieihrvcbshzmxieflsv.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpZWlocnZjYnNoem14aWVmbHN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwMjU2MDYsImV4cCI6MjA1OTYwMTYwNn0.fOBINx1LP_fxvnboVkJEAYTI_GVcI9gzKBhVAqXPrsY';
+// Usar as variáveis de ambiente para configuração ou valores fixos para demonstração
+const supabaseUrl = 'https://yieihrvcbshzmxieflsv.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpZWlocnZjYnNoem14aWVmbHN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwMjU2MDYsImV4cCI6MjA1OTYwMTYwNn0.fOBINx1LP_fxvnboVkJEAYTI_GVcI9gzKBhVAqXPrsY';
 
 // Criar uma única instância do cliente Supabase com configurações explícitas
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -40,32 +40,17 @@ export async function checkAndCreateAvatarsBucket() {
     console.log('Buckets disponíveis:', buckets);
     const avatarsBucket = buckets?.find(bucket => bucket.name === AVATARS_BUCKET);
     
-    // Se o bucket não existir, tentar criá-lo
-    if (!avatarsBucket) {
-      console.log(`Bucket "${AVATARS_BUCKET}" não encontrado, tentando criar...`);
-      try {
-        const { data, error: createError } = await supabase.storage.createBucket(AVATARS_BUCKET, {
-          public: true,
-          fileSizeLimit: 5 * 1024 * 1024 // 5MB limite
-        });
-        
-        if (createError) {
-          console.error(`Erro ao criar bucket ${AVATARS_BUCKET}:`, createError);
-          return false;
-        }
-        
-        console.log(`Bucket "${AVATARS_BUCKET}" criado com sucesso`);
-        return true;
-      } catch (e) {
-        console.error('Exceção ao criar bucket:', e);
-        return false;
-      }
+    // Se o bucket existe, retornar true
+    if (avatarsBucket) {
+      console.log(`Bucket "${AVATARS_BUCKET}" já existe`);
+      return true;
     }
     
-    console.log(`Bucket "${AVATARS_BUCKET}" já existe`);
-    return true;
+    console.log(`Bucket "${AVATARS_BUCKET}" não encontrado`);
+    // Não tentar criar o bucket aqui - isso requer permissões especiais
+    return false;
   } catch (error) {
-    console.error('Erro ao verificar/criar bucket:', error);
+    console.error('Erro ao verificar bucket:', error);
     return false;
   }
 }
@@ -104,8 +89,11 @@ export async function uploadToAvatarsBucket(
   filePath: string
 ): Promise<string> {
   try {
-    // Assegurar que o bucket existe
-    await checkAndCreateAvatarsBucket();
+    // Verificar se o bucket existe
+    const bucketExists = await checkAndCreateAvatarsBucket();
+    if (!bucketExists) {
+      throw new Error('Bucket de avatares não está disponível');
+    }
     
     // Upload do arquivo
     const { data, error } = await supabase.storage
@@ -120,7 +108,11 @@ export async function uploadToAvatarsBucket(
     }
     
     // Retornar a URL pública
-    return getAvatarPublicUrl(data.path);
+    const { data: urlData } = supabase.storage
+      .from(AVATARS_BUCKET)
+      .getPublicUrl(data.path);
+      
+    return urlData.publicUrl;
   } catch (error) {
     console.error('Erro ao fazer upload:', error);
     throw error;
