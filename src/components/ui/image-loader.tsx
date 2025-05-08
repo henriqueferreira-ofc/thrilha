@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useImageLoader } from '@/hooks/use-image-loader';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -32,7 +33,7 @@ export function ImageLoader({
   );
 
   if (loading) {
-    console.log('ImageLoader: Renderizando loader para:', imageUrl);
+    console.log('ImageLoader: Renderizando loader');
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-800">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -41,7 +42,7 @@ export function ImageLoader({
   }
 
   if (error || !src) {
-    console.log('ImageLoader: Renderizando fallback, error:', error, 'src:', src);
+    console.log('ImageLoader: Renderizando fallback, error:', error);
     return fallback || defaultFallback;
   }
 
@@ -54,20 +55,7 @@ export function ImageLoader({
       crossOrigin="anonymous"
       referrerPolicy="no-referrer"
       onError={(e) => {
-        console.error('ImageLoader: Erro na tag img:', {
-          error: e,
-          src: src,
-          naturalWidth: e.currentTarget.naturalWidth,
-          naturalHeight: e.currentTarget.naturalHeight,
-          currentSrc: e.currentTarget.currentSrc
-        });
-      }}
-      onLoad={(e) => {
-        console.log('ImageLoader: Imagem carregada com sucesso:', {
-          naturalWidth: e.currentTarget.naturalWidth,
-          naturalHeight: e.currentTarget.naturalHeight,
-          currentSrc: e.currentTarget.currentSrc
-        });
+        console.error('ImageLoader: Erro na tag img:', e);
       }}
     />
   );
