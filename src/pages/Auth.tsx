@@ -8,35 +8,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { Mountain, LogIn, UserPlus } from 'lucide-react';
+import { toast } from 'sonner';
+import { clearAuthData } from '@/utils/auth-utils';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { user, signIn, signUp, forceLogout } = useAuth();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
   // Força a limpar qualquer resíduo de autenticação ao carregar a página
   useEffect(() => {
-    // Limpar tokens e cookies de autenticação
-    localStorage.removeItem('supabase.auth.token');
-    localStorage.removeItem('supabase.auth.refreshToken');
-    localStorage.removeItem('sb-yieihrvcbshzmxieflsv-auth-token');
-    sessionStorage.clear();
-    
-    // Limpar cookies relacionados à autenticação
-    document.cookie.split(';').forEach(cookie => {
-      const [name] = cookie.split('=').map(c => c.trim());
-      if (name.includes('supabase') || name.includes('sb-')) {
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-      }
-    });
+    console.log('Página de autenticação montada - limpando tokens residuais');
+    clearAuthData();
   }, []);
 
   // Usar useEffect para redirecionar se o usuário já estiver autenticado
   useEffect(() => {
     if (user) {
+      console.log('Usuário já autenticado, redirecionando para /tasks');
       navigate('/tasks', { replace: true });
     }
   }, [user, navigate]);
@@ -44,11 +37,26 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(null);
+    
     try {
+      console.log('Tentando fazer login com:', email);
       await signIn(email, password);
       // O redirecionamento é feito pelo próprio hook use-auth-service
     } catch (error) {
       console.error("Erro no login:", error);
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+        
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('Email ou senha incorretos');
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        setErrorMessage('Erro desconhecido ao fazer login');
+        toast.error('Erro desconhecido ao fazer login');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -57,11 +65,18 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(null);
+    
     try {
       await signUp(email, password, username);
       // Mostrar mensagem de confirmação (a própria função signUp já mostra)
     } catch (error) {
       console.error("Erro no cadastro:", error);
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage('Erro desconhecido ao criar conta');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -110,6 +125,7 @@ const Auth = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        className="bg-black/50 border-white/20"
                       />
                     </div>
                     <div className="space-y-2">
@@ -121,8 +137,14 @@ const Auth = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        className="bg-black/50 border-white/20"
                       />
                     </div>
+                    {errorMessage && (
+                      <div className="text-red-500 text-sm mt-2">
+                        {errorMessage}
+                      </div>
+                    )}
                   </CardContent>
                   <CardFooter>
                     <Button 
@@ -153,6 +175,7 @@ const Auth = () => {
                         placeholder="Seu nome"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
+                        className="bg-black/50 border-white/20"
                       />
                     </div>
                     <div className="space-y-2">
@@ -164,6 +187,7 @@ const Auth = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        className="bg-black/50 border-white/20"
                       />
                     </div>
                     <div className="space-y-2">
@@ -175,8 +199,14 @@ const Auth = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        className="bg-black/50 border-white/20"
                       />
                     </div>
+                    {errorMessage && (
+                      <div className="text-red-500 text-sm mt-2">
+                        {errorMessage}
+                      </div>
+                    )}
                   </CardContent>
                   <CardFooter>
                     <Button 

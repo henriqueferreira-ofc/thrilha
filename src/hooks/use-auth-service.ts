@@ -28,6 +28,7 @@ export function useAuthService() {
       if (error) throw error;
       toast.success('Cadastro realizado! Verifique seu email para confirmar sua conta.');
     } catch (error: unknown) {
+      console.error('Erro no cadastro:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao criar conta');
       throw error;
     } finally {
@@ -43,7 +44,14 @@ export function useAuthService() {
       setIsLoading(true);
       console.log('Iniciando processo de login para:', email);
       
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      // Limpar qualquer sessão residual
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('supabase.auth.refreshToken');
+      
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
       
       if (error) {
         console.error('Erro de autenticação:', error.message);
@@ -51,13 +59,19 @@ export function useAuthService() {
       }
       
       console.log('Login realizado com sucesso:', data.session ? 'Sessão válida' : 'Sem sessão');
+      
+      if (!data.session) {
+        throw new Error('Sessão de autenticação não criada');
+      }
+      
       toast.success('Login realizado com sucesso!');
       
-      // Aumentar o timeout para garantir que o estado de autenticação seja atualizado
+      // Redirecionar para tarefas com um pequeno delay para garantir que 
+      // eventos de autenticação sejam processados
       setTimeout(() => {
-        console.log('Redirecionando para /tasks');
+        console.log('Redirecionando para /tasks após login');
         navigate('/tasks', { replace: true });
-      }, 1000); // Aumentado para 1s para dar mais tempo para o estado ser atualizado
+      }, 1500);
     } catch (error: unknown) {
       console.error('Erro capturado durante login:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao fazer login');
@@ -73,20 +87,24 @@ export function useAuthService() {
   const signOut = async () => {
     try {
       console.log('Iniciando processo de logout');
-      // Primeiro limpar o estado local e redirecionar
+      setIsLoading(true);
+      
+      // Primeiro limpar o estado local 
       navigate('/', { replace: true });
-      setTimeout(async () => {
-        try {
-          await supabase.auth.signOut();
-          clearAuthData();
-          console.log('User signed out successfully');
-        } catch (error) {
-          console.error('Error signing out:', error);
-        }
-      }, 100);
+      
+      // Em seguida, fazer logout do Supabase
+      await supabase.auth.signOut();
+      clearAuthData();
+      
+      console.log('Logout completo');
+      toast.success('Você saiu com sucesso!');
     } catch (error) {
-      console.error('Error during sign out:', error);
+      console.error('Erro durante logout:', error);
+      // Forçar logout mesmo em caso de erro
+      clearAuthData();
       window.location.href = '/';
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,6 +112,7 @@ export function useAuthService() {
    * Force logout by clearing all auth data
    */
   const forceLogout = () => {
+    console.log('Forçando logout e limpando dados de autenticação');
     clearAuthData();
     window.location.href = '/';
   };

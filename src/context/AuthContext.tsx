@@ -5,6 +5,7 @@ import { supabase } from '../supabase/client';
 import { useAuthService } from '../hooks/use-auth-service';
 import { useAvatarUpload } from '../hooks/use-avatar-upload';
 import { clearAuthData } from '../utils/auth-utils';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -27,29 +28,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const authService = useAuthService();
   const avatarService = useAvatarUpload(user);
 
+  // Limpar qualquer estado de autenticação residual
+  useEffect(() => {
+    console.log('AuthProvider - Verificando se há tokens antigos para limpar');
+    
+    // Se houver um token no localStorage mas não na sessão Supabase,
+    // pode haver um problema de sincronização
+    if (localStorage.getItem('supabase.auth.token') && !session) {
+      console.log('Token encontrado no localStorage mas sem sessão ativa, limpando');
+      clearAuthData();
+    }
+  }, []);
+
   // Initialize authentication state
   useEffect(() => {
     console.log('AuthProvider - Inicializando estado de autenticação');
+    let mounted = true;
     
     // Primeiro configurar o listener de mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log('AuthProvider - Evento de autenticação:', event);
-        setSession(currentSession);
-        setUser(currentSession?.user || null);
-        setLoading(false);
+        
+        if (mounted) {
+          setSession(currentSession);
+          setUser(currentSession?.user || null);
+          setLoading(false);
+          
+          if (event === 'SIGNED_IN') {
+            toast.success('Login realizado com sucesso!');
+          } else if (event === 'SIGNED_OUT') {
+            toast.info('Você saiu do sistema');
+          }
+        }
       }
     );
 
     // Em seguida, verificar a sessão atual
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       console.log('AuthProvider - Sessão obtida:', currentSession ? 'Válida' : 'Nenhuma');
-      setSession(currentSession);
-      setUser(currentSession?.user || null);
-      setLoading(false);
+      
+      if (mounted) {
+        setSession(currentSession);
+        setUser(currentSession?.user || null);
+        setLoading(false);
+      }
+    }).catch(error => {
+      console.error('Erro ao obter sessão:', error);
+      if (mounted) {
+        setLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Combine auth services with context
@@ -77,5 +111,6 @@ export function useAuth() {
 }
 
 export function isAuthenticated(): boolean {
-  return !!supabase.auth.getUser() || !!localStorage.getItem('supabase.auth.token');
+  const { data } = supabase.auth.getSession();
+  return !!data.session;
 }

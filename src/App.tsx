@@ -22,6 +22,7 @@ import Auth from "./pages/Auth";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from './supabase/client';
+import { clearAuthData } from "./utils/auth-utils";
 
 // Componente para lidar com navegação e erros
 const NavigationHandler: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -84,48 +85,57 @@ function ConnectionManager() {
 
 // Componente para verificar autenticação e redirecionar para rotas protegidas
 const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, session } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [authChecked, setAuthChecked] = useState(false);
+  const [checking, setChecking] = useState(true);
   
   useEffect(() => {
-    // Quando o componente montar ou atualizar, verificar autenticação
-    const checkAuth = async () => {
+    // Verificar autenticação quando o componente montar
+    const verifyAuth = async () => {
       console.log('ProtectedRoute - Verificando autenticação:', { 
-        user: user ? 'usuário presente' : 'usuário ausente',
+        userPresent: !!user,
+        sessionPresent: !!session,
         loading,
         path: location.pathname
       });
       
+      // Se não estiver mais carregando, podemos verificar
       if (!loading) {
-        setAuthChecked(true);
-        if (!user) {
+        if (!user || !session) {
           console.log('Usuário não autenticado, redirecionando para /auth');
+          clearAuthData(); // Limpar qualquer dado residual
           navigate('/auth', { replace: true });
         } else {
           console.log('Usuário autenticado:', user.email);
         }
+        setChecking(false);
       }
     };
     
-    checkAuth();
-  }, [user, loading, navigate, location.pathname]);
+    verifyAuth();
+  }, [user, session, loading, navigate, location.pathname]);
   
   // Exibir carregamento enquanto verifica usuário
-  if (loading || !authChecked) {
+  if (loading || checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-xl text-purple-400">Verificando autenticação...</div>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="animate-pulse text-xl text-purple-400 flex flex-col items-center">
+          <span>Verificando autenticação...</span>
+          <div className="mt-4 w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
       </div>
     );
   }
   
   // Se o usuário não estiver autenticado, não renderizar nada enquanto redireciona
-  if (!user) {
+  if (!user || !session) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-purple-400">Redirecionando para login...</div>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-xl text-purple-400 flex flex-col items-center">
+          <span>Redirecionando para login...</span>
+          <div className="mt-4 w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
       </div>
     );
   }
