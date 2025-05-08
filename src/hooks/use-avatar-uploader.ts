@@ -90,16 +90,19 @@ export function useAvatarUploader(user: User | null, currentAvatarUrl: string | 
           }
           
           toast.success('Avatar atualizado com sucesso!');
+          return publicUrl;
         } catch (error) {
           console.error('AvatarUploader: Erro no upload:', error);
           setUploadError('Erro ao fazer upload da imagem');
           toast.error('Erro ao fazer upload da imagem');
+          throw error;
         }
       }
     } catch (error) {
       console.error('AvatarUploader: Erro ao processar arquivo:', error);
       setUploadError(error instanceof Error ? error.message : 'Erro ao processar arquivo');
       toast.error(error instanceof Error ? error.message : 'Erro ao processar arquivo');
+      throw error;
     } finally {
       setUploading(false);
     }

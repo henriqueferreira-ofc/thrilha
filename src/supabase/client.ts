@@ -16,7 +16,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-store',
     },
   }
 });
@@ -70,7 +70,7 @@ export async function checkAndCreateAvatarsBucket() {
   }
 }
 
-// Função para gerar URLs públicas de avatar - CORRIGIDA
+// Função para gerar URLs públicas de avatar
 export function getAvatarPublicUrl(filePath: string): string {
   if (!filePath) return '';
   
@@ -81,14 +81,8 @@ export function getAvatarPublicUrl(filePath: string): string {
       return filePath.split('?')[0];
     }
     
-    // Garantir que o caminho não tem duplicações
-    let cleanPath = filePath;
-    if (cleanPath.startsWith(`${AVATARS_BUCKET}/${AVATARS_BUCKET}/`)) {
-      cleanPath = cleanPath.replace(`${AVATARS_BUCKET}/${AVATARS_BUCKET}/`, `${AVATARS_BUCKET}/`);
-    }
-    
     // Remover barras iniciais e finais
-    cleanPath = cleanPath.replace(/^\/|\/$/g, '');
+    const cleanPath = filePath.replace(/^\/|\/$/g, '');
     
     // Usar o método do Supabase para obter a URL CDN pública
     const { data } = supabase.storage
@@ -117,7 +111,7 @@ export async function uploadToAvatarsBucket(
     const { data, error } = await supabase.storage
       .from(AVATARS_BUCKET)
       .upload(filePath, file, {
-        cacheControl: '3600',
+        cacheControl: '0', // Sem cache
         upsert: true
       });
     

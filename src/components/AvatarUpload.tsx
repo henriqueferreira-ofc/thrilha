@@ -46,7 +46,17 @@ export function AvatarUpload({
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      await handleAvatarUpload(file);
+      try {
+        const url = await handleAvatarUpload(file);
+        console.log("Avatar atualizado com sucesso, nova URL:", url);
+        
+        // Resetar o input para permitir selecionar o mesmo arquivo novamente
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } catch (error) {
+        console.error("Erro ao atualizar avatar:", error);
+      }
     }
   };
 

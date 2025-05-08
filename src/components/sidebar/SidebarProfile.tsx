@@ -5,6 +5,7 @@ import { AvatarUpload } from "@/components/AvatarUpload";
 import { Mountain } from 'lucide-react';
 import { getOrCreateProfile } from '@/supabase/helper';
 import { useSidebarProfile } from '@/hooks/use-sidebar-profile';
+import { toast } from 'sonner';
 
 interface SidebarProfileProps {
   user: User | null;
@@ -14,12 +15,14 @@ interface SidebarProfileProps {
 export function SidebarProfile({ user, loading: authLoading }: SidebarProfileProps) {
   const { avatarUrl, username, loading: profileLoading, loadUserProfile } = useSidebarProfile(user);
   
-  const handleAvatarUrlChange = (url: string) => {
+  const handleAvatarUrlChange = async (url: string) => {
     console.log('Avatar URL alterada:', url);
     // O hook use-sidebar-profile já atualiza automaticamente via realtime
     // mas podemos forçar uma nova verificação
     if (user) {
-      loadUserProfile();
+      toast.info('Atualizando perfil...');
+      await loadUserProfile();
+      toast.success('Avatar atualizado com sucesso!');
     }
   };
 

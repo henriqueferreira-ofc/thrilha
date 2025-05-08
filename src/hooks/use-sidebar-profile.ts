@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/supabase/client';
 import { getOrCreateProfile } from '@/supabase/helper';
+import { toast } from 'sonner';
 
 interface ProfilePayload {
   id: string;
@@ -58,9 +59,10 @@ export function useSidebarProfile(user: User | null) {
                 
                 if (newProfile.avatar_url) {
                   // Adicionar timestamp para evitar cache
-                  const newUrl = `${newProfile.avatar_url}?t=${Date.now()}`;
+                  const newUrl = newProfile.avatar_url + '?t=' + Date.now();
                   console.log('Definindo nova avatar URL:', newUrl);
                   setAvatarUrl(newUrl);
+                  toast.info('Avatar atualizado!');
                 }
                 
                 if (newProfile.username) {
@@ -130,7 +132,7 @@ export function useSidebarProfile(user: User | null) {
         
         if (profile.avatar_url) {
           // Adicionar timestamp para evitar problemas de cache
-          const url = `${profile.avatar_url}?t=${Date.now()}`;
+          const url = profile.avatar_url + '?t=' + Date.now();
           console.log('URL de avatar definida:', url);
           setAvatarUrl(url);
         } else {

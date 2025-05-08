@@ -9,6 +9,8 @@ import { supabase } from './client';
  */
 export async function getOrCreateProfile(userId: string, username?: string) {
   try {
+    console.log(`Verificando perfil para usuário ${userId}`);
+    
     // 1. Primeiro verificar se o perfil já existe
     const { data: existingProfile, error: fetchError } = await supabase
       .from('profiles')
@@ -25,6 +27,8 @@ export async function getOrCreateProfile(userId: string, username?: string) {
     if (existingProfile) {
       console.log('Perfil existente encontrado:', existingProfile);
       return { profile: existingProfile, isNew: false };
+    } else {
+      console.log('Perfil não encontrado, criando novo');
     }
     
     // 3. Se não existir, criar um novo
@@ -55,6 +59,7 @@ export async function getOrCreateProfile(userId: string, username?: string) {
       
       if (insertError) {
         console.error('Erro ao criar perfil:', insertError);
+        console.log('Usando perfil fallback');
         return {
           profile: fallbackProfile,
           isNew: true,
@@ -68,6 +73,7 @@ export async function getOrCreateProfile(userId: string, username?: string) {
       }
     } catch (error) {
       console.error('Exceção ao inserir perfil:', error);
+      console.log('Usando perfil fallback após exceção');
       return {
         profile: fallbackProfile,
         isNew: true,

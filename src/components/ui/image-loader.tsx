@@ -53,7 +53,7 @@ export function ImageLoader({
       crossOrigin="anonymous"
       referrerPolicy="no-referrer"
       onError={(e) => {
-        console.error('ImageLoader: Erro ao carregar imagem:', e);
+        console.error('ImageLoader: Erro ao renderizar imagem:', e);
       }}
     />
   );

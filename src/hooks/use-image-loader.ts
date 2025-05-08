@@ -39,43 +39,45 @@ export function useImageLoader(
         return;
       }
 
-      console.log('ImageLoader: Carregando URL:', imageUrl);
+      // Limpar parâmetros de timestamp acumulados
+      let cleanUrl = imageUrl;
+      if (cleanUrl.includes('?t=')) {
+        cleanUrl = cleanUrl.split('?t=')[0];
+        console.log('ImageLoader: URL limpa de timestamps:', cleanUrl);
+      }
+
+      console.log('ImageLoader: Tentando carregar URL:', cleanUrl);
       setLoading(true);
       setError(null);
 
-      // Normalizar URL para evitar problemas com caminhos duplicados
-      let normalizedUrl = imageUrl;
-      if (normalizedUrl.includes('avatars/avatars/')) {
-        normalizedUrl = normalizedUrl.replace('avatars/avatars/', 'avatars/');
-      }
-
       // Se for uma URL blob, usar diretamente
-      if (normalizedUrl.startsWith('blob:')) {
+      if (cleanUrl.startsWith('blob:')) {
         console.log('ImageLoader: Usando URL blob');
-        setSrc(normalizedUrl);
+        setSrc(cleanUrl);
         setLoading(false);
         return;
       }
 
       // Se a URL já foi carregada com sucesso antes, usar diretamente
-      if (successfulUrls.has(normalizedUrl)) {
-        console.log('ImageLoader: Usando URL do cache:', normalizedUrl);
-        setSrc(normalizedUrl);
+      if (successfulUrls.has(cleanUrl)) {
+        console.log('ImageLoader: Usando URL do cache:', cleanUrl);
+        setSrc(cleanUrl);
         setLoading(false);
         return;
       }
 
       try {
         // Para URLs públicas, adicionar timestamp para evitar cache
-        const urlWithTimestamp = `${normalizedUrl}${normalizedUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+        const timestamp = Date.now();
+        const urlWithTimestamp = `${cleanUrl}?t=${timestamp}`;
         console.log('ImageLoader: URL com timestamp:', urlWithTimestamp);
 
         const img = new Image();
         
         const loadPromise = new Promise<string>((resolve, reject) => {
           img.onload = () => {
-            console.log('ImageLoader: Imagem carregada com sucesso');
-            successfulUrls.add(normalizedUrl); // Adicionar ao cache
+            console.log('ImageLoader: Imagem carregada com sucesso:', urlWithTimestamp);
+            successfulUrls.add(cleanUrl); // Adicionar ao cache
             resolve(urlWithTimestamp);
           };
           
