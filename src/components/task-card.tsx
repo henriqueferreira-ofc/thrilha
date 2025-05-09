@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TaskCollaboratorsDialog } from './task-collaborators-dialog';
+import { useAuth } from '@/context/AuthContext';
 
 interface TaskCardProps {
   task: Task;
@@ -35,7 +36,8 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
   const [isEditing, setIsEditing] = useState(false);
   const [isCollaboratorsDialogOpen, setIsCollaboratorsDialogOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const { isTaskOwner } = useTaskCollaborators();
+  const { user } = useAuth();
+  const { isTaskOwner } = useTaskCollaborators(user);
   const completed = task.completed || task.status === 'done';
 
   // Configuração do drag and drop

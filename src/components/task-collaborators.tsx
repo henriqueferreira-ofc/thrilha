@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 interface TaskCollaboratorsProps {
   taskId: string;
@@ -16,7 +17,8 @@ export function TaskCollaborators({ taskId }: TaskCollaboratorsProps) {
   const [collaborators, setCollaborators] = useState<TaskCollaborator[]>([]);
   const [newCollaboratorEmail, setNewCollaboratorEmail] = useState('');
   const [isOwner, setIsOwner] = useState(false);
-  const { loading, addCollaborator, removeCollaborator, getTaskCollaborators, isTaskOwner } = useTaskCollaborators();
+  const { user } = useAuth();
+  const { loading, addCollaborator, removeCollaborator, getTaskCollaborators, isTaskOwner } = useTaskCollaborators(user);
 
   useEffect(() => {
     if (taskId) {

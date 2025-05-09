@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTaskCollaborators } from '@/hooks/use-task-collaborators';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 interface TaskCollaboratorsDialogProps {
   taskId: string;
@@ -15,7 +17,8 @@ interface TaskCollaboratorsDialogProps {
 export function TaskCollaboratorsDialog({ taskId, isOpen, onClose }: TaskCollaboratorsDialogProps) {
   const [email, setEmail] = useState('');
   const [collaborators, setCollaborators] = useState<Array<{ id: string; email: string; avatar_url: string | null; full_name: string | null }>>([]);
-  const { loading, addCollaborator, removeCollaborator, getTaskCollaborators, isTaskOwner } = useTaskCollaborators();
+  const { user } = useAuth();
+  const { loading, addCollaborator, removeCollaborator, getTaskCollaborators, isTaskOwner } = useTaskCollaborators(user);
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {

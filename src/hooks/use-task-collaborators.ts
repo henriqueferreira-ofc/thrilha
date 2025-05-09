@@ -1,7 +1,8 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/supabase/client';
-import { useAuth } from '@/context/AuthContext';
+import { User } from '@supabase/supabase-js';
 
 interface Collaborator {
   id: string;
@@ -14,13 +15,12 @@ interface Collaborator {
   } | null;
 }
 
-export function useTaskCollaborators() {
-  const { user } = useAuth();
+export function useTaskCollaborators(currentUser?: User | null) {
   const [loading, setLoading] = useState(false);
 
   // Adicionar um colaborador a uma tarefa
   const addCollaborator = async (taskId: string, userEmail: string): Promise<boolean> => {
-    if (!user) {
+    if (!currentUser) {
       toast.error('Você precisa estar logado para adicionar colaboradores');
       return false;
     }
@@ -97,7 +97,7 @@ export function useTaskCollaborators() {
 
   // Remover um colaborador de uma tarefa
   const removeCollaborator = async (taskId: string, userId: string): Promise<boolean> => {
-    if (!user) {
+    if (!currentUser) {
       toast.error('Você precisa estar logado para remover colaboradores');
       return false;
     }
@@ -126,7 +126,7 @@ export function useTaskCollaborators() {
 
   // Buscar colaboradores de uma tarefa
   const getTaskCollaborators = async (taskId: string) => {
-    if (!user) {
+    if (!currentUser) {
       toast.error('Você precisa estar logado para ver colaboradores');
       return [];
     }
@@ -188,7 +188,7 @@ export function useTaskCollaborators() {
 
   // Verificar se o usuário atual é dono de uma tarefa
   const isTaskOwner = async (taskId: string): Promise<boolean> => {
-    if (!user) return false;
+    if (!currentUser) return false;
 
     try {
       const { data, error } = await supabase
@@ -198,7 +198,7 @@ export function useTaskCollaborators() {
         .single();
 
       if (error || !data) return false;
-      return data.user_id === user.id;
+      return data.user_id === currentUser.id;
     } catch (error: unknown) {
       console.error('Erro ao verificar propriedade da tarefa:', error);
       return false;
