@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useImageLoader } from '@/hooks/use-image-loader';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { User, RefreshCcw } from 'lucide-react';
@@ -22,11 +22,25 @@ export function ImageLoader({
   fallback,
   showRefreshButton = false
 }: ImageLoaderProps) {
-  const { loading, error, src, refresh } = useImageLoader(imageUrl, {
-    maxRetries: 3,
-    timeout: 10000,
+  const [retryCounter, setRetryCounter] = useState(0);
+  
+  // Adicionar um parâmetro de timestamp à URL para evitar cache
+  const urlWithTimestamp = imageUrl && !imageUrl.includes('?') 
+    ? `${imageUrl}?t=${Date.now()}-${retryCounter}` 
+    : imageUrl && imageUrl.includes('?') 
+      ? `${imageUrl}&t=${Date.now()}-${retryCounter}`
+      : imageUrl;
+  
+  const { loading, error, src, refresh } = useImageLoader(urlWithTimestamp, {
+    maxRetries: 2,
+    timeout: 15000,
     preventCache: true
   });
+
+  const handleRefresh = () => {
+    setRetryCounter(prev => prev + 1);
+    refresh();
+  };
 
   const defaultFallback = (
     <Avatar className="w-full h-full bg-gray-800 relative">
@@ -39,7 +53,7 @@ export function ImageLoader({
             className="absolute bottom-0 right-0 bg-primary/80 rounded-full p-1"
             onClick={(e) => {
               e.stopPropagation();
-              refresh();
+              handleRefresh();
             }}
           >
             <RefreshCcw className="h-3 w-3" />
@@ -70,9 +84,9 @@ export function ImageLoader({
         className={`w-full h-full object-${objectFit} ${className}`}
         crossOrigin="anonymous"
         referrerPolicy="no-referrer"
+        loading="eager"
         onError={(e) => {
           console.error('ImageLoader: Erro ao renderizar imagem:', e);
-          // Se houver erro na renderização, definir para src nula
           e.currentTarget.src = "";
         }}
       />
@@ -81,8 +95,8 @@ export function ImageLoader({
         <Button 
           variant="ghost" 
           size="icon"
-          className="absolute bottom-1 right-1 bg-primary/80 rounded-full p-1"
-          onClick={() => refresh()}
+          className="absolute bottom-1 right-1 bg-primary/80 rounded-full p-1 hover:bg-primary/90"
+          onClick={() => handleRefresh()}
         >
           <RefreshCcw className="h-3 w-3" />
         </Button>

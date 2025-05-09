@@ -32,15 +32,20 @@ export function useImageLoader(
   const preventCache = options.preventCache ?? true;
   const isMounted = useRef(true);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const refresh = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     setRefreshTrigger(prev => prev + 1);
     setRetryCount(0);
     setError(null);
     setLoading(true);
+    console.log('ImageLoader: Refreshing image...');
   };
 
-  // Limpar timeout ao desmontar
+  // Limpar recursos ao desmontar
   useEffect(() => {
     isMounted.current = true;
     
@@ -49,6 +54,9 @@ export function useImageLoader(
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
   }, []);
@@ -61,6 +69,13 @@ export function useImageLoader(
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
+    
+    // Cancelar requisições anteriores
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    abortControllerRef.current = new AbortController();
 
     const loadImage = async () => {
       // Verificar se tem URL
@@ -71,42 +86,25 @@ export function useImageLoader(
         return;
       }
 
-      // Limpar parâmetros de timestamp acumulados
-      let cleanUrl = imageUrl;
-      if (cleanUrl.includes('?t=')) {
-        cleanUrl = cleanUrl.split('?t=')[0];
-        console.log('ImageLoader: URL limpa de timestamps:', cleanUrl);
+      // Obter URL base sem parâmetros
+      let baseUrl = imageUrl;
+      if (baseUrl.includes('?')) {
+        baseUrl = baseUrl.split('?')[0];
       }
 
-      console.log('ImageLoader: Tentando carregar URL:', cleanUrl);
+      console.log('ImageLoader: Tentando carregar URL:', imageUrl);
       setLoading(true);
       setError(null);
 
       // Se for uma URL blob, usar diretamente
-      if (cleanUrl.startsWith('blob:')) {
+      if (imageUrl.startsWith('blob:')) {
         console.log('ImageLoader: Usando URL blob');
-        setSrc(cleanUrl);
-        setLoading(false);
-        return;
-      }
-
-      // Se a URL já foi carregada com sucesso antes e não estamos prevenindo cache
-      if (!preventCache && successfulUrls.has(cleanUrl)) {
-        console.log('ImageLoader: Usando URL do cache:', cleanUrl);
-        setSrc(cleanUrl);
+        setSrc(imageUrl);
         setLoading(false);
         return;
       }
 
       try {
-        // Para URLs públicas, adicionar timestamp para evitar cache
-        const timestamp = Date.now();
-        const urlWithTimestamp = preventCache 
-          ? `${cleanUrl}${cleanUrl.includes('?') ? '&' : '?'}t=${timestamp}`
-          : cleanUrl;
-        
-        console.log('ImageLoader: URL para carregamento:', urlWithTimestamp);
-
         // Criar elemento de imagem para pré-carregamento
         const img = new Image();
         img.crossOrigin = "anonymous";
@@ -115,9 +113,9 @@ export function useImageLoader(
         // Configurar promessa para carregar a imagem
         const loadPromise = new Promise<string>((resolve, reject) => {
           img.onload = () => {
-            console.log('ImageLoader: Imagem carregada com sucesso:', urlWithTimestamp);
-            successfulUrls.add(cleanUrl); // Adicionar ao cache
-            resolve(urlWithTimestamp);
+            console.log('ImageLoader: Imagem carregada com sucesso');
+            if (baseUrl) successfulUrls.add(baseUrl); // Adicionar URL base ao cache
+            resolve(imageUrl);
           };
           
           img.onerror = (e) => {
@@ -126,7 +124,7 @@ export function useImageLoader(
           };
           
           // Iniciar carregamento
-          img.src = urlWithTimestamp;
+          img.src = imageUrl;
         });
 
         // Configurar timeout
@@ -137,8 +135,16 @@ export function useImageLoader(
           }, timeout);
         });
 
-        // Corrida entre carregamento e timeout
-        const result = await Promise.race([loadPromise, timeoutPromise]);
+        // Promessa de cancelamento
+        const abortPromise = new Promise<never>((_, reject) => {
+          const { signal } = abortControllerRef.current as AbortController;
+          signal.addEventListener('abort', () => {
+            reject(new Error('Carregamento de imagem cancelado'));
+          });
+        });
+
+        // Corrida entre carregamento, timeout e cancelamento
+        const result = await Promise.race([loadPromise, timeoutPromise, abortPromise]);
 
         // Limpar timeout se a imagem carregou
         if (timeoutRef.current) {
@@ -153,32 +159,37 @@ export function useImageLoader(
           setError(null);
           setRetryCount(0); // Resetar contagem de tentativas em caso de sucesso
         }
-      } catch (error) {
+      } catch (error: any) {
+        if (!isMounted.current) return;
+        
+        if (error.name === 'AbortError' || error.message === 'Carregamento de imagem cancelado') {
+          console.log('ImageLoader: Carregamento cancelado');
+          return;
+        }
+        
         console.error('ImageLoader: Erro ao carregar imagem:', error);
         
         // Tentar novamente se o componente ainda está montado
-        if (isMounted.current) {
-          if (retryCount < maxRetries) {
-            console.log(`ImageLoader: Tentativa ${retryCount + 1} de ${maxRetries}`);
-            setRetryCount(prev => prev + 1);
-            
-            // Tentar novamente após um pequeno atraso
-            timeoutRef.current = setTimeout(() => {
-              if (isMounted.current) {
-                loadImage();
-              }
-            }, 1000 * (retryCount + 1)); // Atraso crescente
-          } else {
-            setLoading(false);
-            setError('Erro ao carregar imagem');
-            setSrc('');
-          }
+        if (retryCount < maxRetries) {
+          console.log(`ImageLoader: Tentativa ${retryCount + 1} de ${maxRetries}`);
+          setRetryCount(prev => prev + 1);
+          
+          // Tentar novamente após um pequeno atraso
+          timeoutRef.current = setTimeout(() => {
+            if (isMounted.current) {
+              loadImage();
+            }
+          }, 1000 * (retryCount + 1)); // Atraso crescente
+        } else {
+          setLoading(false);
+          setError('Erro ao carregar imagem após várias tentativas');
+          setSrc('');
         }
       }
     };
 
     loadImage();
-  }, [imageUrl, retryCount, maxRetries, timeout, preventCache, refreshTrigger]);
+  }, [imageUrl, refreshTrigger, maxRetries, timeout, preventCache]);
 
   return { loading, error, src, retryCount, refresh };
 }

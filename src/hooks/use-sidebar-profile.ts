@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/supabase/client';
-import { getOrCreateProfile } from '@/supabase/helper';
 import { toast } from 'sonner';
 
 interface ProfilePayload {
@@ -18,14 +17,11 @@ export function useSidebarProfile(user: User | null) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const isSettingUpChannel = useRef(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   
   // Configurar assinatura em tempo real para atualizações de perfil
   useEffect(() => {
-    if (!user || isSettingUpChannel.current) return;
-
-    isSettingUpChannel.current = true;
+    if (!user) return;
 
     const setupChannel = async () => {
       try {
@@ -59,7 +55,7 @@ export function useSidebarProfile(user: User | null) {
                 
                 if (newProfile.avatar_url) {
                   // Adicionar timestamp para evitar cache
-                  const newUrl = newProfile.avatar_url + '?t=' + Date.now();
+                  const newUrl = `${newProfile.avatar_url}?t=${Date.now()}`;
                   console.log('Definindo nova avatar URL:', newUrl);
                   setAvatarUrl(newUrl);
                   toast.info('Avatar atualizado!');
@@ -81,16 +77,9 @@ export function useSidebarProfile(user: User | null) {
           await loadUserProfile();
         } catch (err) {
           console.error('Erro ao inscrever no canal:', err);
-          
-          // Limpar recursos e tentar novamente após um atraso
-          channelRef.current = null;
-          isSettingUpChannel.current = false;
-          
-          setTimeout(() => setupChannel(), 5000);
         }
       } catch (error) {
         console.error('Erro ao configurar canal realtime:', error);
-        isSettingUpChannel.current = false;
       }
     };
 
@@ -104,7 +93,6 @@ export function useSidebarProfile(user: User | null) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
-      isSettingUpChannel.current = false;
     };
   }, [user]);
 
@@ -163,7 +151,7 @@ export function useSidebarProfile(user: User | null) {
         
         if (profileData.avatar_url) {
           // Adicionar timestamp para evitar problemas de cache
-          const url = profileData.avatar_url + '?t=' + Date.now();
+          const url = `${profileData.avatar_url}?t=${Date.now()}`;
           console.log('URL de avatar definida:', url);
           setAvatarUrl(url);
         } else {
