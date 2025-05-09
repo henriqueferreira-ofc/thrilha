@@ -14,6 +14,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, username?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   updateProfile: (data: { avatar_url?: string }) => Promise<string>;
   uploadAvatar: (file: File) => Promise<string>;
   forceLogout: () => void;
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const authService = useAuthService();
   const avatarService = useAvatarUpload(user);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   // Limpar qualquer estado de autenticação residual
   useEffect(() => {
@@ -48,37 +50,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Primeiro configurar o listener de mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        console.log('AuthProvider - Evento de autenticação:', event);
+        console.log('AuthProvider - Evento de autenticação:', event, 'Sessão:', currentSession ? 'Presente' : 'Ausente');
         
         if (mounted) {
+          if (currentSession) {
+            console.log('Sessão válida detectada, atualizando estado');
+            console.log('ID do usuário:', currentSession.user.id);
+            console.log('Sessão expira em:', new Date(currentSession.expires_at! * 1000).toLocaleString());
+          } else {
+            console.log('Nenhuma sessão válida detectada');
+          }
+          
           setSession(currentSession);
           setUser(currentSession?.user || null);
           setLoading(false);
+          setAuthInitialized(true);
           
           if (event === 'SIGNED_IN') {
             toast.success('Login realizado com sucesso!');
           } else if (event === 'SIGNED_OUT') {
             toast.info('Você saiu do sistema');
+          } else if (event === 'TOKEN_REFRESHED') {
+            console.log('Token atualizado com sucesso');
+          } else if (event === 'USER_UPDATED') {
+            console.log('Dados do usuário atualizados');
+            toast.info('Perfil atualizado');
           }
         }
       }
     );
 
     // Em seguida, verificar a sessão atual
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log('AuthProvider - Sessão obtida:', currentSession ? 'Válida' : 'Nenhuma');
-      
-      if (mounted) {
-        setSession(currentSession);
-        setUser(currentSession?.user || null);
-        setLoading(false);
+    const checkSession = async () => {
+      try {
+        console.log('Verificando sessão atual...');
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Erro ao obter sessão:', error);
+          throw error;
+        }
+        
+        if (data.session) {
+          console.log('Sessão existente recuperada');
+          console.log('ID do usuário:', data.session.user.id);
+          console.log('Sessão expira em:', new Date(data.session.expires_at! * 1000).toLocaleString());
+        } else {
+          console.log('Nenhuma sessão ativa encontrada');
+        }
+        
+        if (mounted) {
+          setSession(data.session);
+          setUser(data.session?.user || null);
+          setLoading(false);
+          setAuthInitialized(true);
+        }
+      } catch (error) {
+        console.error('Exceção ao obter sessão:', error);
+        if (mounted) {
+          setLoading(false);
+          setAuthInitialized(true);
+        }
       }
-    }).catch(error => {
-      console.error('Erro ao obter sessão:', error);
-      if (mounted) {
-        setLoading(false);
-      }
-    });
+    };
+    
+    // Usar setTimeout para garantir que o listener seja registrado primeiro
+    setTimeout(() => {
+      checkSession();
+    }, 0);
 
     return () => {
       mounted = false;
@@ -94,12 +133,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp: authService.signUp,
     signIn: authService.signIn,
     signOut: authService.signOut,
+    resetPassword: authService.resetPassword,
     updateProfile: avatarService.updateProfile,
     uploadAvatar: avatarService.uploadAvatar,
     forceLogout: authService.forceLogout,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
@@ -111,6 +155,24 @@ export function useAuth() {
 }
 
 export async function isAuthenticated(): Promise<boolean> {
-  const { data } = await supabase.auth.getSession();
-  return !!data.session;
+  try {
+    console.log('Verificando autenticação...');
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Erro ao verificar autenticação:', error);
+      return false;
+    }
+    
+    if (data.session) {
+      console.log('Usuário autenticado:', data.session.user.id);
+      return true;
+    }
+    
+    console.log('Usuário não autenticado');
+    return false;
+  } catch (error) {
+    console.error('Exceção ao verificar autenticação:', error);
+    return false;
+  }
 }
