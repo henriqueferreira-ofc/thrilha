@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase/client';
 
@@ -15,7 +14,7 @@ interface UseImageLoaderResult {
   src: string;
   loading: boolean;
   error: Error | null;
-  refresh: () => void; // Adicionamos o método refresh ao tipo
+  refresh: () => void;
 }
 
 export function useImageLoader(
@@ -36,7 +35,6 @@ export function useImageLoader(
   const [retryCount, setRetryCount] = useState<number>(0);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
 
-  // Implementa a função refresh
   const refresh = useCallback(() => {
     setRetryCount(0);
     setRefreshCounter(prev => prev + 1);
@@ -57,21 +55,42 @@ export function useImageLoader(
         setLoading(true);
         setError(null);
 
-        // Adicionar parâmetro para evitar cache se preventCache estiver habilitado
-        const urlWithTimestamp = preventCache 
-          ? `${initialSrc}${initialSrc.includes('?') ? '&' : '?'}t=${Date.now()}-${refreshCounter}`
-          : initialSrc;
-
         // Verificar se a URL é do Supabase Storage
-        const isSupabaseUrl = urlWithTimestamp.includes('supabase.co/storage');
+        const isSupabaseUrl = initialSrc.includes('supabase.co/storage');
         
         if (isSupabaseUrl) {
           try {
-            // Extrair o caminho do arquivo da URL e remover parâmetros de query
-            const urlParts = urlWithTimestamp.split('/storage/v1/object/public/');
+            // Se já é uma URL pública do Supabase, usar diretamente
+            if (initialSrc.includes('/public/')) {
+              console.log('ImageLoader: Usando URL pública do Supabase diretamente');
+              // Remover qualquer parâmetro de query existente e adicionar timestamp
+              const baseUrl = initialSrc.split('?')[0];
+              const timestamp = preventCache ? `?t=${Date.now()}` : '';
+              const finalUrl = `${baseUrl}${timestamp}`;
+              
+              // Verificar se a URL é acessível
+              const response = await fetch(finalUrl, {
+                method: 'HEAD',
+                mode: 'cors',
+                credentials: 'omit'
+              });
+
+              if (response.ok) {
+                console.log('ImageLoader: URL pública verificada e acessível');
+                setImageSrc(finalUrl);
+                setLoading(false);
+                setError(null);
+                setRetryCount(0);
+                return;
+              } else {
+                throw new Error(`URL não acessível: ${response.status}`);
+              }
+            }
+
+            // Extrair o caminho do arquivo da URL
+            const urlParts = initialSrc.split('/storage/v1/object/public/');
             if (urlParts.length === 2) {
-              const fullPath = urlParts[1].split('?')[0]; // Remover parâmetros de query
-              // Remover o bucket name do início do caminho
+              const fullPath = urlParts[1].split('?')[0];
               const filePath = fullPath.split('/').slice(1).join('/');
               console.log('ImageLoader: Gerando URL pública para:', filePath);
               
@@ -82,16 +101,31 @@ export function useImageLoader(
 
               if (publicUrlData?.publicUrl) {
                 console.log('ImageLoader: URL pública gerada com sucesso');
-                setImageSrc(publicUrlData.publicUrl);
-                setLoading(false);
-                setError(null);
-                setRetryCount(0);
-                return;
+                const timestamp = preventCache ? `?t=${Date.now()}` : '';
+                const finalUrl = `${publicUrlData.publicUrl}${timestamp}`;
+                
+                // Verificar se a URL é acessível
+                const response = await fetch(finalUrl, {
+                  method: 'HEAD',
+                  mode: 'cors',
+                  credentials: 'omit'
+                });
+
+                if (response.ok) {
+                  console.log('ImageLoader: URL pública verificada e acessível');
+                  setImageSrc(finalUrl);
+                  setLoading(false);
+                  setError(null);
+                  setRetryCount(0);
+                  return;
+                } else {
+                  throw new Error(`URL não acessível: ${response.status}`);
+                }
               }
             }
           } catch (err) {
-            console.error('ImageLoader: Erro ao gerar URL pública:', err);
-            // Se falhar, tenta carregar a URL original
+            console.error('ImageLoader: Erro ao gerar/verificar URL pública:', err);
+            throw err;
           }
         }
 
@@ -102,7 +136,7 @@ export function useImageLoader(
         const loadPromise = new Promise<string>((resolve, reject) => {
           img.onload = () => {
             console.log('ImageLoader: Imagem carregada com sucesso');
-            resolve(urlWithTimestamp);
+            resolve(initialSrc);
           };
           
           img.onerror = (e) => {
@@ -110,7 +144,7 @@ export function useImageLoader(
             reject(new Error('Erro ao carregar imagem'));
           };
           
-          img.src = urlWithTimestamp;
+          img.src = initialSrc;
         });
 
         const timeoutPromise = new Promise<never>((_, reject) => {

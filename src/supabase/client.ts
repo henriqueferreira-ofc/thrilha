@@ -30,23 +30,36 @@ export async function checkBucketExists(): Promise<boolean> {
   try {
     console.log('Verificando se o bucket avatars existe...');
     
-    // Verificar se o bucket existe
-    const { data: buckets, error } = await supabase.storage.listBuckets();
+    // Primeiro, tenta acessar diretamente o bucket
+    const { data: bucketData, error: bucketError } = await supabase.storage
+      .from(AVATARS_BUCKET)
+      .list();
     
-    if (error) {
-      console.error('Erro ao verificar buckets:', error);
-      throw new Error('Erro ao verificar buckets: ' + error.message);
+    if (bucketError) {
+      console.error('Erro ao acessar bucket:', bucketError);
+      
+      // Se o erro for de bucket não encontrado, tenta listar todos os buckets
+      if (bucketError.message.includes('not found')) {
+        const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+        
+        if (listError) {
+          console.error('Erro ao listar buckets:', listError);
+          throw new Error('Erro ao listar buckets: ' + listError.message);
+        }
+        
+        console.log('Buckets disponíveis:', buckets);
+        const avatarsBucket = buckets?.find(bucket => bucket.name === AVATARS_BUCKET);
+        
+        if (!avatarsBucket) {
+          console.error(`Bucket "${AVATARS_BUCKET}" não encontrado`);
+          throw new Error('Bucket de avatares não encontrado. Por favor, crie o bucket "avatars" no seu projeto Supabase através do painel de controle.');
+        }
+      } else {
+        throw new Error('Erro ao acessar bucket: ' + bucketError.message);
+      }
     }
     
-    console.log('Buckets disponíveis:', buckets);
-    const avatarsBucket = buckets?.find(bucket => bucket.name === AVATARS_BUCKET);
-    
-    if (!avatarsBucket) {
-      console.error(`Bucket "${AVATARS_BUCKET}" não encontrado`);
-      throw new Error('Bucket de avatares não encontrado. Por favor, crie o bucket "avatars" no seu projeto Supabase através do painel de controle.');
-    }
-    
-    console.log(`Bucket "${AVATARS_BUCKET}" encontrado`);
+    console.log(`Bucket "${AVATARS_BUCKET}" acessível com sucesso`);
     return true;
   } catch (error) {
     console.error('Erro ao verificar bucket:', error);
