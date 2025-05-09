@@ -1,59 +1,86 @@
-import { useCallback } from 'react';
-import { useAvatarUploader } from '../hooks/use-avatar-uploader';
-import { User } from '@supabase/supabase-js';
-import { ImageLoader } from './ImageLoader';
+
+import { useEffect, useRef } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { AvatarDisplay } from './avatar/AvatarDisplay';
+import { UploadOverlay } from './avatar/UploadOverlay';
+import { useAvatarUploader } from '@/hooks/use-avatar-uploader';
+import { toast } from 'sonner';
 
 interface AvatarUploadProps {
-  user: User | null;
   currentAvatarUrl: string | null;
   onAvatarChange?: (url: string) => void;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export function AvatarUpload({ user, currentAvatarUrl, onAvatarChange }: AvatarUploadProps) {
-  const { handleAvatarUpload, isUploading, error } = useAvatarUploader(user);
+export function AvatarUpload({ 
+  currentAvatarUrl, 
+  onAvatarChange,
+  size = 'md'
+}: AvatarUploadProps) {
+  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploading, uploadError, handleAvatarUpload, cleanupLocalPreview } = useAvatarUploader(
+    user, 
+    currentAvatarUrl, 
+    onAvatarChange
+  );
 
-  const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  // Limpar a URL quando o componente for desmontado
+  useEffect(() => {
+    return () => {
+      cleanupLocalPreview();
+    };
+  }, []);
 
-    try {
-      const publicUrl = await handleAvatarUpload(file);
-      if (onAvatarChange) {
-        onAvatarChange(publicUrl);
-      }
-    } catch (err) {
-      console.error('Erro ao atualizar avatar:', err);
+  const handleClick = () => {
+    if (!user) {
+      toast.error('Você precisa estar logado para alterar seu avatar');
+      return;
     }
-  }, [handleAvatarUpload, onAvatarChange]);
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        const url = await handleAvatarUpload(file);
+        console.log("Avatar atualizado com sucesso, nova URL:", url);
+        
+        // Resetar o input para permitir selecionar o mesmo arquivo novamente
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } catch (error) {
+        console.error("Erro ao atualizar avatar:", error);
+      }
+    }
+  };
 
   return (
     <div className="relative group">
-      <div className="relative w-24 h-24 rounded-full overflow-hidden">
-        <ImageLoader
-          src={currentAvatarUrl}
-          fallbackSrc="/default-avatar.png"
-          alt="Avatar"
-          className="w-full h-full object-cover"
-        />
-        
-        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <label className="cursor-pointer text-white text-sm font-medium">
-            {isUploading ? 'Enviando...' : 'Alterar'}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              disabled={isUploading}
-              className="hidden"
-            />
-          </label>
-        </div>
+      <div 
+        className="relative cursor-pointer"
+        onClick={handleClick}
+      >
+        <AvatarDisplay avatarUrl={currentAvatarUrl} size={size} />
+        <UploadOverlay size={size} uploading={uploading} />
       </div>
       
-      {error && (
-        <p className="mt-2 text-sm text-red-500">
-          {error.message}
-        </p>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={uploading}
+      />
+      
+      {uploadError && (
+        <p className="mt-2 text-sm text-red-500 text-center">{uploadError}</p>
       )}
     </div>
   );
