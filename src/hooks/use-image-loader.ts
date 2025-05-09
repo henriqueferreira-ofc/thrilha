@@ -1,121 +1,86 @@
-
-import { useState, useEffect, useRef } from 'react';
-
-// Cache de URLs que foram carregadas com sucesso
-const successfulUrls = new Set<string>();
+import { useState, useEffect } from 'react';
+import { supabase } from '../supabase/client';
 
 interface UseImageLoaderOptions {
+  src: string | null;
+  fallbackSrc: string;
   maxRetries?: number;
-  timeout?: number;
-  preventCache?: boolean;
+  retryDelay?: number;
 }
 
 interface UseImageLoaderResult {
   src: string;
   loading: boolean;
-  error: string | null;
-  retryCount: number;
-  refresh: () => void;
+  error: Error | null;
 }
 
-export function useImageLoader(
-  imageUrl: string | null, 
-  options: UseImageLoaderOptions = {}
-): UseImageLoaderResult {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [src, setSrc] = useState('');
-  const [retryCount, setRetryCount] = useState(0);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const maxRetries = options.maxRetries ?? 3;
-  const timeout = options.timeout ?? 10000;
-  const preventCache = options.preventCache ?? true;
-  const isMounted = useRef(true);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  const refresh = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    setRefreshTrigger(prev => prev + 1);
-    setRetryCount(0);
-    setError(null);
-    setLoading(true);
-    console.log('ImageLoader: Refreshing image...');
-  };
-
-  // Limpar recursos ao desmontar
-  useEffect(() => {
-    isMounted.current = true;
-    
-    return () => {
-      isMounted.current = false;
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
+export function useImageLoader({
+  src,
+  fallbackSrc,
+  maxRetries = 3,
+  retryDelay = 1000
+}: UseImageLoaderOptions): UseImageLoaderResult {
+  const [imageSrc, setImageSrc] = useState<string>(src || fallbackSrc);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
 
   useEffect(() => {
-    if (!isMounted.current) return;
-    
-    // Limpar timeout anterior
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    
-    // Cancelar requisições anteriores
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    
-    abortControllerRef.current = new AbortController();
+    let isMounted = true;
+    let timeoutId: number;
 
     const loadImage = async () => {
-      // Verificar se tem URL
-      if (!imageUrl) {
-        console.log('ImageLoader: URL não fornecida');
-        setError('URL de imagem não fornecida');
-        setLoading(false);
-        return;
-      }
-
-      // Obter URL base sem parâmetros
-      let baseUrl = imageUrl;
-      if (baseUrl.includes('?')) {
-        baseUrl = baseUrl.split('?')[0];
-      }
-
-      console.log('ImageLoader: Tentando carregar URL:', imageUrl);
-      setLoading(true);
-      setError(null);
-
-      // Se for uma URL blob, usar diretamente
-      if (imageUrl.startsWith('blob:')) {
-        console.log('ImageLoader: Usando URL blob');
-        setSrc(imageUrl);
+      if (!src) {
+        setImageSrc(fallbackSrc);
         setLoading(false);
         return;
       }
 
       try {
-        // Criar elemento de imagem para pré-carregamento
+        setLoading(true);
+        setError(null);
+
+        // Verificar se a URL é do Supabase Storage
+        const isSupabaseUrl = src.includes('supabase.co/storage');
+        
+        if (isSupabaseUrl) {
+          try {
+            // Extrair o caminho do arquivo da URL e remover parâmetros de query
+            const urlParts = src.split('/storage/v1/object/public/');
+            if (urlParts.length === 2) {
+              const fullPath = urlParts[1].split('?')[0]; // Remover parâmetros de query
+              // Remover o bucket name do início do caminho
+              const filePath = fullPath.split('/').slice(1).join('/');
+              console.log('ImageLoader: Gerando URL pública para:', filePath);
+              
+              // Gerar URL pública
+              const { data: publicUrlData } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+              if (publicUrlData?.publicUrl) {
+                console.log('ImageLoader: URL pública gerada com sucesso');
+                setImageSrc(publicUrlData.publicUrl);
+                setLoading(false);
+                setError(null);
+                setRetryCount(0);
+                return;
+              }
+            }
+          } catch (err) {
+            console.error('ImageLoader: Erro ao gerar URL pública:', err);
+            // Se falhar, tenta carregar a URL original
+          }
+        }
+
+        // Se não for URL do Supabase ou se falhar em gerar URL pública
         const img = new Image();
         img.crossOrigin = "anonymous";
-        img.referrerPolicy = "no-referrer";
 
-        // Configurar promessa para carregar a imagem
         const loadPromise = new Promise<string>((resolve, reject) => {
           img.onload = () => {
             console.log('ImageLoader: Imagem carregada com sucesso');
-            if (baseUrl) successfulUrls.add(baseUrl); // Adicionar URL base ao cache
-            resolve(imageUrl);
+            resolve(src);
           };
           
           img.onerror = (e) => {
@@ -123,73 +88,60 @@ export function useImageLoader(
             reject(new Error('Erro ao carregar imagem'));
           };
           
-          // Iniciar carregamento
-          img.src = imageUrl;
+          // Remover parâmetros de query da URL
+          const cleanUrl = src.split('?')[0];
+          img.src = cleanUrl;
         });
 
-        // Configurar timeout
         const timeoutPromise = new Promise<never>((_, reject) => {
-          timeoutRef.current = setTimeout(() => {
-            img.src = ''; // Cancelar carregamento
+          timeoutId = window.setTimeout(() => {
             reject(new Error('Timeout ao carregar imagem'));
-          }, timeout);
+          }, 10000);
         });
 
-        // Promessa de cancelamento
-        const abortPromise = new Promise<never>((_, reject) => {
-          const { signal } = abortControllerRef.current as AbortController;
-          signal.addEventListener('abort', () => {
-            reject(new Error('Carregamento de imagem cancelado'));
-          });
-        });
+        const result = await Promise.race([loadPromise, timeoutPromise]);
 
-        // Corrida entre carregamento, timeout e cancelamento
-        const result = await Promise.race([loadPromise, timeoutPromise, abortPromise]);
-
-        // Limpar timeout se a imagem carregou
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
-
-        // Atualizar estado se componente ainda está montado
-        if (isMounted.current) {
-          setSrc(result);
+        if (isMounted) {
+          setImageSrc(result);
           setLoading(false);
           setError(null);
-          setRetryCount(0); // Resetar contagem de tentativas em caso de sucesso
+          setRetryCount(0);
         }
-      } catch (error: any) {
-        if (!isMounted.current) return;
-        
-        if (error.name === 'AbortError' || error.message === 'Carregamento de imagem cancelado') {
-          console.log('ImageLoader: Carregamento cancelado');
-          return;
-        }
-        
-        console.error('ImageLoader: Erro ao carregar imagem:', error);
-        
-        // Tentar novamente se o componente ainda está montado
+      } catch (err) {
+        if (!isMounted) return;
+
+        console.error('ImageLoader: Erro ao carregar imagem:', err);
+
         if (retryCount < maxRetries) {
           console.log(`ImageLoader: Tentativa ${retryCount + 1} de ${maxRetries}`);
           setRetryCount(prev => prev + 1);
-          
-          // Tentar novamente após um pequeno atraso
-          timeoutRef.current = setTimeout(() => {
-            if (isMounted.current) {
+          timeoutId = window.setTimeout(() => {
+            if (isMounted) {
               loadImage();
             }
-          }, 1000 * (retryCount + 1)); // Atraso crescente
+          }, retryDelay * (retryCount + 1));
         } else {
+          console.log('ImageLoader: Todas as tentativas falharam, usando fallback');
           setLoading(false);
-          setError('Erro ao carregar imagem após várias tentativas');
-          setSrc('');
+          setError(err instanceof Error ? err : new Error('Erro ao carregar imagem'));
+          setImageSrc(fallbackSrc);
         }
       }
     };
 
     loadImage();
-  }, [imageUrl, refreshTrigger, maxRetries, timeout, preventCache]);
 
-  return { loading, error, src, retryCount, refresh };
+    return () => {
+      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [src, fallbackSrc, maxRetries, retryDelay, retryCount]);
+
+  return {
+    src: imageSrc,
+    loading,
+    error
+  };
 }
