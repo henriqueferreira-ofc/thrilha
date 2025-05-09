@@ -24,14 +24,8 @@ export function ImageLoader({
 }: ImageLoaderProps) {
   const [retryCounter, setRetryCounter] = useState(0);
   
-  // Adicionar um parâmetro de timestamp à URL para evitar cache
-  const urlWithTimestamp = imageUrl && !imageUrl.includes('?') 
-    ? `${imageUrl}?t=${Date.now()}-${retryCounter}` 
-    : imageUrl && imageUrl.includes('?') 
-      ? `${imageUrl}&t=${Date.now()}-${retryCounter}`
-      : imageUrl;
-  
-  const { loading, error, src, refresh } = useImageLoader(urlWithTimestamp, {
+  // Use o hook corretamente, passando as opções como segundo argumento
+  const { loading, error, src, refresh } = useImageLoader(imageUrl, {
     maxRetries: 2,
     timeout: 15000,
     preventCache: true

@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { useAvatarUploader } from '../hooks/use-avatar-uploader';
 import { User } from '@supabase/supabase-js';
@@ -7,9 +8,10 @@ interface AvatarUploadProps {
   user: User | null;
   currentAvatarUrl: string | null;
   onAvatarChange?: (url: string) => void;
+  size?: "sm" | "md" | "lg"; // Adiciona suporte para tamanhos diferentes
 }
 
-export function AvatarUpload({ user, currentAvatarUrl, onAvatarChange }: AvatarUploadProps) {
+export function AvatarUpload({ user, currentAvatarUrl, onAvatarChange, size = "md" }: AvatarUploadProps) {
   const { handleAvatarUpload, isUploading, error } = useAvatarUploader(user);
 
   const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,9 +28,19 @@ export function AvatarUpload({ user, currentAvatarUrl, onAvatarChange }: AvatarU
     }
   }, [handleAvatarUpload, onAvatarChange]);
 
+  // Determinar o tamanho com base na prop size
+  const getAvatarSize = () => {
+    switch(size) {
+      case "sm": return "w-16 h-16";
+      case "lg": return "w-32 h-32";
+      case "md":
+      default: return "w-24 h-24";
+    }
+  };
+
   return (
     <div className="relative group">
-      <div className="relative w-24 h-24 rounded-full overflow-hidden">
+      <div className={`relative ${getAvatarSize()} rounded-full overflow-hidden`}>
         <ImageLoader
           src={currentAvatarUrl}
           fallbackSrc="/default-avatar.png"
