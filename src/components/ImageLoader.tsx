@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useImageLoader } from '../hooks/use-image-loader';
 
@@ -9,8 +10,8 @@ interface ImageLoaderProps {
 }
 
 export function ImageLoader({ src, fallbackSrc, alt, className = '' }: ImageLoaderProps) {
-  const { src: imageSrc, loading, error } = useImageLoader({
-    src,
+  // Fix the parameters to match the hook's expected signature
+  const { src: imageSrc, loading, error } = useImageLoader(src, {
     fallbackSrc,
     maxRetries: 3,
     retryDelay: 1000

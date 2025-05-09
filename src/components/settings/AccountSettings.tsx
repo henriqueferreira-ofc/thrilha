@@ -37,6 +37,7 @@ export function AccountSettings() {
       <div className="space-y-6">
         <div className="flex flex-col items-center gap-4">
           <AvatarUpload 
+            user={user} // Add the required user prop
             currentAvatarUrl={avatarUrl} 
             onAvatarChange={handleAvatarUrlChange} 
             size="lg" 

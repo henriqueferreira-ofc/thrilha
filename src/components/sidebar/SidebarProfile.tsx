@@ -37,6 +37,7 @@ export function SidebarProfile({ user, loading: authLoading }: SidebarProfilePro
       {user && (
         <div className="flex flex-col items-center gap-2 w-full mt-2">
           <AvatarUpload
+            user={user} // Add the required user prop
             currentAvatarUrl={avatarUrl}
             onAvatarChange={handleAvatarUrlChange}
             size="sm"

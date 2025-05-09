@@ -24,7 +24,7 @@ export function ImageLoader({
 }: ImageLoaderProps) {
   const [retryCounter, setRetryCounter] = useState(0);
   
-  // Use o hook corretamente, passando as opções como segundo argumento
+  // Use the hook correctly, with imageUrl as first parameter and options as second
   const { loading, error, src, refresh } = useImageLoader(imageUrl, {
     maxRetries: 2,
     timeout: 15000,
@@ -33,7 +33,9 @@ export function ImageLoader({
 
   const handleRefresh = () => {
     setRetryCounter(prev => prev + 1);
-    refresh();
+    if (refresh) {
+      refresh();
+    }
   };
 
   const defaultFallback = (
