@@ -67,50 +67,6 @@ export async function checkBucketExists(): Promise<boolean> {
   }
 }
 
-// Função centralizada para lidar com URLs de avatares
-export function normalizeAvatarUrl(url: string | null): string {
-  if (!url) return '';
-  
-  try {
-    // Se já é uma URL completa
-    if (url.startsWith('http')) {
-      // Remover parâmetros de query
-      const cleanUrl = url.split('?')[0];
-      
-      // Se já é uma URL pública do Supabase, retornar diretamente
-      if (cleanUrl.includes('/storage/v1/object/public/')) {
-        return cleanUrl;
-      }
-      
-      // Se é uma URL do Supabase mas não pública, extrair o caminho
-      if (cleanUrl.includes('supabase.co/storage')) {
-        const urlParts = cleanUrl.split('/storage/v1/object/');
-        if (urlParts.length === 2) {
-          const filePath = urlParts[1];
-          const { data } = supabase.storage
-            .from(AVATARS_BUCKET)
-            .getPublicUrl(filePath);
-            
-          return data?.publicUrl || '';
-        }
-      }
-      
-      return cleanUrl;
-    }
-    
-    // Se é apenas um caminho de arquivo
-    const cleanPath = url.replace(/^\/|\/$/g, '');
-    const { data } = supabase.storage
-      .from(AVATARS_BUCKET)
-      .getPublicUrl(cleanPath);
-      
-    return data?.publicUrl || '';
-  } catch (error) {
-    console.error('Erro ao normalizar URL do avatar:', error);
-    return '';
-  }
-}
-
 // Função para gerar URLs públicas de avatar
 export function getAvatarPublicUrl(filePath: string): string {
   if (!filePath) return '';

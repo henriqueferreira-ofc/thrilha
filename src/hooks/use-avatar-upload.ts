@@ -22,8 +22,9 @@ export function useAvatarUpload(user: User | null) {
       
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${user.id}_${Date.now()}.${fileExt}`;
+      const filePath = `${AVATARS_BUCKET}/${fileName}`;
       
-      console.log('Iniciando upload do avatar:', fileName);
+      console.log('Iniciando upload do avatar:', filePath);
       
       // Fazer o upload
       const { error: uploadError } = await supabase.storage
