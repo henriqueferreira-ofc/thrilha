@@ -24,11 +24,31 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Nome consistente do bucket para todo o aplicativo
 export const AVATARS_BUCKET = 'avatars';
 
-// Esta função foi simplificada para não lançar erro e não bloquear o fluxo
+// Verificar a existência do bucket, criando-o se necessário
 export async function checkBucketExists(): Promise<boolean> {
-  // Consideramos que o bucket existe e apenas log, sem bloquear o fluxo
-  console.log('Assumindo que o bucket avatars existe... Continuando.');
-  return true;
+  try {
+    // Listar todos os buckets
+    const { data: buckets, error } = await supabase.storage.listBuckets();
+    
+    if (error) {
+      console.error('Erro ao listar buckets:', error);
+      return false;
+    }
+    
+    // Verificar se o bucket existe
+    const bucketExists = buckets?.some(bucket => bucket.name === AVATARS_BUCKET);
+    
+    if (!bucketExists) {
+      console.warn(`Bucket '${AVATARS_BUCKET}' não encontrado. Assumindo que existe.`);
+    } else {
+      console.log(`Bucket '${AVATARS_BUCKET}' encontrado.`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao verificar bucket:', error);
+    return false;
+  }
 }
 
 // Função para gerar URLs públicas de avatar

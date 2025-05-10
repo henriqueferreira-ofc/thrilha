@@ -14,7 +14,7 @@ interface SidebarProfileProps {
 }
 
 export function SidebarProfile({ user, loading: authLoading }: SidebarProfileProps) {
-  const { avatarUrl, username, loading: profileLoading, loadUserProfile } = useSidebarProfile(user);
+  const { avatarUrl, username, loading: profileLoading, loadUserProfile, refreshProfile } = useSidebarProfile(user);
   
   const handleAvatarUrlChange = async (url: string) => {
     console.log('Avatar URL alterada:', url);
@@ -23,7 +23,11 @@ export function SidebarProfile({ user, loading: authLoading }: SidebarProfilePro
     if (user) {
       toast.info('Atualizando perfil...');
       await loadUserProfile();
-      toast.success('Avatar atualizado com sucesso!');
+      // Forçar a recarga dos dados do perfil
+      setTimeout(() => {
+        refreshProfile();
+        toast.success('Avatar atualizado com sucesso!');
+      }, 1000);
     }
   };
 

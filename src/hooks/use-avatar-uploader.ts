@@ -85,7 +85,7 @@ export function useAvatarUploader(user: User | null) {
       setError(error);
       throw error;
     } finally {
-      setIsLoading(false);
+      setIsUploading(false);
     }
   };
 

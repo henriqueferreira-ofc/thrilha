@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useAvatarUploader } from '../hooks/use-avatar-uploader';
 import { User } from '@supabase/supabase-js';
 import { ImageLoader } from './ui/image-loader';
-import { UploadOverlay } from './avatar/UploadOverlay';
+import { User as UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AvatarUploadProps {
@@ -61,7 +61,7 @@ export function AvatarUpload({
           showRefreshButton={true}
           fallback={
             <div className="w-full h-full flex items-center justify-center bg-gray-800">
-              <User className="h-1/2 w-1/2 text-gray-400" />
+              <UserIcon className="h-1/2 w-1/2 text-gray-400" />
             </div>
           }
         />

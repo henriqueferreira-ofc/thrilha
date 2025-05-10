@@ -156,7 +156,6 @@ export function useSidebarProfile(user: User | null) {
           const url = `${profileData.avatar_url}?t=${Date.now()}`;
           console.log('URL de avatar definida:', url);
           setAvatarUrl(url);
-          setRefreshCounter(c => c + 1);
         } else {
           setAvatarUrl(null);
         }
@@ -180,8 +179,11 @@ export function useSidebarProfile(user: User | null) {
 
   // Forçar uma recarga do perfil
   const refreshProfile = () => {
-    loadUserProfile();
-    setRefreshCounter(prev => prev + 1);
+    if (user) {
+      console.log('Forçando atualização do perfil...');
+      loadUserProfile();
+      setRefreshCounter(prev => prev + 1);
+    }
   };
 
   return {
