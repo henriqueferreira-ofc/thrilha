@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
+import { clearAuthData } from '@/utils/auth-utils';
 
 interface LoginFormProps {
   email: string;
@@ -32,6 +33,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setErrorMessage(null);
     
     try {
+      // Limpar quaisquer dados de autenticação antes de tentar o login
+      clearAuthData();
+      
       console.log('Tentando fazer login com:', email);
       await signIn(email, password);
       // O redirecionamento é feito pelo próprio hook use-auth-service

@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../supabase/client';
@@ -40,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Token encontrado no localStorage mas sem sessão ativa, limpando');
       clearAuthData();
     }
-  }, []);
+  }, [session]);
 
   // Initialize authentication state
   useEffect(() => {
@@ -110,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           setLoading(false);
           setAuthInitialized(true);
+          clearAuthData(); // Limpar dados de autenticação em caso de erro
         }
       }
     };

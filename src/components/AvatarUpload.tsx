@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { useAvatarUploader } from '../hooks/use-avatar-uploader';
-import { User } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
 import { ImageLoader } from './ui/image-loader';
 import { User as UserIcon } from 'lucide-react';
 import { toast } from 'sonner';

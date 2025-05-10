@@ -10,7 +10,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    storage: localStorage
   },
   global: {
     headers: {
@@ -40,6 +41,7 @@ export async function checkBucketExists(): Promise<boolean> {
     
     if (!bucketExists) {
       console.warn(`Bucket '${AVATARS_BUCKET}' não encontrado. Assumindo que existe.`);
+      // Não tentaremos criar o bucket aqui, isso deve ser feito por SQL
     } else {
       console.log(`Bucket '${AVATARS_BUCKET}' encontrado.`);
     }
