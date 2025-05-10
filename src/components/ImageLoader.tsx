@@ -25,17 +25,8 @@ export function ImageLoader({
   });
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error('Erro ao carregar imagem:', {
-      src: imageSrc,
-      originalSrc: src,
-      error: e
-    });
+    console.error('Erro ao carregar imagem:', e);
     onError?.(new Error('Falha ao carregar imagem'));
-  };
-
-  const handleLoad = () => {
-    console.log('Imagem carregada com sucesso:', imageSrc);
-    onLoad?.();
   };
 
   return (
@@ -49,11 +40,10 @@ export function ImageLoader({
         transition: 'opacity 0.3s ease-in-out'
       }}
       onError={handleError}
-      onLoad={handleLoad}
+      onLoad={onLoad}
       crossOrigin="anonymous"
       loading="lazy"
       referrerPolicy="no-referrer"
-      decoding="async"
     />
   );
 } 

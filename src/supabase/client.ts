@@ -116,52 +116,23 @@ export function getAvatarPublicUrl(filePath: string): string {
   if (!filePath) return '';
   
   try {
-    // Se já é uma URL completa
+    // Se já é uma URL completa, retorná-la limpa
     if (filePath.startsWith('http')) {
-      // Remover parâmetros de query e fragmentos
-      const cleanUrl = filePath.split(/[?#]/)[0];
-      
-      // Se já é uma URL pública do Supabase, retornar diretamente
-      if (cleanUrl.includes('/storage/v1/object/public/')) {
-        console.log('URL já é pública:', cleanUrl);
-        return cleanUrl;
-      }
-      
-      // Se é uma URL do Supabase mas não pública
-      if (cleanUrl.includes('supabase.co/storage')) {
-        const urlParts = cleanUrl.split('/storage/v1/object/');
-        if (urlParts.length === 2) {
-          const path = urlParts[1].split('/').filter(Boolean).join('/');
-          console.log('Gerando URL pública para:', path);
-          
-          const { data } = supabase.storage
-            .from(AVATARS_BUCKET)
-            .getPublicUrl(path);
-            
-          if (data?.publicUrl) {
-            console.log('Nova URL pública gerada:', data.publicUrl);
-            return data.publicUrl;
-          }
-        }
-      }
-      
-      return cleanUrl;
+      // Remover possíveis parâmetros de query
+      return filePath.split('?')[0];
     }
     
-    // Se é apenas um caminho de arquivo
-    const cleanPath = filePath.replace(/^\/+|\/+$/g, '');
-    console.log('Gerando URL pública para caminho:', cleanPath);
+    // Remover barras iniciais e finais
+    const cleanPath = filePath.replace(/^\/|\/$/g, '');
     
+    // Usar o método do Supabase para obter a URL CDN pública
     const { data } = supabase.storage
       .from(AVATARS_BUCKET)
       .getPublicUrl(cleanPath);
-      
-    if (data?.publicUrl) {
-      console.log('URL pública gerada:', data.publicUrl);
-      return data.publicUrl;
-    }
     
-    throw new Error('Não foi possível gerar URL pública');
+    console.log('URL pública gerada:', data.publicUrl);
+    
+    return data.publicUrl;
   } catch (error) {
     console.error('Erro ao gerar URL pública:', error);
     throw new Error('Erro ao gerar URL pública: ' + (error instanceof Error ? error.message : String(error)));
