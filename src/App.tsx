@@ -153,12 +153,12 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <Router>
-      <AuthProvider>
-        <TooltipProvider>
-          <ConnectionManager />
-          <Toaster />
-          <Sonner />
-          <NavigationHandler>
+      <TooltipProvider>
+        <ConnectionManager />
+        <Toaster />
+        <Sonner />
+        <NavigationHandler>
+          <AuthProvider>
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<Auth />} />
@@ -173,9 +173,9 @@ const App = () => (
               <Route path="/404" element={<NotFound />} />
               <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
-          </NavigationHandler>
-        </TooltipProvider>
-      </AuthProvider>
+          </AuthProvider>
+        </NavigationHandler>
+      </TooltipProvider>
     </Router>
   </QueryClientProvider>
 );

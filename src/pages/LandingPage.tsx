@@ -1,23 +1,11 @@
-import React, { useEffect } from 'react';
+
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Mountain } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-const LandingPage = () => {
-  const {
-    user,
-    loading
-  } = useAuth();
-  const navigate = useNavigate();
 
-  // Redirecionar para tarefas se o usuário já estiver autenticado
-  useEffect(() => {
-    if (user && !loading) {
-      navigate('/tasks', {
-        replace: true
-      });
-    }
-  }, [user, loading, navigate]);
+const LandingPage = () => {
+  const navigate = useNavigate();
 
   // Função para ir para a página de login
   const goToLoginPage = () => {
@@ -37,24 +25,20 @@ const LandingPage = () => {
     navigate('/tasks');
   };
 
-  // Se estiver carregando, mostre um indicador
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-xl text-purple-400 animate-pulse">Carregando...</div>
-      </div>;
-  }
-
-  // Se o usuário estiver logado, ele será redirecionado pelo useEffect
-
-  return <div className="min-h-screen flex flex-col bg-black text-white">
+  return (
+    <div className="min-h-screen flex flex-col bg-black text-white">
       {/* Navigation */}
       <nav className="py-5 px-6 md:px-12 flex justify-between items-center border-b border-white/10">
         <div className="flex items-center gap-2">
           <Mountain className="h-6 w-6 text-purple-300" />
           <span className="text-xl font-bold purple-gradient-text">Trilha</span>
         </div>
-        <Button variant="outline" className="border-purple-300 text-purple-300 hover:bg-purple-300/10" onClick={user ? goToTasks : goToLoginPage}>
-          {user ? 'Minhas Tarefas' : 'Login'}
+        <Button 
+          variant="outline" 
+          className="border-purple-300 text-purple-300 hover:bg-purple-300/10" 
+          onClick={goToLoginPage}
+        >
+          Login
         </Button>
       </nav>
 
@@ -69,10 +53,17 @@ const LandingPage = () => {
             Aumente sua produtividade com o Trilha.
           </p>
           <div className="flex gap-4 pt-4">
-            <Button className="purple-gradient-bg text-white px-8 py-6 text-lg" onClick={user ? goToTasks : goToLoginPage}>
-              {user ? 'Minhas Tarefas' : 'Teste Grátis'}
+            <Button 
+              className="purple-gradient-bg text-white px-8 py-6 text-lg" 
+              onClick={goToLoginPage}
+            >
+              Teste Grátis
             </Button>
-            <Button variant="outline" onClick={scrollToFeatures} className="text-white border-white/20 bg-white/5 px-8 py-6 text-lg font-normal">
+            <Button 
+              variant="outline" 
+              onClick={scrollToFeatures} 
+              className="text-white border-white/20 bg-white/5 px-8 py-6 text-lg font-normal"
+            >
               Saiba Mais
             </Button>
           </div>
@@ -80,9 +71,14 @@ const LandingPage = () => {
 
         <div className="flex justify-center items-end">
           <div className="relative">
-            <img src="/trilha1.png" alt="Trilha App" className="relative z-10 max-h-[500px] object-contain -mb-16" onError={e => {
-            e.currentTarget.src = "https://placehold.co/300x600/3a1c71/ffffff?text=Trilha+App";
-          }} />
+            <img 
+              src="/trilha1.png" 
+              alt="Trilha App" 
+              className="relative z-10 max-h-[500px] object-contain -mb-16" 
+              onError={e => {
+                e.currentTarget.src = "https://placehold.co/300x600/3a1c71/ffffff?text=Trilha+App";
+              }} 
+            />
           </div>
         </div>
       </main>
@@ -123,6 +119,8 @@ const LandingPage = () => {
           <p className="text-sm text-white/60">© 2025 Trilha. Todos os direitos reservados.</p>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default LandingPage;
