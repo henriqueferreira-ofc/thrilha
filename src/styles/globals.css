@@ -1,0 +1,19 @@
+@layer components {
+  .avatar-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .avatar-container img {
+    pointer-events: none !important;
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+  }
+
+  .avatar-container::after,
+  .avatar-container::before {
+    display: none !important;
+  }
+}
+
+<div className={`${avatarClasses} avatar-container`}>

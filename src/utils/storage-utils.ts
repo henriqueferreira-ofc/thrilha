@@ -4,32 +4,32 @@ export async function verificarBucket() {
   const supabase = getSupabaseClient();
   
   try {
-    // Verifica se o bucket existe
     const { data: buckets, error } = await supabase
       .storage
       .listBuckets();
 
-    if (error) throw error;
-
-    const bucketAvatars = buckets?.find(b => b.name === 'avatars');
-    
-    if (!bucketAvatars) {
-      // Cria o bucket se não existir
-      const { error: createError } = await supabase
-        .storage
-        .createBucket('avatars', {
-          public: true,
-          fileSizeLimit: 1024 * 1024 * 2, // 2MB
-        });
-
-      if (createError) throw createError;
+    if (error) {
+      console.error('Erro ao listar buckets:', error);
+      return false;
     }
 
-    // Configura as políticas do bucket
-    const { error: policyError } = await supabase.rpc('criar_politicas_avatar');
-    if (policyError) console.error('Erro ao configurar políticas:', policyError);
+    const avatarBucket = buckets?.find(b => b.name === 'avatars');
+    
+    if (!avatarBucket) {
+      console.warn('Criando bucket avatars...');
+      const { error: createError } = await supabase
+        .storage
+        .createBucket('avatars', { public: true });
 
+      if (createError) {
+        console.error('Erro ao criar bucket:', createError);
+        return false;
+      }
+    }
+
+    return true;
   } catch (erro) {
     console.error('Erro ao verificar bucket:', erro);
+    return false;
   }
 }

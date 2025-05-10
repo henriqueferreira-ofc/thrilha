@@ -2,6 +2,7 @@ import { User } from 'lucide-react';
 import { ImageLoader } from './ImageLoader';
 import { useEffect, useState } from 'react';
 import { verificarBucket } from '@/utils/storage-utils';
+import { cn } from '@/lib/utils';
 
 interface AvatarUsuarioProps {
   urlAvatar?: string | null;
@@ -59,7 +60,7 @@ export function AvatarUsuario({
   }
 
   return (
-    <div className={avatarClasses}>
+    <div className={cn(avatarClasses, "avatar-container")}>
       <ImageLoader
         src={imageUrl}
         alt={`Avatar de ${nomeUsuario}`}
