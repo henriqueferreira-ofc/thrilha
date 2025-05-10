@@ -18,6 +18,7 @@ export function useSidebarProfile(user: User | null) {
   const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const [refreshCounter, setRefreshCounter] = useState(0);
   
   // Configurar assinatura em tempo real para atualizações de perfil
   useEffect(() => {
@@ -58,6 +59,7 @@ export function useSidebarProfile(user: User | null) {
                   const newUrl = `${newProfile.avatar_url}?t=${Date.now()}`;
                   console.log('Definindo nova avatar URL:', newUrl);
                   setAvatarUrl(newUrl);
+                  setRefreshCounter(c => c + 1);
                   toast.info('Avatar atualizado!');
                 }
                 
@@ -154,6 +156,7 @@ export function useSidebarProfile(user: User | null) {
           const url = `${profileData.avatar_url}?t=${Date.now()}`;
           console.log('URL de avatar definida:', url);
           setAvatarUrl(url);
+          setRefreshCounter(c => c + 1);
         } else {
           setAvatarUrl(null);
         }
@@ -175,19 +178,20 @@ export function useSidebarProfile(user: User | null) {
     }
   };
 
-  // Carregamento inicial do perfil
-  useEffect(() => {
-    if (user) {
-      loadUserProfile();
-    }
-  }, [user]);
+  // Forçar uma recarga do perfil
+  const refreshProfile = () => {
+    loadUserProfile();
+    setRefreshCounter(prev => prev + 1);
+  };
 
   return {
     avatarUrl,
     username,
     loading,
     loadUserProfile,
+    refreshProfile,
     setAvatarUrl,
-    setUsername
+    setUsername,
+    refreshCounter
   };
 }

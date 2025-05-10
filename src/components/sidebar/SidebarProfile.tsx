@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { AvatarUpload } from "@/components/AvatarUpload";
+import { AvatarDisplay } from "@/components/avatar/AvatarDisplay";
 import { Mountain } from 'lucide-react';
 import { getOrCreateProfile } from '@/supabase/helper';
 import { useSidebarProfile } from '@/hooks/use-sidebar-profile';
 import { toast } from 'sonner';
+import { AvatarUpload } from '@/components/AvatarUpload';
 
 interface SidebarProfileProps {
   user: User | null;
@@ -26,6 +27,11 @@ export function SidebarProfile({ user, loading: authLoading }: SidebarProfilePro
     }
   };
 
+  // Registrar a URL do avatar atual para depuração
+  useEffect(() => {
+    console.log('SidebarProfile: Avatar URL atual:', avatarUrl);
+  }, [avatarUrl]);
+
   return (
     <div className="flex flex-col items-center gap-2 py-6">
       <div className="flex items-center gap-2">
@@ -37,8 +43,8 @@ export function SidebarProfile({ user, loading: authLoading }: SidebarProfilePro
       {user && (
         <div className="flex flex-col items-center gap-2 w-full mt-2">
           <AvatarUpload
-            user={user} // Add the required user prop
-            currentAvatarUrl={avatarUrl}
+            user={user}
+            currentAvatarUrl={avatarUrl} 
             onAvatarChange={handleAvatarUrlChange}
             size="sm"
           />

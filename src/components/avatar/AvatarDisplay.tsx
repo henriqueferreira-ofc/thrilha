@@ -28,6 +28,7 @@ export function AvatarDisplay({ avatarUrl, size }: AvatarDisplayProps) {
         <ImageLoader 
           imageUrl={avatarUrl} 
           alt="Avatar do usuário" 
+          showRefreshButton={true}
           fallback={
             <div className="w-full h-full flex items-center justify-center">
               <User className={`${iconSizes[size]} text-gray-400`} />

@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { User, RefreshCcw } from 'lucide-react';
+import { User, RefreshCcw, Loader2, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface ImageLoaderProps {
   imageUrl: string | null;
@@ -22,86 +23,84 @@ export function ImageLoader({
   showRefreshButton = false
 }: ImageLoaderProps) {
   const [retryCounter, setRetryCounter] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!!imageUrl);
   const [hasError, setHasError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState<string | null>(imageUrl);
+  const [currentSrc, setCurrentSrc] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Adicione timestamp para evitar cache apenas quando a URL mudar
+    if (imageUrl) {
+      const baseUrl = imageUrl.split('?')[0];
+      const newUrl = `${baseUrl}?t=${Date.now()}`;
+      console.log('ImageLoader: Definindo URL com timestamp:', newUrl);
+      setCurrentSrc(newUrl);
+      setIsLoading(true);
+      setHasError(false);
+    } else {
+      setCurrentSrc(null);
+      setIsLoading(false);
+    }
+  }, [imageUrl, retryCounter]);
   
   const handleRefresh = () => {
+    console.log('Atualizando imagem...');
     setRetryCounter(prev => prev + 1);
     setIsLoading(true);
     setHasError(false);
-    
-    if (imageUrl) {
-      // Adicionar um timestamp para evitar cache
-      const baseUrl = imageUrl.split('?')[0];
-      const newUrl = `${baseUrl}?t=${Date.now()}`;
-      setCurrentSrc(newUrl);
-    }
+    toast.info('Recarregando imagem...');
   };
 
   const handleError = () => {
-    console.error('Erro ao carregar imagem:', imageUrl);
+    console.error('Erro ao carregar imagem:', currentSrc);
     setIsLoading(false);
     setHasError(true);
+    toast.error('Não foi possível carregar a imagem');
   };
 
   const handleLoad = () => {
-    console.log('Imagem carregada com sucesso:', imageUrl);
+    console.log('Imagem carregada com sucesso:', currentSrc);
     setIsLoading(false);
     setHasError(false);
   };
 
-  const defaultFallback = (
-    <Avatar className="w-full h-full bg-gray-800 relative">
-      <AvatarFallback className="bg-gray-800 text-gray-400">
-        <User className="w-1/2 h-1/2" />
-        {showRefreshButton && (
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="absolute bottom-0 right-0 bg-primary/80 rounded-full p-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRefresh();
-            }}
-          >
-            <RefreshCcw className="h-3 w-3" />
-          </Button>
-        )}
-      </AvatarFallback>
-    </Avatar>
-  );
-
+  // Renderizar fallback se imagem não existir ou houver erro
   if (hasError || !currentSrc) {
-    return fallback || defaultFallback;
-  }
-
-  if (isLoading) {
     return (
       <div className="relative w-full h-full">
-        {currentSrc && (
-          <img
-            src={currentSrc}
-            alt={alt}
-            className={`w-full h-full object-${objectFit} ${className} opacity-0`}
-            onLoad={handleLoad}
-            onError={handleError}
-            style={{ display: 'none' }}
-          />
+        {fallback || (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800 text-gray-400">
+            <Image className="w-1/3 h-1/3 mb-2 opacity-50" />
+            <span className="text-xs">Sem imagem</span>
+            
+            {showRefreshButton && (
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="absolute bottom-1 right-1 bg-purple-600/80 hover:bg-purple-700 rounded-full p-1"
+                onClick={handleRefresh}
+              >
+                <RefreshCcw className="h-3 w-3 text-white" />
+              </Button>
+            )}
+          </div>
         )}
-        <div className="w-full h-full flex items-center justify-center bg-gray-800">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-        </div>
       </div>
     );
   }
 
   return (
     <div className="relative w-full h-full">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 z-10">
+          <Loader2 className="animate-spin h-8 w-8 text-purple-500" />
+        </div>
+      )}
+      
       <img
         src={currentSrc}
         alt={alt}
-        className={`w-full h-full object-${objectFit} ${className}`}
+        className={`w-full h-full object-${objectFit} ${className} ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        style={{ transition: 'opacity 0.3s ease' }}
         crossOrigin="anonymous"
         referrerPolicy="no-referrer"
         loading="eager"
@@ -109,14 +108,14 @@ export function ImageLoader({
         onLoad={handleLoad}
       />
       
-      {showRefreshButton && (
+      {showRefreshButton && !isLoading && (
         <Button 
           variant="ghost" 
           size="icon"
-          className="absolute bottom-1 right-1 bg-primary/80 rounded-full p-1 hover:bg-primary/90"
+          className="absolute bottom-1 right-1 bg-purple-600/80 hover:bg-purple-700 rounded-full p-1"
           onClick={handleRefresh}
         >
-          <RefreshCcw className="h-3 w-3" />
+          <RefreshCcw className="h-3 w-3 text-white" />
         </Button>
       )}
     </div>

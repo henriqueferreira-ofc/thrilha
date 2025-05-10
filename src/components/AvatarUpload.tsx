@@ -2,7 +2,9 @@
 import { useCallback } from 'react';
 import { useAvatarUploader } from '../hooks/use-avatar-uploader';
 import { User } from '@supabase/supabase-js';
-import { ImageLoader } from './ImageLoader';
+import { ImageLoader } from './ui/image-loader';
+import { UploadOverlay } from './avatar/UploadOverlay';
+import { toast } from 'sonner';
 
 interface AvatarUploadProps {
   user: User | null;
@@ -25,11 +27,17 @@ export function AvatarUpload({
 
     try {
       const publicUrl = await handleAvatarUpload(file);
+      console.log('Upload concluído. URL recebida:', publicUrl);
+      
       if (onAvatarChange) {
         onAvatarChange(publicUrl);
       }
+      
+      // Forçar atualização visual
+      toast.success("Avatar atualizado com sucesso!");
     } catch (err) {
       console.error('Erro ao atualizar avatar:', err);
+      toast.error('Não foi possível fazer upload da imagem');
     }
   }, [handleAvatarUpload, onAvatarChange]);
 
@@ -47,10 +55,15 @@ export function AvatarUpload({
     <div className="relative group">
       <div className={`relative ${getAvatarSize()} rounded-full overflow-hidden`}>
         <ImageLoader
-          src={currentAvatarUrl}
-          fallbackSrc="/default-avatar.png"
+          imageUrl={currentAvatarUrl}
           alt="Avatar"
           className="w-full h-full object-cover"
+          showRefreshButton={true}
+          fallback={
+            <div className="w-full h-full flex items-center justify-center bg-gray-800">
+              <User className="h-1/2 w-1/2 text-gray-400" />
+            </div>
+          }
         />
         
         <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

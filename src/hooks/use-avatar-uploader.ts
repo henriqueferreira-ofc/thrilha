@@ -50,6 +50,8 @@ export function useAvatarUploader(user: User | null) {
         throw new Error('Dados de upload inválidos');
       }
 
+      console.log('Upload concluído com sucesso:', data);
+
       // Obter URL pública
       const { data: urlData } = supabase.storage
         .from(AVATARS_BUCKET)
@@ -62,7 +64,7 @@ export function useAvatarUploader(user: User | null) {
       const publicUrl = urlData.publicUrl;
       console.log('URL pública gerada:', publicUrl);
 
-      // Atualizar o perfil com a URL pública
+      // Atualizar o perfil com a nova URL pública
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
@@ -76,16 +78,14 @@ export function useAvatarUploader(user: User | null) {
         throw new Error(`Erro ao atualizar perfil: ${updateError.message}`);
       }
 
-      toast.success('Avatar atualizado com sucesso!');
       return publicUrl;
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Erro desconhecido ao fazer upload');
       console.error('Erro ao processar arquivo:', error);
       setError(error);
-      toast.error(error.message);
       throw error;
     } finally {
-      setIsUploading(false);
+      setIsLoading(false);
     }
   };
 
