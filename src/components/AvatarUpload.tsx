@@ -8,10 +8,15 @@ interface AvatarUploadProps {
   user: User | null;
   currentAvatarUrl: string | null;
   onAvatarChange?: (url: string) => void;
-  size?: "sm" | "md" | "lg"; // Adiciona suporte para tamanhos diferentes
+  size?: "sm" | "md" | "lg";
 }
 
-export function AvatarUpload({ user, currentAvatarUrl, onAvatarChange, size = "md" }: AvatarUploadProps) {
+export function AvatarUpload({ 
+  user, 
+  currentAvatarUrl, 
+  onAvatarChange, 
+  size = "md" 
+}: AvatarUploadProps) {
   const { handleAvatarUpload, isUploading, error } = useAvatarUploader(user);
 
   const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {

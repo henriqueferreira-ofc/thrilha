@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { useSettings } from '@/context/SettingsContext';
+import { toast } from 'sonner';
 
 export function AccountSettings() {
   const { 
@@ -18,7 +19,7 @@ export function AccountSettings() {
     testSupabaseConnection, 
     testingConnection, 
     bucketsList,
-    user // This should now be recognized correctly
+    user 
   } = useSettings();
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,15 +32,25 @@ export function AccountSettings() {
     }
   };
 
+  const handleAvatarChange = async (url: string) => {
+    console.log('Avatar URL alterada:', url);
+    try {
+      await handleAvatarUrlChange(url);
+      toast.success('Avatar atualizado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao atualizar avatar');
+    }
+  };
+
   return (
     <div>
       <h2 className="text-xl text-purple-400 mb-6">Configurações da Conta</h2>
       <div className="space-y-6">
         <div className="flex flex-col items-center gap-4">
           <AvatarUpload 
-            user={user} // Add the required user prop
+            user={user}
             currentAvatarUrl={avatarUrl} 
-            onAvatarChange={handleAvatarUrlChange} 
+            onAvatarChange={handleAvatarChange} 
             size="lg" 
           />
           

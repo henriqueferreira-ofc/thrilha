@@ -1,5 +1,5 @@
+
 import React, { useState, useEffect } from 'react';
-import { useImageLoader } from '../hooks/use-image-loader';
 
 interface ImageLoaderProps {
   src?: string | null;
@@ -20,69 +20,73 @@ export function ImageLoader({
   onLoad,
   onError
 }: ImageLoaderProps) {
-  const [currentSrc, setCurrentSrc] = useState<string>(src || fallbackSrc);
+  const [imageSrc, setImageSrc] = useState<string>(src || fallbackSrc);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const { src: imageSrc, loading, error, refresh } = useImageLoader(src, {
-    fallbackSrc,
-    maxRetries: 3,
-    retryDelay: 1000,
-    preventCache: true
-  });
 
   useEffect(() => {
-    if (src !== currentSrc) {
-      setCurrentSrc(src || fallbackSrc);
+    // Atualizar a source quando as props mudarem
+    if (src) {
+      setImageSrc(src);
+      setIsLoading(true);
+      setError(null);
       setRetryCount(0);
+    } else {
+      setImageSrc(fallbackSrc);
     }
   }, [src, fallbackSrc]);
 
-  const handleError = async (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error('Erro ao carregar imagem:', e);
     const target = e.target as HTMLImageElement;
-    console.error('ImageLoader: Erro ao renderizar imagem:', {
-      src: target.src,
-      error: e,
-      currentSrc,
-      retryCount
-    });
-
-    if (retryCount < 3) {
-      console.log(`ImageLoader: Tentativa ${retryCount + 1} de 3`);
+    
+    if (retryCount < 2) {
+      // Tentar novamente com timestamp para evitar cache
+      console.log(`Tentativa ${retryCount + 1} de 2`);
       setRetryCount(prev => prev + 1);
       
-      // Tentar recarregar a imagem com um novo timestamp
+      // Adicionar timestamp para evitar cache
       const baseUrl = target.src.split('?')[0];
       const newUrl = `${baseUrl}?t=${Date.now()}`;
-      setCurrentSrc(newUrl);
+      setImageSrc(newUrl);
     } else {
-      console.log('ImageLoader: Todas as tentativas falharam, usando fallback');
-      if (currentSrc !== fallbackSrc) {
-        setCurrentSrc(fallbackSrc);
-      } else {
-        console.error('ImageLoader: Fallback também falhou');
-        onError?.(new Error('Falha ao carregar imagem e fallback'));
+      // Depois de falhar nas tentativas, usar a imagem fallback
+      console.log('Usando imagem fallback após tentativas falhas');
+      setError(new Error('Não foi possível carregar a imagem'));
+      setImageSrc(fallbackSrc);
+      
+      if (onError) {
+        onError(new Error('Falha ao carregar imagem'));
       }
+    }
+  };
+
+  const handleLoad = () => {
+    console.log('Imagem carregada com sucesso:', imageSrc);
+    setIsLoading(false);
+    setRetryCount(0);
+    
+    if (onLoad) {
+      onLoad();
     }
   };
 
   return (
     <img
-      src={currentSrc}
+      src={imageSrc}
       alt={alt}
       className={className}
       style={{
         ...style,
-        opacity: loading ? 0.5 : 1,
-        transition: 'opacity 0.3s ease-in-out'
+        opacity: isLoading ? 0.7 : 1,
+        transition: 'opacity 0.3s ease'
       }}
       onError={handleError}
-      onLoad={() => {
-        console.log('ImageLoader: Imagem carregada com sucesso');
-        setRetryCount(0);
-        onLoad?.();
-      }}
+      onLoad={handleLoad}
       crossOrigin="anonymous"
       loading="lazy"
       referrerPolicy="no-referrer"
     />
   );
-} 
+}
