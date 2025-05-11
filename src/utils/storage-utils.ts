@@ -1,8 +1,7 @@
-import { getSupabaseClient } from '@/lib/supabase';
+
+import { supabase } from '@/supabase/client';
 
 export async function verificarBucket() {
-  const supabase = getSupabaseClient();
-  
   try {
     // Verifica se o bucket existe
     const { data: buckets, error } = await supabase

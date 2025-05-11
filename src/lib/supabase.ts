@@ -5,3 +5,8 @@
 import { supabase } from '../supabase/client';
 
 export { supabase };
+
+// Adicionamos esta função por compatibilidade com código existente
+export function getSupabaseClient() {
+  return supabase;
+}
