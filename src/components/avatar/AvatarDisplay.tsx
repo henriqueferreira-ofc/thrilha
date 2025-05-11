@@ -2,6 +2,7 @@
 import React from 'react';
 import { User } from 'lucide-react';
 import { ImageLoader } from '../ui/image-loader';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface AvatarDisplayProps {
   avatarUrl: string | null;
@@ -16,30 +17,18 @@ export function AvatarDisplay({ avatarUrl, size }: AvatarDisplayProps) {
     lg: 'w-32 h-32'
   };
 
-  const iconSizes = {
-    sm: 'w-6 h-6',
-    md: 'w-10 h-10',
-    lg: 'w-14 h-14'
-  };
-
   return (
-    <div className={`${sizeClasses[size]} relative rounded-full overflow-hidden bg-gray-800`}>
+    <Avatar className={`${sizeClasses[size]} relative rounded-full overflow-hidden bg-gray-800`}>
       {avatarUrl ? (
-        <ImageLoader 
-          imageUrl={avatarUrl} 
+        <AvatarImage 
+          src={`${avatarUrl}?v=${Date.now()}`} 
           alt="Avatar do usuário" 
-          showRefreshButton={true}
-          fallback={
-            <div className="w-full h-full flex items-center justify-center">
-              <User className={`${iconSizes[size]} text-gray-400`} />
-            </div>
-          }
+          className="object-cover w-full h-full"
         />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center">
-          <User className={`${iconSizes[size]} text-gray-400`} />
-        </div>
-      )}
-    </div>
+      ) : null}
+      <AvatarFallback className="bg-purple-500/20">
+        <User className="w-1/2 h-1/2 text-purple-500" />
+      </AvatarFallback>
+    </Avatar>
   );
 }

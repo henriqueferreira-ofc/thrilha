@@ -2,8 +2,8 @@
 import { useCallback } from 'react';
 import { useAvatarUploader } from '../hooks/use-avatar-uploader';
 import type { User } from '@supabase/supabase-js';
-import { ImageLoader } from './ui/image-loader';
-import { User as UserIcon } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { User as UserIcon, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AvatarUploadProps {
@@ -33,7 +33,6 @@ export function AvatarUpload({
         onAvatarChange(publicUrl);
       }
       
-      // Forçar atualização visual
       toast.success("Avatar atualizado com sucesso!");
     } catch (err) {
       console.error('Erro ao atualizar avatar:', err);
@@ -53,18 +52,17 @@ export function AvatarUpload({
 
   return (
     <div className="relative group">
-      <div className={`relative ${getAvatarSize()} rounded-full overflow-hidden`}>
-        <ImageLoader
-          imageUrl={currentAvatarUrl}
-          alt="Avatar"
-          className="w-full h-full object-cover"
-          showRefreshButton={true}
-          fallback={
-            <div className="w-full h-full flex items-center justify-center bg-gray-800">
-              <UserIcon className="h-1/2 w-1/2 text-gray-400" />
-            </div>
-          }
-        />
+      <Avatar className={`${getAvatarSize()} rounded-full overflow-hidden`}>
+        {currentAvatarUrl ? (
+          <AvatarImage 
+            src={`${currentAvatarUrl}?v=${Date.now()}`} 
+            alt="Avatar" 
+            className="w-full h-full object-cover"
+          />
+        ) : null}
+        <AvatarFallback className="bg-gray-800">
+          <UserIcon className="h-1/2 w-1/2 text-gray-400" />
+        </AvatarFallback>
         
         <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <label className="cursor-pointer text-white text-sm font-medium">
@@ -78,7 +76,7 @@ export function AvatarUpload({
             />
           </label>
         </div>
-      </div>
+      </Avatar>
       
       {error && (
         <p className="mt-2 text-sm text-red-500">
