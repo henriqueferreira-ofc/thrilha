@@ -4,13 +4,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { 
-  BrowserRouter, 
+  BrowserRouter,
   Routes, 
   Route, 
   Navigate, 
   useNavigate, 
-  useLocation,
-  HashRouter 
+  useLocation 
 } from "react-router-dom";
 import Index from "./pages/Index";
 import Calendar from "./pages/Calendar";
@@ -104,7 +103,6 @@ const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) 
       if (!loading) {
         if (!user || !session) {
           console.log('Usuário não autenticado, redirecionando para /auth');
-          clearAuthData(); // Limpar qualquer dado residual
           navigate('/auth', { replace: true });
         } else {
           console.log('Usuário autenticado:', user.email);
@@ -144,15 +142,12 @@ const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) 
   return element;
 };
 
-// Determinar qual Router usar, dependendo do ambiente
-// HashRouter é mais seguro para ambientes que não configuram corretamente o roteamento de SPA
-const Router = import.meta.env.DEV ? HashRouter : BrowserRouter;
-
+// Utilizamos apenas BrowserRouter para funcionar corretamente com o React Router
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Router>
+    <BrowserRouter>
       <TooltipProvider>
         <ConnectionManager />
         <Toaster />
@@ -176,7 +171,7 @@ const App = () => (
           </AuthProvider>
         </NavigationHandler>
       </TooltipProvider>
-    </Router>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

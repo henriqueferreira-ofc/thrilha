@@ -1,5 +1,5 @@
 
-import { useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   LayoutDashboard, 
@@ -15,9 +15,11 @@ interface SidebarNavigationProps {
 
 export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   
   const navigateTo = (path: string) => {
-    window.location.replace(`#${path}`);
+    // Usar o navigate do React Router em vez de window.location.replace
+    navigate(path);
   };
   
   return (

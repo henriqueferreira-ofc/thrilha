@@ -306,6 +306,10 @@ export type Database = {
           username: string | null
         }
       }
+      criar_politicas_avatar: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_invite_token: {
         Args: Record<PropertyKey, never>
         Returns: string
