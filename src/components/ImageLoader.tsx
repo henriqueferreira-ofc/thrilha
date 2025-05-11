@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { User } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface ImageLoaderProps {
   src: string;
@@ -9,52 +8,41 @@ interface ImageLoaderProps {
   fallbackClassName?: string;
 }
 
-export function ImageLoader({
-  src,
-  alt,
-  className,
-  fallbackClassName
-}: ImageLoaderProps) {
+export function ImageLoader({ src, alt, className, fallbackClassName }: ImageLoaderProps) {
   const [hasError, setHasError] = useState(false);
-  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
 
+  // Reset error state when src changes
   useEffect(() => {
     setHasError(false);
-    setLoadedSrc(null);
-
-    if (!src) return;
-
-    const img = new Image();
-    img.src = src;
-    
-    img.onload = () => {
-      setLoadedSrc(src);
-      console.log('Imagem carregada com sucesso:', src);
-    };
-    
-    img.onerror = () => {
-      setHasError(true);
-      console.error('Erro ao carregar imagem:', src);
-    };
   }, [src]);
 
-  if (hasError || !loadedSrc) {
+  const handleError = () => {
+    console.error(`Erro ao carregar imagem: ${src}`);
+    setHasError(true);
+  };
+
+  if (hasError || !src) {
     return (
-      <div className={cn("flex items-center justify-center bg-purple-500/20", fallbackClassName)}>
+      <div className={`flex items-center justify-center bg-purple-500/20 ${fallbackClassName}`}>
         <User className="w-6 h-6 text-purple-500" />
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-full">
+    <picture>
+      <source srcSet={src} type="image/webp" />
+      <source srcSet={src} type="image/jpeg" />
+      <source srcSet={src} type="image/png" />
       <img
-        src={loadedSrc}
+        src={src}
         alt={alt}
-        className={cn("w-full h-full object-cover select-none", className)}
-        draggable={false}
-        style={{ pointerEvents: 'none' }}
+        className={className}
+        onError={handleError}
+        loading="lazy"
+        crossOrigin="anonymous"
+        referrerPolicy="no-referrer"
       />
-    </div>
+    </picture>
   );
 }
