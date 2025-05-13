@@ -36,8 +36,9 @@ export function useTasksBoard(currentBoard: Board | null) {
           title: task.title,
           description: task.description || '',
           status: task.status as TaskStatus,
-          createdAt: task.created_at,
-          dueDate: task.due_date,
+          created_at: task.created_at,
+          updated_at: task.updated_at || task.created_at,
+          due_date: task.due_date,
           user_id: task.user_id,
           board_id: task.board_id,
           completed: task.status === 'done'
@@ -73,8 +74,9 @@ export function useTasksBoard(currentBoard: Board | null) {
             title: newTask.title,
             description: newTask.description || '',
             status: newTask.status as TaskStatus,
-            createdAt: newTask.created_at,
-            dueDate: newTask.due_date,
+            created_at: newTask.created_at,
+            updated_at: newTask.updated_at || newTask.created_at,
+            due_date: newTask.due_date,
             user_id: newTask.user_id,
             board_id: newTask.board_id,
             completed: newTask.status === 'done'

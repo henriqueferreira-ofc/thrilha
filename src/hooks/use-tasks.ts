@@ -30,9 +30,11 @@ export function useTasks() {
           title: task.title,
           description: task.description || '',
           status: task.status as TaskStatus,
-          createdAt: task.created_at,
-          dueDate: task.due_date,
+          created_at: task.created_at,
+          updated_at: task.updated_at || task.created_at,
+          due_date: task.due_date,
           user_id: task.user_id,
+          board_id: task.board_id,
           completed: task.status === 'done'
         })) || [];
 
@@ -64,7 +66,8 @@ export function useTasks() {
           status: 'todo',
           user_id: user.id,
           due_date: taskData.dueDate,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          board_id: taskData.board_id || ''
         })
         .select()
         .single();
@@ -76,9 +79,11 @@ export function useTasks() {
         title: data.title,
         description: data.description || '',
         status: data.status as TaskStatus,
-        createdAt: data.created_at,
-        dueDate: data.due_date,
+        created_at: data.created_at,
+        updated_at: data.updated_at || data.created_at,
+        due_date: data.due_date,
         user_id: data.user_id,
+        board_id: data.board_id,
         completed: false
       };
 
@@ -106,7 +111,7 @@ export function useTasks() {
           title: updatedData.title,
           description: updatedData.description,
           status: updatedData.status,
-          due_date: updatedData.dueDate,
+          due_date: updatedData.due_date,
         })
         .eq('id', id)
         .eq('user_id', user.id);
@@ -119,7 +124,7 @@ export function useTasks() {
             ? {
                 ...task,
                 ...updatedData,
-                completed: updatedData.status === 'done' || task.completed
+                completed: updatedData.status === 'done' || (task.completed || false)
               }
             : task
         )
@@ -190,7 +195,7 @@ export function useTasks() {
     switch (status) {
       case 'todo':
         return 'A Fazer';
-      case 'inProgress':
+      case 'in-progress':
         return 'Em Progresso';
       case 'done':
         return 'Concluída';

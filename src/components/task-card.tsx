@@ -63,7 +63,7 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
     switch (task.status) {
       case 'todo':
         return 'bg-purple-500/20 hover:bg-purple-500/30 border-l-4 border-purple-500';
-      case 'inProgress': 
+      case 'in-progress': 
         return 'bg-blue-500/20 hover:bg-blue-500/30 border-l-4 border-blue-500';
       case 'done':
         return 'bg-green-500/20 hover:bg-green-500/30 border-l-4 border-green-500';
@@ -74,8 +74,8 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
 
   // Verifica se a data de vencimento está próxima (menos de 3 dias)
   const isDueSoon = () => {
-    if (!task.dueDate) return false;
-    const dueDate = new Date(task.dueDate);
+    if (!task.due_date) return false;
+    const dueDate = new Date(task.due_date);
     const today = new Date();
     const diffTime = dueDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -84,16 +84,16 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
 
   // Verifica se a tarefa está atrasada
   const isOverdue = () => {
-    if (!task.dueDate) return false;
-    const dueDate = new Date(task.dueDate);
+    if (!task.due_date) return false;
+    const dueDate = new Date(task.due_date);
     const today = new Date();
     return dueDate < today && task.status !== 'done';
   };
 
   // Formata a data de vencimento 
   const formatTaskDueDate = () => {
-    if (!task.dueDate) return null;
-    const dueDate = new Date(task.dueDate);
+    if (!task.due_date) return null;
+    const dueDate = new Date(task.due_date);
     return format(dueDate, "dd 'de' MMM", { locale: ptBR });
   };
 
@@ -162,7 +162,7 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
         )}
 
         <div className="mt-3 flex items-center justify-between">
-          {task.dueDate && (
+          {task.due_date && (
             <div className={`flex items-center text-xs ${isOverdue() ? 'text-red-400' : isDueSoon() ? 'text-amber-400' : 'text-muted-foreground'}`}>
               {isOverdue() ? (
                 <CalendarClock size={14} className="mr-1 animate-pulse" />
@@ -182,7 +182,7 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
             initialData={{
               title: task.title,
               description: task.description,
-              dueDate: task.dueDate
+              dueDate: task.due_date
             }}
             onSubmit={handleUpdate}
           />

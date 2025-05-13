@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { Task, TaskStatus, TaskFormData } from '@/types/task';
 import { supabase } from '@/supabase/client';
@@ -23,9 +24,11 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
         title: taskData.title,
         description: taskData.description || '',
         status: 'todo',
-        createdAt: new Date().toISOString(),
-        dueDate: taskData.dueDate,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        due_date: taskData.dueDate,
         user_id: user.id,
+        board_id: taskData.board_id || '',
         completed: false
       };
 
@@ -40,7 +43,8 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
           description: taskData.description || '',
           status: 'todo' as TaskStatus,
           user_id: user.id,
-          due_date: taskData.dueDate
+          due_date: taskData.dueDate,
+          board_id: taskData.board_id || ''
         })
         .select()
         .single();
@@ -57,9 +61,11 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
         title: data.title,
         description: data.description || '',
         status: data.status as TaskStatus,
-        createdAt: data.created_at,
-        dueDate: data.due_date,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        due_date: data.due_date,
         user_id: data.user_id,
+        board_id: data.board_id,
         completed: data.status === 'done'
       };
 
@@ -89,7 +95,7 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
         title: updatedData.title,
         description: updatedData.description,
         status: updatedData.status,
-        due_date: updatedData.dueDate
+        due_date: updatedData.due_date
       };
 
       const { error } = await supabase
@@ -101,7 +107,7 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
 
       // Atualizar o estado local
       setTasks(prev => prev.map(task => 
-        task.id === id ? { ...task, ...updatedData, completed: updatedData.status === 'done' || task.completed } : task
+        task.id === id ? { ...task, ...updatedData, completed: updatedData.status === 'done' || (task.completed || false) } : task
       ));
 
       toast.success('Tarefa atualizada com sucesso!');
@@ -181,7 +187,7 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
   const getStatusName = (status: TaskStatus): string => {
     switch (status) {
       case 'todo': return 'A Fazer';
-      case 'inProgress': return 'Em Progresso';
+      case 'in-progress': return 'Em Progresso';
       case 'done': return 'Concluída';
       default: return status;
     }

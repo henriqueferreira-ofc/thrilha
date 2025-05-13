@@ -50,8 +50,8 @@ export const groupTasksByStatus = (tasks: Task[]) => {
       title: "A Fazer",
       tasks: [] as Task[]
     },
-    inProgress: {
-      id: "inProgress" as TaskStatus,
+    "in-progress": {
+      id: "in-progress" as TaskStatus,
       title: "Em Progresso",
       tasks: [] as Task[]
     },
@@ -66,13 +66,13 @@ export const groupTasksByStatus = (tasks: Task[]) => {
     columns[task.status].tasks.push(task);
   });
 
-  return [columns.todo, columns.inProgress, columns.done];
+  return [columns.todo, columns["in-progress"], columns.done];
 };
 
 // Verificar se uma tarefa está próxima do prazo (3 dias ou menos)
 export const isTaskDueSoon = (task: Task): boolean => {
-  if (!task.dueDate) return false;
-  const dueDate = new Date(task.dueDate);
+  if (!task.due_date) return false;
+  const dueDate = new Date(task.due_date);
   const today = new Date();
   const diffTime = dueDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -81,8 +81,8 @@ export const isTaskDueSoon = (task: Task): boolean => {
 
 // Verificar se uma tarefa está atrasada
 export const isTaskOverdue = (task: Task): boolean => {
-  if (!task.dueDate) return false;
-  const dueDate = new Date(task.dueDate);
+  if (!task.due_date) return false;
+  const dueDate = new Date(task.due_date);
   const today = new Date();
   return dueDate < today && task.status !== 'done';
 };

@@ -8,16 +8,17 @@ export interface Task {
   updated_at: string;
   user_id: string;
   due_date?: string;
-  board_id: string; // Adicionando board_id ao tipo Task
+  board_id: string;
+  completed?: boolean; // Adicionando campo completed
 }
 
 export type TaskStatus = 'todo' | 'in-progress' | 'done';
 
-export interface TaskFormProps {
-  initialData?: Partial<Task>;
-  onSubmit: (data: Omit<Task, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => void;
-  onCancel?: () => void;
-  loading?: boolean;
+export interface TaskFormData {
+  title: string;
+  description?: string;
+  dueDate?: string;
+  board_id?: string;
 }
 
 export interface TaskFilterOptions {
@@ -44,4 +45,20 @@ export interface TaskState {
 export interface TaskContextType extends TaskState, TaskOperations {
   setFilter: (filter: TaskFilterOptions) => void;
   filteredTasks: Task[];
+}
+
+export interface TaskCollaborator {
+  id: string;
+  task_id: string;
+  user_id: string;
+  added_at: string;
+  added_by: string;
+  userEmail?: string;
+  userName?: string;
+}
+
+export interface Column {
+  id: TaskStatus;
+  title: string;
+  tasks: Task[];
 }

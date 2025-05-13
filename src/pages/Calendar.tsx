@@ -24,16 +24,16 @@ const Calendar = () => {
 
   // Filtrar tarefas pela data selecionada
   const tasksForSelectedDate = tasks.filter((task) => {
-    if (!selectedDate || !task.dueDate) return false;
+    if (!selectedDate || !task.due_date) return false;
     
-    const taskDate = new Date(task.dueDate);
+    const taskDate = new Date(task.due_date);
     return isSameDay(taskDate, selectedDate);
   });
 
   // Função para determinar que dias devem ser destacados no calendário (dias com tarefas)
   const getDaysWithTasks = tasks
-    .filter((task) => task.dueDate)
-    .map((task) => new Date(task.dueDate!));
+    .filter((task) => task.due_date)
+    .map((task) => new Date(task.due_date!));
 
   // Função para renderizar o indicador de status da tarefa
   const renderStatusIndicator = (status: Task['status']) => {
@@ -127,4 +127,3 @@ const Calendar = () => {
 };
 
 export default Calendar;
-

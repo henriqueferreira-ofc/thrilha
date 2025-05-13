@@ -1,6 +1,6 @@
 
 import { useDrop } from 'react-dnd';
-import { Task, Column, TaskStatus } from '@/types/task';
+import { Task, TaskStatus, Column } from '@/types/task';
 import { TaskCard } from '@/components/task-card';
 
 interface TaskColumnProps {
@@ -28,7 +28,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
     switch (column.id) {
       case 'todo':
         return 'border-t-4 border-t-purple-500/70 bg-black';
-      case 'inProgress':
+      case 'in-progress':
         return 'border-t-4 border-t-blue-500/70 bg-black';
       case 'done':
         return 'border-t-4 border-t-green-500/70 bg-black';
@@ -62,7 +62,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
               task={task} 
               onDelete={onDelete} 
               onUpdate={onUpdate}
-              onToggleComplete={() => onUpdate(task.id, { completed: !task.completed })}
+              onToggleComplete={() => onUpdate(task.id, { status: task.status === 'done' ? 'todo' : 'done' })}
             />
           ))
         )}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Task, TaskStatus } from '@/types/task';
@@ -33,9 +32,11 @@ export function useTaskCore() {
           title: task.title,
           description: task.description || '',
           status: task.status as TaskStatus,
-          createdAt: task.created_at,
-          dueDate: task.due_date,
+          created_at: task.created_at,
+          updated_at: task.updated_at || task.created_at,
+          due_date: task.due_date,
           user_id: task.user_id,
+          board_id: task.board_id,
           completed: task.status === 'done'
         })) || [];
         
@@ -69,9 +70,11 @@ export function useTaskCore() {
               title: newTask.title,
               description: newTask.description || '',
               status: newTask.status as TaskStatus,
-              createdAt: newTask.created_at,
-              dueDate: newTask.due_date,
+              created_at: newTask.created_at,
+              updated_at: newTask.updated_at || newTask.created_at,
+              due_date: newTask.due_date,
               user_id: newTask.user_id,
+              board_id: newTask.board_id,
               completed: newTask.status === 'done'
             };
             setTasks(prev => [formattedTask, ...prev]);
@@ -85,9 +88,11 @@ export function useTaskCore() {
                 title: updatedTask.title,
                 description: updatedTask.description || '',
                 status: updatedTask.status as TaskStatus,
-                createdAt: updatedTask.created_at,
-                dueDate: updatedTask.due_date,
+                created_at: updatedTask.created_at,
+                updated_at: updatedTask.updated_at || updatedTask.created_at,
+                due_date: updatedTask.due_date,
                 user_id: updatedTask.user_id,
+                board_id: updatedTask.board_id,
                 completed: updatedTask.status === 'done'
               } : task)
             );
@@ -128,9 +133,11 @@ export function useTaskCore() {
                 title: data.title,
                 description: data.description || '',
                 status: data.status as TaskStatus,
-                createdAt: data.created_at,
-                dueDate: data.due_date,
+                created_at: data.created_at,
+                updated_at: data.updated_at || data.created_at,
+                due_date: data.due_date,
                 user_id: data.user_id,
+                board_id: data.board_id,
                 completed: data.status === 'done'
               };
               
