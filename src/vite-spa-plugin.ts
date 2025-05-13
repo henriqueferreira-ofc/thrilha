@@ -1,7 +1,8 @@
+
 import type { Plugin, ViteDevServer } from 'vite';
 
 // Configuração para o plugin SPA
-export default function spaFallbackPlugin(): Plugin {
+export function viteSpaPlugin(): Plugin {
   return {
     name: 'spa-fallback',
     configureServer(server: ViteDevServer) {
@@ -17,3 +18,5 @@ export default function spaFallbackPlugin(): Plugin {
     }
   };
 } 
+
+export default viteSpaPlugin;

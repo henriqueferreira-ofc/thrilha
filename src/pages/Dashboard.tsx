@@ -1,85 +1,27 @@
 
-import { TaskSidebar } from '@/components/task-sidebar';
+import React from 'react';
 import { TaskBoard } from '@/components/task-board';
-import { RequireAuth } from '@/components/RequireAuth';
-import { useBoards } from '@/hooks/use-boards';
-import { useTasksBoard } from '@/hooks/use-tasks-board';
-import { useTaskOperationsBoard } from '@/hooks/tasks/use-task-operations-board';
-import { BoardSelector } from '@/components/boards/board-selector';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { TaskSidebar } from '@/components/task-sidebar';
 
-export function Dashboard() {
-  const { 
-    boards, 
-    loading: loadingBoards, 
-    currentBoard, 
-    setCurrentBoard,
-    canCreateMoreBoards,
-    createBoard
-  } = useBoards();
-  
-  const { 
-    tasks, 
-    loading: loadingTasks, 
-    setTasks 
-  } = useTasksBoard(currentBoard);
-  
-  const { 
-    addTask, 
-    updateTask, 
-    deleteTask, 
-    changeTaskStatus 
-  } = useTaskOperationsBoard(tasks, setTasks, currentBoard);
-
+const Dashboard = () => {
   return (
-    <RequireAuth>
-      <div className="flex h-screen overflow-hidden">
-        <TaskSidebar onCreateTask={addTask} />
-        <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="p-4 border-b border-white/10">
-            {loadingBoards ? (
-              <Skeleton className="h-10 w-[250px]" />
-            ) : (
-              <BoardSelector
-                boards={boards}
-                currentBoard={currentBoard}
-                onBoardChange={setCurrentBoard}
-                canCreateMoreBoards={canCreateMoreBoards}
-                onCreateBoard={createBoard}
-              />
-            )}
-          </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <TaskSidebar />
+        
+        <div className="flex-1 flex flex-col">
+          <header className="p-6 flex justify-between items-center border-b border-white/10">
+            <h1 className="text-xl font-bold">Dashboard</h1>
+          </header>
           
-          <div className="flex-1 overflow-auto">
-            {!currentBoard && !loadingBoards ? (
-              <div className="flex flex-col items-center justify-center h-full p-6">
-                <Alert className="max-w-md">
-                  <ExclamationTriangleIcon className="h-4 w-4" />
-                  <AlertDescription>
-                    Você precisa criar um quadro para começar a adicionar tarefas.
-                    Use o botão + ao lado do seletor de quadros.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            ) : loadingBoards || loadingTasks ? (
-              <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Skeleton className="h-[500px]" />
-                <Skeleton className="h-[500px]" />
-                <Skeleton className="h-[500px]" />
-              </div>
-            ) : (
-              <TaskBoard
-                tasks={tasks}
-                onDelete={deleteTask}
-                onUpdate={updateTask}
-                onChangeStatus={changeTaskStatus}
-              />
-            )}
-          </div>
-        </main>
+          <main className="flex-1 p-6">
+            <TaskBoard />
+          </main>
+        </div>
       </div>
-    </RequireAuth>
+    </SidebarProvider>
   );
-}
+};
+
+export default Dashboard;

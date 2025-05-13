@@ -1,7 +1,8 @@
+
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 
-const About = () => {
+export const About = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -40,4 +41,4 @@ const About = () => {
   );
 };
 
-export default About; 
+export default About;
