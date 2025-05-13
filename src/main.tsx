@@ -1,49 +1,46 @@
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import { SettingsProvider } from './context/SettingsContext'
+import { Toaster } from './components/ui/sonner'
 import './index.css'
 
-// Função para desabilitar ou remover qualquer Service Worker existente
-// que possa estar causando problemas de comunicação
-const cleanupServiceWorkers = async () => {
-  if ('serviceWorker' in navigator) {
-    try {
-      // Obter todas as registrações de service workers
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      
-      // Remover todos os service workers registrados
-      for (const registration of registrations) {
-        await registration.unregister();
-        console.log('Service Worker desregistrado:', registration);
-      }
-      
-      // Limpar caches que possam estar causando problemas
-      if ('caches' in window) {
-        const cacheKeys = await caches.keys();
-        await Promise.all(
-          cacheKeys.map(key => caches.delete(key))
-        );
-        console.log('Caches limpos:', cacheKeys);
-      }
-    } catch (error) {
-      console.error('Erro ao limpar Service Workers:', error);
-    }
-  }
-};
+// Pages
+import { Dashboard } from './pages/Dashboard'
+import { LandingPage } from './pages/LandingPage'
+import { Auth } from './pages/Auth'
+import { Settings } from './pages/Settings'
+import { About } from './pages/About'
+import { NotFound } from './pages/NotFound'
+import { Calendar } from './pages/Calendar'
+import { SubscriptionPage } from './pages/Subscription'
+import { AcceptInvite } from './pages/AcceptInvite'
+import { viteSpaPlugin } from './vite-spa-plugin'
 
-// Lidar com o erro de comunicação assíncrona
-window.addEventListener('unhandledrejection', (event) => {
-  if (
-    event.reason && 
-    typeof event.reason.message === 'string' && 
-    event.reason.message.includes('message channel closed')
-  ) {
-    console.warn('Detectado erro de canal de mensagem fechado. Isso geralmente é causado por Service Workers ou WebSockets.');
-    event.preventDefault(); // Previne o erro de aparecer no console
-    cleanupServiceWorkers(); // Tenta limpar service workers problemáticos
-  }
-});
+// Install SPA plugin
+viteSpaPlugin();
 
-// Iniciar o app após a limpeza
-cleanupServiceWorkers().then(() => {
-  createRoot(document.getElementById("root")!).render(<App />);
-});
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <AuthProvider>
+        <SettingsProvider>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/app" element={<Dashboard />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/subscription" element={<SubscriptionPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/invite/:token" element={<AcceptInvite />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </SettingsProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </React.StrictMode>,
+)

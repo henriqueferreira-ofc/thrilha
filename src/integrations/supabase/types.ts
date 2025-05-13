@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      boards: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_archived: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_archived?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_archived?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       collaborators: {
         Row: {
           collaborator_id: string
@@ -149,6 +179,45 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          plan_type: string
+          start_date: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          plan_type?: string
+          start_date?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          plan_type?: string
+          start_date?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       task_collaborators: {
         Row: {
           created_at: string
@@ -219,6 +288,7 @@ export type Database = {
       }
       tasks: {
         Row: {
+          board_id: string
           created_at: string
           description: string | null
           due_date: string | null
@@ -229,6 +299,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          board_id: string
           created_at?: string
           description?: string | null
           due_date?: string | null
@@ -239,6 +310,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          board_id?: string
           created_at?: string
           description?: string | null
           due_date?: string | null
@@ -248,7 +320,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       work_groups: {
         Row: {
@@ -294,6 +374,10 @@ export type Database = {
       add_task_collaborator: {
         Args: { p_task_id: string; p_user_id: string; p_added_by: string }
         Returns: string
+      }
+      can_create_board: {
+        Args: { user_id: string }
+        Returns: boolean
       }
       create_user_profile: {
         Args: { user_id: string; user_name: string }

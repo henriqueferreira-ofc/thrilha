@@ -1,13 +1,17 @@
 
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  LayoutDashboard, 
-  Calendar, 
-  Settings, 
-  Info, 
-  LogOut 
-} from 'lucide-react';
+  HomeIcon, 
+  GearIcon, 
+  CalendarIcon, 
+  PieChartIcon, 
+  PersonIcon,
+  ExitIcon,
+  EnvelopeClosedIcon,
+  HeartFilledIcon
+} from '@radix-ui/react-icons';
 
 interface SidebarNavigationProps {
   onLogout: () => void;
@@ -15,61 +19,61 @@ interface SidebarNavigationProps {
 
 export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
   const location = useLocation();
-  const navigate = useNavigate();
-  
-  const navigateTo = (path: string) => {
-    // Usar o navigate do React Router em vez de window.location.replace
-    navigate(path);
-  };
-  
-  return (
-    <div className="flex flex-col gap-4">
-      <Button 
-        variant="ghost" 
-        className={`justify-start hover:bg-white/5 ${location.pathname === "/tasks" ? "bg-white/5 text-purple-300" : ""}`}
-        onClick={() => navigateTo('/tasks')}
-      >
-        <LayoutDashboard className="mr-2 h-4 w-4 text-purple-300" />
-        Tarefas
-      </Button>
-      
-      <Button 
-        variant="ghost" 
-        className={`justify-start hover:bg-white/5 ${location.pathname === "/calendar" ? "bg-white/5 text-purple-300" : ""}`}
-        onClick={() => navigateTo('/calendar')}
-      >
-        <Calendar className="mr-2 h-4 w-4 text-purple-300" />
-        Calendário
-      </Button>
-      
-      <Button 
-        variant="ghost" 
-        className={`justify-start hover:bg-white/5 ${location.pathname === "/settings" ? "bg-white/5 text-purple-300" : ""}`}
-        onClick={() => navigateTo('/settings')}
-      >
-        <Settings className="mr-2 h-4 w-4 text-purple-300" />
-        Configurações
-      </Button>
-      
-      <Button 
-        variant="ghost" 
-        className={`justify-start hover:bg-white/5 ${location.pathname === "/about" ? "bg-white/5 text-purple-300" : ""}`}
-        onClick={() => navigateTo('/about')}
-      >
-        <Info className="mr-2 h-4 w-4 text-purple-300" />
-        Sobre
-      </Button>
+  const isActive = (path: string) => location.pathname === path;
 
-      <div className="mt-auto">
-        <Button 
-          variant="ghost" 
-          className="justify-start w-full hover:bg-white/5 text-red-400 hover:text-red-300"
-          onClick={onLogout}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sair
-        </Button>
+  const navItems = [
+    { 
+      icon: <HomeIcon className="h-4 w-4 mr-2" />, 
+      label: 'Tarefas', 
+      path: '/app' 
+    },
+    { 
+      icon: <CalendarIcon className="h-4 w-4 mr-2" />, 
+      label: 'Calendário', 
+      path: '/calendar' 
+    },
+    { 
+      icon: <HeartFilledIcon className="h-4 w-4 mr-2" />, 
+      label: 'Planos', 
+      path: '/subscription' 
+    },
+    { 
+      icon: <GearIcon className="h-4 w-4 mr-2" />, 
+      label: 'Configurações', 
+      path: '/settings' 
+    },
+    { 
+      icon: <PersonIcon className="h-4 w-4 mr-2" />, 
+      label: 'Sobre', 
+      path: '/about' 
+    }
+  ];
+
+  return (
+    <ScrollArea className="flex-1 pt-2">
+      <div className="flex flex-col gap-1 p-2">
+        {navItems.map((item) => (
+          <Link to={item.path} key={item.path}>
+            <Button
+              variant={isActive(item.path) ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+            >
+              {item.icon}
+              {item.label}
+            </Button>
+          </Link>
+        ))}
+        <div className="mt-auto">
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100/10"
+            onClick={onLogout}
+          >
+            <ExitIcon className="h-4 w-4 mr-2" />
+            Sair
+          </Button>
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   );
 }
