@@ -90,8 +90,9 @@ export function useTasksBoard(currentBoard: Board | null) {
               title: updatedTask.title,
               description: updatedTask.description || '',
               status: updatedTask.status as TaskStatus,
-              createdAt: updatedTask.created_at,
-              dueDate: updatedTask.due_date,
+              created_at: updatedTask.created_at,
+              updated_at: updatedTask.updated_at || updatedTask.created_at,
+              due_date: updatedTask.due_date,
               user_id: updatedTask.user_id,
               board_id: updatedTask.board_id,
               completed: updatedTask.status === 'done'

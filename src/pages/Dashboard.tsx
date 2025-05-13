@@ -3,8 +3,11 @@ import React from 'react';
 import { TaskBoard } from '@/components/task-board';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
+import { useTasks } from '@/hooks/use-tasks';
 
 const Dashboard = () => {
+  const { tasks, updateTask, deleteTask, changeTaskStatus } = useTasks();
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -16,7 +19,12 @@ const Dashboard = () => {
           </header>
           
           <main className="flex-1 p-6">
-            <TaskBoard />
+            <TaskBoard 
+              tasks={tasks}
+              onDelete={deleteTask}
+              onUpdate={updateTask}
+              onChangeStatus={changeTaskStatus}
+            />
           </main>
         </div>
       </div>

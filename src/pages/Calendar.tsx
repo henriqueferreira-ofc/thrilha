@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
@@ -40,7 +41,7 @@ const Calendar = () => {
     switch (status) {
       case 'todo':
         return <Circle className="h-4 w-4 text-muted-foreground" />;
-      case 'inProgress':
+      case 'in-progress':
         return <Circle className="h-4 w-4 text-blue-500 fill-blue-500/30" />;
       case 'done':
         return <Check className="h-4 w-4 text-green-500" />;
@@ -78,7 +79,7 @@ const Calendar = () => {
                   modifiersClassNames={{
                     highlighted: "bg-purple-900/50 text-white font-bold animate-pulse border-2 border-purple-500 rounded-full",
                   }}
-                  locale={ptBR   }
+                  locale={ptBR}
                 />
               </div>
 
