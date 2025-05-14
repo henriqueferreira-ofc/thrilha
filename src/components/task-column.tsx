@@ -13,7 +13,7 @@ interface TaskColumnProps {
 export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnProps) {
   // Set up drop functionality
   const [{ isOver }, drop] = useDrop({
-    accept: 'task', // Tipo precisa ser minúsculo para corresponder ao que vem de TaskCard
+    accept: 'task',
     drop: (item: { id: string }) => {
       console.log(`Tarefa ${item.id} sendo movida para ${column.id}`);
       onDrop(item.id, column.id);
@@ -40,7 +40,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
   // Handler for toggling task completion
   const handleToggleComplete = (task: Task) => {
     const newStatus = task.status === 'done' ? 'todo' : 'done';
-    onUpdate(task.id, { status: newStatus });
+    onUpdate(task.id, { status: newStatus, completed: newStatus === 'done' });
   };
 
   return (
