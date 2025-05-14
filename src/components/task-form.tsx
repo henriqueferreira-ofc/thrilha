@@ -23,9 +23,10 @@ interface TaskFormProps {
     dueDate?: string;
   };
   onSubmit: (data: TaskFormData) => void;
+  boardId?: string;
 }
 
-export function TaskForm({ initialData = {}, onSubmit }: TaskFormProps) {
+export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps) {
   const [title, setTitle] = useState(initialData.title || '');
   const [description, setDescription] = useState(initialData.description || '');
   const [date, setDate] = useState<Date | undefined>(
@@ -40,7 +41,8 @@ export function TaskForm({ initialData = {}, onSubmit }: TaskFormProps) {
     onSubmit({
       title: title.trim(),
       description: description.trim() || undefined,
-      dueDate: date ? date.toISOString() : undefined
+      dueDate: date ? date.toISOString() : undefined,
+      board_id: boardId
     });
 
     // Reset form if it's a new task (no initialData)
@@ -105,7 +107,7 @@ export function TaskForm({ initialData = {}, onSubmit }: TaskFormProps) {
         </Popover>
       </div>
 
-      <Button type="submit" className="w-full">
+      <Button type="submit" className="w-full" disabled={!boardId}>
         {initialData.title ? 'Salvar Alterações' : 'Criar Tarefa'}
       </Button>
     </form>

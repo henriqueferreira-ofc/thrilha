@@ -7,12 +7,14 @@ import { SidebarProfile } from './sidebar/SidebarProfile';
 import { SidebarNavigation } from './sidebar/SidebarNavigation';
 import { TaskCreateDialog } from './sidebar/TaskCreateDialog';
 import { useSidebarProfile } from '@/hooks/use-sidebar-profile';
+import { Board } from '@/types/board';
 
 interface TaskSidebarProps {
   onCreateTask?: (data: TaskFormData) => void;
+  currentBoard?: Board | null;
 }
 
-export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
+export function TaskSidebar({ onCreateTask, currentBoard }: TaskSidebarProps) {
   const { user, signOut } = useAuth();
   const { avatarUrl, username, loading } = useSidebarProfile(user);
 
@@ -53,7 +55,10 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
             loading={loading} 
           />
           {user && (
-            <TaskCreateDialog onCreateTask={handleCreateTask} />
+            <TaskCreateDialog 
+              onCreateTask={handleCreateTask} 
+              currentBoard={currentBoard} 
+            />
           )}
         </SidebarHeader>
         <SidebarContent className="flex flex-col gap-4">

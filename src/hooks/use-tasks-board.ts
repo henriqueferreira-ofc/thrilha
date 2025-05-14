@@ -5,6 +5,7 @@ import { Task, TaskStatus } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Board } from '@/types/board';
+import { useTaskOperationsBoard } from './tasks/use-task-operations-board';
 
 export function useTasksBoard(currentBoard: Board | null) {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -116,3 +117,5 @@ export function useTasksBoard(currentBoard: Board | null) {
     setTasks
   };
 }
+
+export { useTaskOperationsBoard };

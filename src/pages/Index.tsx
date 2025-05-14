@@ -2,28 +2,55 @@
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { TaskBoard } from '@/components/task-board';
-import { useTasks } from '@/hooks/use-tasks';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/task-form';
 import { Plus, Mountain } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useBoards } from '@/hooks/use-boards';
+import { useTasksBoard } from '@/hooks/use-tasks-board';
+import { BoardSelector } from '@/components/boards/board-selector';
+import { TaskFormData } from '@/types/task';
 
 const Index = () => {
-  const { tasks, addTask, updateTask, deleteTask, changeTaskStatus } = useTasks();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { user } = useAuth();
+  const { 
+    boards, 
+    currentBoard, 
+    setCurrentBoard, 
+    canCreateMoreBoards, 
+    createBoard 
+  } = useBoards();
+  
+  const { tasks, loading } = useTasksBoard(currentBoard);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  const handleCreateTask = async (data) => {
-    await addTask(data);
+  // Importar as operações específicas do quadro
+  const { addTask, updateTask, deleteTask, changeTaskStatus } = useTaskOperationsBoard(
+    tasks,
+    setTasks,
+    currentBoard
+  );
+
+  const handleCreateTask = async (data: TaskFormData) => {
+    if (!currentBoard) {
+      return;
+    }
+    
+    // Agora incluímos o board_id na criação da tarefa
+    await addTask({
+      ...data,
+      board_id: currentBoard.id
+    });
+    
     setIsCreateDialogOpen(false);
   };
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full mountain-pattern">
-        <TaskSidebar onCreateTask={addTask} />
+        <TaskSidebar onCreateTask={handleCreateTask} currentBoard={currentBoard} />
         
         <div className="flex-1 flex flex-col">
           <header className="p-6 flex justify-between items-center border-b border-white/10 backdrop-blur-sm bg-black/20">
@@ -31,27 +58,55 @@ const Index = () => {
               <Mountain className="h-5 w-5 text-purple-300" />
               <h1 className="text-xl font-bold purple-gradient-text">Minhas Tarefas</h1>
             </div>
+            
+            {boards && boards.length > 0 && (
+              <BoardSelector
+                boards={boards}
+                currentBoard={currentBoard}
+                onBoardChange={setCurrentBoard}
+                canCreateMoreBoards={canCreateMoreBoards}
+                onCreateBoard={createBoard}
+              />
+            )}
+            
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="purple-gradient-bg">
+                <Button className="purple-gradient-bg" disabled={!currentBoard}>
                   <Plus className="mr-2 h-4 w-4" />
                   Nova Tarefa
                 </Button>
               </DialogTrigger>
               <DialogContent className="glass-panel sm:max-w-[425px]">
                 <DialogTitle>Criar Nova Tarefa</DialogTitle>
-                <TaskForm onSubmit={handleCreateTask} />
+                <TaskForm onSubmit={handleCreateTask} boardId={currentBoard?.id} />
               </DialogContent>
             </Dialog>
           </header>
           
           <main className="flex-1 overflow-hidden p-4">
-            <TaskBoard
-              tasks={tasks || []} 
-              onDelete={deleteTask}
-              onUpdate={updateTask}
-              onChangeStatus={changeTaskStatus}
-            />
+            {currentBoard ? (
+              <TaskBoard
+                tasks={tasks || []} 
+                onDelete={deleteTask}
+                onUpdate={updateTask}
+                onChangeStatus={changeTaskStatus}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                <h2 className="text-xl font-semibold mb-2">Nenhum quadro selecionado</h2>
+                <p className="text-gray-500 mb-4">
+                  Selecione ou crie um quadro para começar a gerenciar suas tarefas.
+                </p>
+                {boards && boards.length === 0 && canCreateMoreBoards && (
+                  <Button onClick={() => {
+                    const name = prompt('Nome do quadro:');
+                    if (name) createBoard({ name });
+                  }}>
+                    Criar Primeiro Quadro
+                  </Button>
+                )}
+              </div>
+            )}
           </main>
         </div>
       </div>
