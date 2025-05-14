@@ -1,12 +1,13 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/hooks/use-subscription';
-import { toast } from '@/hooks/toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabase/client';
 import { Board } from '@/types/board';
 
-export function useTaskCounter(currentBoard: Board | null) {
+export function useTaskCounter(currentBoard: Board | null = null) {
   const [totalTasks, setTotalTasks] = useState<number>(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
   const { user } = useAuth();
@@ -88,20 +89,12 @@ export function useTaskCounter(currentBoard: Board | null) {
     if (newCount >= FREE_PLAN_LIMIT) {
       setShowUpgradeModal(true);
       
-      toast({
-        title: "Limite de tarefas atingido!",
-        description: "Você atingiu o limite de tarefas do plano gratuito.",
-        variant: "destructive"
-      });
+      toast("Limite de tarefas atingido! Você atingiu o limite de tarefas do plano gratuito.");
       
       navigate('/subscription');
     } else if (newCount === FREE_PLAN_LIMIT - 1) {
       // Aviso quando estiver próximo do limite
-      toast({
-        title: "Aviso de limite",
-        description: `Você está próximo do limite de tarefas (${newCount}/${FREE_PLAN_LIMIT}).`,
-        variant: "default"
-      });
+      toast("Aviso de limite: Você está próximo do limite de tarefas.");
     }
 
     // Sincronizar com o servidor em segundo plano
@@ -125,6 +118,15 @@ export function useTaskCounter(currentBoard: Board | null) {
     // Sincronizar com o servidor em segundo plano
     syncCompletedTasksCount();
   };
+  
+  // Adicionar a função resetCounter que está faltando
+  const resetCounter = (board: Board | null = null) => {
+    if (board) {
+      syncCompletedTasksCount();
+    } else {
+      setTotalTasks(0);
+    }
+  };
 
   return {
     totalTasks,
@@ -135,6 +137,7 @@ export function useTaskCounter(currentBoard: Board | null) {
     syncCompletedTasksCount,
     showUpgradeModal,
     closeUpgradeModal: () => setShowUpgradeModal(false),
-    limitReached: !isPro && totalTasks >= FREE_PLAN_LIMIT
+    limitReached: !isPro && totalTasks >= FREE_PLAN_LIMIT,
+    resetCounter
   };
 }

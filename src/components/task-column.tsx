@@ -15,7 +15,7 @@ interface TaskColumnProps {
 }
 
 export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnProps) {
-  const { limitReached, resetCounter } = useTaskCounter();
+  const { limitReached } = useTaskCounter();
   const { isPro } = useSubscription();
   
   // Configurar funcionalidade de drop

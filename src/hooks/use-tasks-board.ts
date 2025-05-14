@@ -77,11 +77,12 @@ export function useTasksBoard(currentBoard: Board | null) {
         schema: 'public',
         table: 'tasks',
         filter: `board_id=eq.${currentBoard.id}`
-      }, (payload) => {
+      }, (payload: any) => {
         console.log('Alteração em tarefas recebida:', payload);
         
         try {
-          switch (payload.eventType) {
+          const eventType = payload.eventType as string;
+          switch (eventType) {
             case 'INSERT': {
               const newTask = formatTask(payload.new as DatabaseTask);
               console.log('Nova tarefa detectada:', newTask.title);
@@ -106,7 +107,7 @@ export function useTasksBoard(currentBoard: Board | null) {
             }
 
             default:
-              console.log('Evento desconhecido:', payload.eventType);
+              console.log('Evento desconhecido:', eventType);
           }
         } catch (error) {
           console.error('Erro ao processar alteração em tempo real:', error);

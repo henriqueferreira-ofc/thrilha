@@ -15,7 +15,7 @@ interface TaskCreateDialogProps {
 
 export function TaskCreateDialog({ onCreateTask, currentBoard }: TaskCreateDialogProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { limitReached } = useTaskCounter();
+  const { limitReached } = useTaskCounter(currentBoard);
   
   const handleCreateTask = (data: TaskFormData) => {
     onCreateTask({

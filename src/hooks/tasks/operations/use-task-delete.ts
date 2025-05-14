@@ -1,5 +1,5 @@
 
-import { toast } from '@/hooks/toast';
+import { toast } from 'sonner';
 import { Task } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { useTaskCounter } from '../use-task-counter';

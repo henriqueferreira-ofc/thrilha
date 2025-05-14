@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { Task, TaskStatus, TaskFormData } from '@/types/task';
 import { supabase } from '@/supabase/client';
@@ -40,8 +41,7 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
         updated_at: data.updated_at || data.created_at,
         due_date: data.due_date,
         user_id: data.user_id,
-        board_id: data.board_id,
-        completed: false
+        board_id: data.board_id
       };
 
       setTasks((prev) => [formattedTask, ...prev]);
@@ -79,8 +79,7 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
             ? {
                 ...task,
                 ...updatedData,
-                status: updatedData.status ? normalizeTaskStatus(updatedData.status) : task.status,
-                completed: updatedData.status === 'done' || (task.completed || false)
+                status: updatedData.status ? normalizeTaskStatus(updatedData.status) : task.status
               }
             : task
         )

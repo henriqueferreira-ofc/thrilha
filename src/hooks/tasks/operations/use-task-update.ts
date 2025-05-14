@@ -33,7 +33,7 @@ export function useTaskUpdate(
 
       // Atualizar o estado local
       setTasks(prev => prev.map(task => 
-        task.id === id ? { ...task, ...updatedData, completed: updatedData.status === 'done' || (task.completed || false) } : task
+        task.id === id ? { ...task, ...updatedData } : task
       ));
 
       toast.success('Tarefa atualizada com sucesso!');
