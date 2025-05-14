@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
+import SubscriptionPage from "./pages/Subscription";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from './supabase/client';
@@ -163,6 +163,7 @@ const App = () => (
               <Route path="/calendar" element={<ProtectedRoute element={<Calendar />} />} />
               <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
               <Route path="/about" element={<ProtectedRoute element={<About />} />} />
+              <Route path="/subscription" element={<ProtectedRoute element={<SubscriptionPage />} />} />
 
               {/* Rota para qualquer outra URL */}
               <Route path="/404" element={<NotFound />} />

@@ -1,119 +1,55 @@
 
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import React from 'react';
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Task } from '@/types/task';
-import { TaskForm } from '@/components/task-form';
+import { TaskActionsMenu } from './task-actions-menu';
+import { TaskDueDate } from './task-due-date';
+import { TaskCollaboratorsButton } from './task-collaborators-button';
 import { useDrag } from 'react-dnd';
 import { cn } from '@/lib/utils';
-import { Checkbox } from '@/components/ui/checkbox';
-import { TaskCollaboratorsDialog } from '../task-collaborators-dialog';
-import { useAuth } from '@/context/AuthContext';
-import { TaskDueDate } from './task-due-date';
-import { TaskActionsMenu } from './task-actions-menu';
-import { TaskCollaboratorsButton } from './task-collaborators-button';
-import { getTaskBackgroundStyle } from './task-card-utils';
 
 interface TaskCardProps {
   task: Task;
-  onDelete: (id: string) => void;
-  onUpdate: (id: string, updatedData: Partial<Task>) => void;
-  onToggleComplete: (taskId: string) => void;
+  onDelete?: (id: string) => void;
+  onUpdate?: (id: string, updatedData: Partial<Task>) => void;
 }
 
-export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCardProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [isCollaboratorsDialogOpen, setIsCollaboratorsDialogOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const { user } = useAuth();
-  const completed = task.completed || task.status === 'done';
-
-  // Configuração do drag and drop
-  const [{ isDragging }, drag] = useDrag({
-    type: 'task',
-    item: { id: task.id },
+export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: 'TASK',
+    item: { id: task.id, status: task.status },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
-  });
-
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-
-  const handleUpdate = (updatedData: Partial<Task>) => {
-    onUpdate(task.id, updatedData);
-    setIsEditing(false);
-  };
+  }));
 
   return (
-    <>
-      <Card 
-        ref={drag}
-        className={cn(
-          "mb-3 p-4 cursor-grab animate-fade-in transition-all duration-300",
-          getTaskBackgroundStyle(task.status),
-          isHovered ? 'scale-105 shadow-lg' : '',
-          isDragging ? 'opacity-50' : ''
-        )}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <div className="flex justify-between items-start">
-          <h3 className="font-medium truncate mr-2">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={completed}
-                onCheckedChange={() => onToggleComplete(task.id)}
-              />
-              <span className={completed ? 'line-through' : ''}>
-                {task.title}
-              </span>
-            </div>
-          </h3>
-          <div className="flex items-center gap-2">
-            <TaskCollaboratorsButton 
-              onClick={() => setIsCollaboratorsDialogOpen(true)}
-            />
-            <TaskActionsMenu
-              taskId={task.id}
-              taskUserId={task.user_id}
-              onEdit={handleEdit}
-              onDelete={onDelete}
-            />
-          </div>
-        </div>
-
-        {task.description && (
-          <p className="text-sm mt-2 text-muted-foreground line-clamp-3">{task.description}</p>
-        )}
-
-        <div className="mt-3 flex items-center justify-between">
-          <TaskDueDate dueDate={task.due_date} status={task.status} />
-        </div>
-      </Card>
-
-      <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="glass-panel sm:max-w-[425px]">
-          <DialogTitle>Editar Tarefa</DialogTitle>
-          <TaskForm
-            initialData={{
-              title: task.title,
-              description: task.description,
-              dueDate: task.due_date
-            }}
-            onSubmit={handleUpdate}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {isCollaboratorsDialogOpen && (
-        <TaskCollaboratorsDialog
-          taskId={task.id}
-          isOpen={isCollaboratorsDialogOpen}
-          onClose={() => setIsCollaboratorsDialogOpen(false)}
-        />
+    <Card 
+      ref={drag}
+      className={cn(
+        "mb-3 shadow-sm border border-border bg-card hover:shadow-md transition-all cursor-grab",
+        isDragging ? "opacity-50" : "opacity-100"
       )}
-    </>
+    >
+      <CardHeader className="p-3 pb-0 flex flex-row items-start justify-between">
+        <h3 className="text-sm font-medium break-words pr-4">{task.title}</h3>
+        <TaskActionsMenu task={task} onDelete={onDelete} onUpdate={onUpdate} />
+      </CardHeader>
+      
+      <CardContent className="p-3 pt-2">
+        {task.description && (
+          <p className="text-xs text-muted-foreground break-words">
+            {task.description.length > 100 
+              ? `${task.description.substring(0, 100)}...` 
+              : task.description}
+          </p>
+        )}
+      </CardContent>
+      
+      <CardFooter className="p-3 pt-0 flex items-center justify-between">
+        <TaskDueDate dueDate={task.due_date} />
+        <TaskCollaboratorsButton taskId={task.id} />
+      </CardFooter>
+    </Card>
   );
 }
