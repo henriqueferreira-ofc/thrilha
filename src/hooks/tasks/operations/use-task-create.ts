@@ -37,6 +37,11 @@ export function useTaskCreate(
     }
 
     try {
+      console.log("Criando nova tarefa:", {
+        board: currentBoard.id,
+        title: taskData.title
+      });
+      
       const newTask = {
         title: taskData.title,
         description: taskData.description || '',
@@ -67,11 +72,10 @@ export function useTaskCreate(
         completed: false
       };
 
+      console.log("Tarefa criada com sucesso:", createdTask);
+      
       // Adicionar nova tarefa ao estado
       setTasks(prev => [createdTask, ...prev]);
-      
-      // Removemos a chamada para incrementCreatedTasks que não existe mais
-      // já que agora contamos apenas tarefas concluídas
       
       toast.success('Tarefa criada com sucesso!');
       return createdTask;

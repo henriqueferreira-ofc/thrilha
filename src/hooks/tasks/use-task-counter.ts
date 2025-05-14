@@ -24,9 +24,11 @@ export function useTaskCounter() {
 
   // Função para sincronizar o contador com o estado real das tarefas concluídas
   const syncCompletedTasksCount = async () => {
-    if (!user) return;
+    if (!user) return 0;
     
     try {
+      console.log("Sincronizando contador de tarefas concluídas...");
+      
       // Verificar número real de tarefas concluídas no banco de dados
       const { data: doneTasks, error } = await supabase
         .from('tasks')
@@ -34,35 +36,37 @@ export function useTaskCounter() {
         .eq('user_id', user.id)
         .eq('status', 'done');
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar tarefas concluídas:", error);
+        throw error;
+      }
       
       const count = doneTasks?.length || 0;
       console.log(`Sincronizando contador: ${count} tarefas concluídas encontradas`);
       setCompletedTasks(count);
       
-      // Persistir no localStorage como fallback
-      localStorage.setItem(`completedTaskCounter_${user.id}`, count.toString());
-      
       // Verificar se já atingiu o limite logo na carga
-      checkLimitAndRedirect(count);
+      if (!isPro && count >= FREE_PLAN_LIMIT) {
+        setShowUpgradeModal(true);
+      }
       
       return count;
     } catch (err) {
       console.error('Erro ao sincronizar contador de tarefas:', err);
-      
-      // Fallback para localStorage se houver erro ao consultar BD
-      const storedCount = localStorage.getItem(`completedTaskCounter_${user.id}`);
-      if (storedCount) {
-        setCompletedTasks(parseInt(storedCount));
-        return parseInt(storedCount);
-      }
       return 0;
     }
   };
 
-  // Verificar limite e redirecionar se necessário
-  const checkLimitAndRedirect = (count: number) => {
-    if (!isPro && count >= FREE_PLAN_LIMIT) {
+  // Incrementar contador de tarefas concluídas
+  const incrementCompletedTasks = async () => {
+    if (!user || isPro) return; // Não contabiliza para usuários Pro
+
+    const newCount = completedTasks + 1;
+    console.log(`Incrementando contador de ${completedTasks} para ${newCount}`);
+    setCompletedTasks(newCount);
+    
+    // Verificar se atingiu o limite
+    if (newCount >= FREE_PLAN_LIMIT) {
       setShowUpgradeModal(true);
       
       toast({
@@ -73,31 +77,14 @@ export function useTaskCounter() {
       
       // Redirecionar para a página de planos
       navigate('/subscription');
-    } else if (count === FREE_PLAN_LIMIT - 1 && !isPro) {
+    } else if (newCount === FREE_PLAN_LIMIT - 1) {
       // Aviso quando estiver próximo do limite
       toast({
         title: "Aviso de limite",
-        description: `Você está próximo do limite de tarefas concluídas (${count}/${FREE_PLAN_LIMIT}). No plano gratuito, você pode ter até ${FREE_PLAN_LIMIT} tarefas concluídas.`,
+        description: `Você está próximo do limite de tarefas concluídas (${newCount}/${FREE_PLAN_LIMIT}).`,
         variant: "default"
       });
     }
-  };
-
-  // Incrementar contador de tarefas concluídas
-  const incrementCompletedTasks = () => {
-    if (!user || isPro) return; // Não contabiliza para usuários Pro
-
-    const newCount = completedTasks + 1;
-    console.log(`Incrementando contador de ${completedTasks} para ${newCount}`);
-    setCompletedTasks(newCount);
-    
-    // Persistir no localStorage
-    if (user) {
-      localStorage.setItem(`completedTaskCounter_${user.id}`, newCount.toString());
-    }
-    
-    // Verificar se atingiu o limite
-    checkLimitAndRedirect(newCount);
   };
 
   // Decrementar contador quando tarefa for movida de "concluída" para outro status
@@ -107,20 +94,11 @@ export function useTaskCounter() {
     const newCount = Math.max(0, completedTasks - 1);
     console.log(`Decrementando contador de ${completedTasks} para ${newCount}`);
     setCompletedTasks(newCount);
-    
-    // Persistir no localStorage
-    if (user) {
-      localStorage.setItem(`completedTaskCounter_${user.id}`, newCount.toString());
-    }
   };
 
   // Resetar contador
   const resetCounter = () => {
     setCompletedTasks(0);
-    if (user) {
-      localStorage.removeItem(`completedTaskCounter_${user.id}`);
-      localStorage.removeItem(`taskCreatedCounter_${user.id}`); // Remover o contador antigo também
-    }
     setShowUpgradeModal(false);
   };
 

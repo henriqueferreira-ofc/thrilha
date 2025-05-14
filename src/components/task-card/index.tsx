@@ -15,17 +15,13 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCardProps) {
-  const [{ isDragging }, drag] = useDrag(() => ({
+  const [{ isDragging }, drag] = useDrag({
     type: 'task',
     item: { id: task.id },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
-    end: (item, monitor) => {
-      const didDrop = monitor.didDrop();
-      console.log(`TaskCard - Finalizando arrasto da tarefa ${task.id}, sucesso: ${didDrop}`);
-    }
-  }), [task.id]);
+  });
 
   // Estilo baseado no status da tarefa
   const getTaskStyle = () => {
@@ -52,7 +48,7 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h3 className="text-base font-medium">{task.title}</h3>
-            {task.completed && (
+            {task.status === 'done' && (
               <span className="inline-flex items-center justify-center bg-green-500/20 p-1 rounded-full">
                 <Check className="h-3.5 w-3.5 text-green-500" />
               </span>

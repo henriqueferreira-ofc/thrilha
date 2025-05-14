@@ -14,29 +14,27 @@ interface TaskBoardProps {
 }
 
 export function TaskBoard({ tasks = [], onDelete, onUpdate, onChangeStatus }: TaskBoardProps) {
-  // Group tasks by status, garantindo que tasks é um array
+  // Agrupar tarefas por status
   const columns = useMemo(() => 
     groupTasksByStatus(Array.isArray(tasks) ? tasks : []), 
     [tasks]
   );
 
-  // Handler para mudar status via drag & drop com logs detalhados
+  // Handler para mudar status via drag & drop
   const handleDrop = (taskId: string, newStatus: TaskStatus) => {
-    console.log(`TaskBoard - Processando movimentação da tarefa ${taskId} para ${newStatus}`);
+    console.log(`TaskBoard: Solicitando mudança de status da tarefa ${taskId} para ${newStatus}`);
     
-    // Encontrar a tarefa atual para logar mais detalhes
+    // Encontrar tarefa atual para logging
     const task = tasks.find(t => t.id === taskId);
     if (task) {
-      console.log(`TaskBoard - Movendo tarefa "${task.title}" do status ${task.status} para ${newStatus}`);
-      
-      // Só fazer a mudança se o status for diferente
       if (task.status !== newStatus) {
+        // Só chamar onChangeStatus se o status for diferente
         onChangeStatus(taskId, newStatus);
       } else {
-        console.log(`TaskBoard - Tarefa já está no status ${newStatus}, ignorando`);
+        console.log(`TaskBoard: Tarefa já está no status ${newStatus}, ignorando`);
       }
     } else {
-      console.error(`TaskBoard - Tarefa com ID ${taskId} não encontrada`);
+      console.error(`TaskBoard: Tarefa com ID ${taskId} não encontrada`);
     }
   };
 

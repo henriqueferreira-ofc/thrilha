@@ -11,7 +11,6 @@ export function useTaskStatus(
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>,
   user: any | null
 ) {
-  // Integrar o contador de tarefas e verificador de assinatura
   const { limitReached, incrementCompletedTasks, decrementCompletedTasks } = useTaskCounter();
   const { isPro } = useSubscription();
 
@@ -22,9 +21,9 @@ export function useTaskStatus(
       return;
     }
 
-    console.log(`Iniciando solicitação para alterar status da tarefa: ${taskId} para ${newStatus}`);
+    console.log(`Iniciando mudança de status da tarefa ${taskId} para ${newStatus}`);
 
-    // Encontra a tarefa no estado atual
+    // Encontrar a tarefa atual
     const task = tasks.find(t => t.id === taskId);
     
     if (!task) {
@@ -32,33 +31,27 @@ export function useTaskStatus(
       return;
     }
     
-    console.log(`Tarefa encontrada: ${task.id}, status atual: ${task.status}, novo status: ${newStatus}`);
-
     // Verificar se está completando ou descompletando uma tarefa
     const isCompletingTask = newStatus === 'done' && task.status !== 'done';
     const isUncompletingTask = task.status === 'done' && newStatus !== 'done';
 
-    console.log(`isCompletingTask: ${isCompletingTask}, isUncompletingTask: ${isUncompletingTask}, limitReached: ${limitReached}, isPro: ${isPro}`);
+    console.log(`isCompletingTask: ${isCompletingTask}, isUncompletingTask: ${isUncompletingTask}`);
 
     // Se está tentando marcar como concluída e já atingiu o limite (sem ser Pro)
     if (isCompletingTask && limitReached && !isPro) {
       toast.error('Você atingiu o limite de tarefas concluídas no plano gratuito. Faça upgrade para o plano Pro.');
-      console.log('Tentativa de concluir tarefa bloqueada por limite atingido no plano gratuito');
+      console.log('Limite de tarefas concluídas atingido!');
       return;
     }
 
     try {
-      console.log(`Atualizando estado local: tarefa ${taskId} de ${task.status} para ${newStatus}`);
-      
       // Atualizar o estado local imediatamente para melhor experiência do usuário
       setTasks(prev => {
-        const updatedTasks = prev.map(t => 
+        return prev.map(t => 
           t.id === taskId
             ? { ...t, status: newStatus, completed: newStatus === 'done' }
             : t
         );
-        console.log('Estado local atualizado com sucesso');
-        return updatedTasks;
       });
 
       console.log(`Enviando atualização para o servidor: tarefa ${taskId} para status ${newStatus}`);
@@ -69,36 +62,32 @@ export function useTaskStatus(
           status: newStatus,
           completed: newStatus === 'done'
         })
-        .eq('id', taskId)
-        .eq('user_id', user.id);
+        .eq('id', taskId);
 
       if (error) {
-        // Se houver erro, reverter a alteração no estado local
-        console.error('Erro ao atualizar status no servidor:', error);
-        toast.error('Erro ao atualizar status da tarefa');
-
-        setTasks(prev =>
-          prev.map(t =>
-            t.id === taskId ? { ...t, status: task.status, completed: task.status === 'done' } : t
-          )
-        );
-        return;
+        throw error;
       }
 
       // Atualizar o contador de tarefas concluídas
       if (isCompletingTask) {
-        incrementCompletedTasks();
         console.log('Incrementando contador de tarefas concluídas');
+        await incrementCompletedTasks();
       } else if (isUncompletingTask) {
-        decrementCompletedTasks();
         console.log('Decrementando contador de tarefas concluídas');
+        decrementCompletedTasks();
       }
 
-      console.log(`Status alterado com sucesso no servidor: ${taskId} para ${newStatus}`);
       toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Erro ao atualizar status da tarefa:', error);
       toast.error('Erro ao atualizar status da tarefa');
+      
+      // Reverter alteração em caso de erro
+      setTasks(prev =>
+        prev.map(t =>
+          t.id === taskId ? { ...t, status: task.status, completed: task.status === 'done' } : t
+        )
+      );
     }
   };
 

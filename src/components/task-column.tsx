@@ -18,21 +18,18 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
   const { limitReached } = useTaskCounter();
   const { isPro } = useSubscription();
   
-  // Set up drop functionality with more detailed logging
-  const [{ isOver }, drop] = useDrop(() => ({
+  // Configurar funcionalidade de drop
+  const [{ isOver }, drop] = useDrop({
     accept: 'task',
     drop: (item: { id: string }) => {
-      console.log(`TaskColumn - Tarefa ${item.id} sendo solta na coluna ${column.id}`);
+      console.log(`TaskColumn: Tarefa ${item.id} solta na coluna ${column.id}`);
       onDrop(item.id, column.id);
       return { status: column.id };
-    },
-    hover: (item: { id: string }) => {
-      console.log(`TaskColumn - Tarefa ${item.id} passando sobre a coluna ${column.id}`);
     },
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
-  }), [column.id, onDrop]);
+  });
 
   // Estilo específico para cada tipo de coluna
   const getColumnStyle = () => {
@@ -48,9 +45,9 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
     }
   };
 
-  // Handler for toggling task completion
+  // Handler para toggle da tarefa concluída
   const handleToggleComplete = (task: Task) => {
-    console.log(`TaskColumn - Alternando status da tarefa ${task.id} de ${task.status} para ${task.status === 'done' ? 'todo' : 'done'}`);
+    console.log(`TaskColumn: Alternando status da tarefa ${task.id}`);
     const newStatus = task.status === 'done' ? 'todo' : 'done';
     onDrop(task.id, newStatus);
   };
