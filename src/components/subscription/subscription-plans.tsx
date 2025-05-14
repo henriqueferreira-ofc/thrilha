@@ -25,11 +25,18 @@ export function SubscriptionPlans({
   const isPro = currentSubscription?.plan_type === 'pro';
 
   const handleUpgrade = async () => {
-    if (checkingOut) return;
+    if (checkingOut || isLoading) return;
     
     setIsLoading(true);
+    console.log("Iniciando processo de upgrade para plano Pro");
+    
     try {
-      await onUpgradeToPro();
+      const success = await onUpgradeToPro();
+      
+      if (!success) {
+        console.error("Falha no processo de upgrade");
+        toast.error('Não foi possível acessar o checkout. Por favor, tente novamente.');
+      }
     } catch (error) {
       console.error('Erro ao atualizar plano:', error);
       toast.error('Ocorreu um erro ao atualizar seu plano');
@@ -39,11 +46,15 @@ export function SubscriptionPlans({
   };
 
   const handleDowngrade = async () => {
-    if (checkingOut) return;
+    if (checkingOut || isLoading) return;
     
     setIsLoading(true);
     try {
-      await onDowngradeToFree();
+      const success = await onDowngradeToFree();
+      
+      if (!success) {
+        toast.error('Não foi possível acessar o portal de gerenciamento. Por favor, tente novamente.');
+      }
     } catch (error) {
       console.error('Erro ao alterar plano:', error);
       toast.error('Ocorreu um erro ao alterar seu plano');
@@ -53,11 +64,15 @@ export function SubscriptionPlans({
   };
 
   const handleManageSubscription = async () => {
-    if (!onManageSubscription || checkingOut) return;
+    if (!onManageSubscription || checkingOut || isLoading) return;
     
     setIsLoading(true);
     try {
-      await onManageSubscription();
+      const success = await onManageSubscription();
+      
+      if (!success) {
+        toast.error('Não foi possível acessar o gerenciamento da assinatura. Por favor, tente novamente.');
+      }
     } catch (error) {
       console.error('Erro ao gerenciar assinatura:', error);
       toast.error('Ocorreu um erro ao acessar o gerenciamento da assinatura');

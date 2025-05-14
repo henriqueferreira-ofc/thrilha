@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -63,10 +64,10 @@ export function useTaskCounter(currentBoard: Board | null = null) {
       const tasksSubscription = supabase
         .channel('tasks_counter')
         .on('postgres_changes', {
-          event: '*',
+          event: '*', 
           schema: 'public',
           table: 'tasks',
-          filter: `user_id=eq.${user.id} AND board_id=eq.${currentBoard.id}`
+          filter: `user_id=eq.${user.id}`
         }, () => {
           // Atualizar o contador imediatamente quando houver mudanças
           syncCompletedTasksCount();

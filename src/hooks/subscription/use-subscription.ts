@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { SubscriptionPlan } from '@/types/board';
@@ -99,15 +100,22 @@ export function useSubscription(): UseSubscriptionReturn {
 
     try {
       setCheckingOut(true);
+      console.log("Iniciando processo de upgrade para plano Pro");
       
       const result = await createCheckoutSessionAPI();
       
       if (result.success && result.url) {
+        console.log("Redirecionando para o checkout do Stripe:", result.url);
         // Redirecionar para o checkout do Stripe
         window.location.href = result.url;
         return true;
       }
       
+      console.error("Falha ao criar URL de checkout:", result.error);
+      return false;
+    } catch (error) {
+      console.error("Erro durante o processo de upgrade:", error);
+      toast.error('Ocorreu um erro inesperado. Por favor, tente novamente.');
       return false;
     } finally {
       setCheckingOut(false);
@@ -123,15 +131,22 @@ export function useSubscription(): UseSubscriptionReturn {
 
     try {
       setLoading(true);
+      console.log("Iniciando acesso ao portal do cliente");
       
       const result = await createCustomerPortalSessionAPI();
       
       if (result.success && result.url) {
+        console.log("Redirecionando para o portal do cliente Stripe:", result.url);
         // Redirecionar para o portal do cliente Stripe
         window.location.href = result.url;
         return true;
       }
       
+      console.error("Falha ao criar portal do cliente");
+      return false;
+    } catch (error) {
+      console.error("Erro durante o acesso ao portal:", error);
+      toast.error('Ocorreu um erro inesperado. Por favor, tente novamente.');
       return false;
     } finally {
       setLoading(false);

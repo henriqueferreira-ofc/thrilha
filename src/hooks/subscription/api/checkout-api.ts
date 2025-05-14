@@ -1,9 +1,12 @@
+
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/supabase/client';
 
 // Criar sessão de checkout do Stripe
 export async function createCheckoutSessionAPI(): Promise<{success: boolean, url?: string, error?: string}> {
   try {
+    console.log("Iniciando criação da sessão de checkout do Stripe");
+    
     // Chamar a função Edge do Supabase para criar a sessão de checkout do Stripe
     const { data, error } = await supabase.functions.invoke("create-checkout", {
       headers: {
@@ -32,6 +35,7 @@ export async function createCheckoutSessionAPI(): Promise<{success: boolean, url
     }
     
     if (data && data.url) {
+      console.log("URL de checkout gerada com sucesso");
       return { 
         success: true,
         url: data.url 
