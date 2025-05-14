@@ -13,7 +13,7 @@ export function useTaskCreate(
   user: any | null,
   currentBoard: Board | null
 ) {
-  const { incrementCreatedTasks, limitReached } = useTaskCounter();
+  const { limitReached } = useTaskCounter();
   const navigate = useNavigate();
   const { isPro } = useSubscription();
 
@@ -31,7 +31,7 @@ export function useTaskCreate(
 
     // Verificar se já atingiu o limite do plano gratuito
     if (limitReached && !isPro) {
-      toast.error('Você atingiu o limite de tarefas do plano gratuito. Faça upgrade para o plano Pro.');
+      toast.error('Você atingiu o limite de tarefas concluídas do plano gratuito. Faça upgrade para o plano Pro.');
       navigate('/subscription');
       return null;
     }
@@ -70,8 +70,8 @@ export function useTaskCreate(
       // Adicionar nova tarefa ao estado
       setTasks(prev => [createdTask, ...prev]);
       
-      // Incrementar contador de tarefas criadas após a criação com sucesso
-      incrementCreatedTasks();
+      // Removemos a chamada para incrementCreatedTasks que não existe mais
+      // já que agora contamos apenas tarefas concluídas
       
       toast.success('Tarefa criada com sucesso!');
       return createdTask;
