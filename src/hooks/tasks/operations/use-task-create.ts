@@ -109,9 +109,11 @@ export function useTaskCreate(
       console.log('Tarefa criada com sucesso no servidor:', createdTask.id);
 
       // Atualizar o estado com o ID real (substituir a tarefa temporária)
-      setTasks(prev => prev.map(task => 
-        task.id === tempId ? createdTask : task
-      ));
+      // Importante: usamos filter + unshift ao invés de map para evitar duplicações
+      setTasks(prev => {
+        const filteredTasks = prev.filter(task => task.id !== tempId);
+        return [createdTask, ...filteredTasks];
+      });
 
       // Atualizar o contador imediatamente após criar a tarefa
       await syncCompletedTasksCount();

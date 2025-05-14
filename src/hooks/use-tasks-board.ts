@@ -60,8 +60,14 @@ export function useTasksBoard(currentBoard: Board | null) {
         if (error) throw error;
         
         const formattedTasks = (data || []).map(task => formatTask(task as DatabaseTask));
-        setTasks(formattedTasks);
-        console.log(`Carregadas ${formattedTasks.length} tarefas do quadro ${currentBoard.id}`);
+        
+        // Usar um Set para armazenar IDs únicos e evitar duplicatas
+        const uniqueTasks = Array.from(
+          new Map(formattedTasks.map(task => [task.id, task])).values()
+        );
+        
+        setTasks(uniqueTasks);
+        console.log(`Carregadas ${uniqueTasks.length} tarefas do quadro ${currentBoard.id}`);
       } catch (error: unknown) {
         console.error('Erro ao buscar tarefas:', error);
         toast.error('Erro ao carregar tarefas');
@@ -77,7 +83,15 @@ export function useTasksBoard(currentBoard: Board | null) {
   const optimisticUpdate = {
     addTask: (newTask: Task) => {
       console.log('Atualizando estado otimisticamente - Adicionando tarefa:', newTask);
-      setTasks(prev => [newTask, ...prev]);
+      // Verificar se a tarefa já existe (para evitar duplicação)
+      setTasks(prev => {
+        // Se a tarefa já existe, não adicionar novamente
+        if (prev.some(task => task.id === newTask.id)) {
+          console.log('Tarefa já existe no estado, ignorando:', newTask.id);
+          return prev;
+        }
+        return [newTask, ...prev];
+      });
     },
     updateTask: (updatedTask: Task) => {
       console.log('Atualizando estado otimisticamente - Atualizando tarefa:', updatedTask);
@@ -95,12 +109,31 @@ export function useTasksBoard(currentBoard: Board | null) {
   const realtimeHandlers = {
     onInsert: (newTask: Task) => {
       console.log('Evento em tempo real - Adicionando tarefa:', newTask.title);
-      // Verificar se a tarefa já existe no estado (para evitar duplicação)
+      // Verificar cuidadosamente se a tarefa já existe no estado para evitar duplicação
       setTasks(prev => {
-        if (!prev.some(task => task.id === newTask.id)) {
-          return [newTask, ...prev];
+        // Se já existe uma tarefa com este ID, ignorar
+        if (prev.some(task => task.id === newTask.id)) {
+          console.log('Ignorando inserção em tempo real - tarefa já existe:', newTask.id);
+          return prev;
         }
-        return prev;
+        
+        // Se existe uma tarefa temporária para esta tarefa, substituir
+        const tempTaskIndex = prev.findIndex(task => 
+          task.id.startsWith('temp-') && 
+          task.title === newTask.title && 
+          task.board_id === newTask.board_id
+        );
+        
+        if (tempTaskIndex >= 0) {
+          console.log('Substituindo tarefa temporária pelo ID real:', prev[tempTaskIndex].id, '->', newTask.id);
+          const newTasks = [...prev];
+          newTasks[tempTaskIndex] = newTask;
+          return newTasks;
+        }
+        
+        // Caso contrário, adicionar como nova tarefa
+        console.log('Adicionando nova tarefa por evento em tempo real:', newTask.id);
+        return [newTask, ...prev];
       });
     },
     onUpdate: (updatedTask: Task) => {
