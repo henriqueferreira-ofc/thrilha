@@ -62,7 +62,7 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
         )}
         
         <div className="flex items-center space-x-2">
-          <TaskCollaboratorsButton task={task} />
+          <TaskCollaboratorsButton taskId={task.id} onClick={onToggleComplete} />
         </div>
       </div>
     </Card>
