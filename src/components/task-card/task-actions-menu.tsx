@@ -7,15 +7,25 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { Task } from '@/types/task';
 
 interface TaskActionsMenuProps {
-  taskId: string;
-  taskUserId?: string;
-  onEdit: () => void;
-  onDelete: (id: string) => void;
+  task: Task;
+  onEdit?: () => void;
+  onDelete?: (id: string) => void;
+  onUpdate?: (id: string, updatedData: Partial<Task>) => void;
 }
 
-export function TaskActionsMenu({ taskId, taskUserId, onEdit, onDelete }: TaskActionsMenuProps) {
+export function TaskActionsMenu({ task, onEdit, onDelete, onUpdate }: TaskActionsMenuProps) {
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit();
+    } else if (onUpdate) {
+      // Fallback para onUpdate se onEdit não for fornecido
+      onUpdate(task.id, {});
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -25,19 +35,15 @@ export function TaskActionsMenu({ taskId, taskUserId, onEdit, onDelete }: TaskAc
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={onEdit}>
+        <DropdownMenuItem onClick={handleEdit}>
           <Edit className="mr-2 h-4 w-4" />
           Editar
         </DropdownMenuItem>
-        {taskUserId && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onDelete(taskId)} className="text-destructive">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Excluir
-            </DropdownMenuItem>
-          </>
-        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => onDelete && onDelete(task.id)} className="text-destructive">
+          <Trash2 className="mr-2 h-4 w-4" />
+          Excluir
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -62,7 +62,6 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
               task={task} 
               onDelete={onDelete} 
               onUpdate={onUpdate}
-              onToggleComplete={() => onUpdate(task.id, { status: task.status === 'done' ? 'todo' : 'done' })}
             />
           ))
         )}

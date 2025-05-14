@@ -3,10 +3,11 @@ import { Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface TaskCollaboratorsButtonProps {
-  onClick: () => void;
+  taskId: string;
+  onClick?: () => void;
 }
 
-export function TaskCollaboratorsButton({ onClick }: TaskCollaboratorsButtonProps) {
+export function TaskCollaboratorsButton({ taskId, onClick }: TaskCollaboratorsButtonProps) {
   return (
     <Button
       variant="ghost"

@@ -12,9 +12,10 @@ interface TaskCardProps {
   task: Task;
   onDelete?: (id: string) => void;
   onUpdate?: (id: string, updatedData: Partial<Task>) => void;
+  onToggleComplete?: () => void;
 }
 
-export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
+export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCardProps) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'TASK',
     item: { id: task.id, status: task.status },
@@ -33,7 +34,11 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
     >
       <CardHeader className="p-3 pb-0 flex flex-row items-start justify-between">
         <h3 className="text-sm font-medium break-words pr-4">{task.title}</h3>
-        <TaskActionsMenu task={task} onDelete={onDelete} onUpdate={onUpdate} />
+        <TaskActionsMenu 
+          task={task} 
+          onDelete={onDelete} 
+          onUpdate={onUpdate} 
+        />
       </CardHeader>
       
       <CardContent className="p-3 pt-2">
@@ -47,8 +52,8 @@ export function TaskCard({ task, onDelete, onUpdate }: TaskCardProps) {
       </CardContent>
       
       <CardFooter className="p-3 pt-0 flex items-center justify-between">
-        <TaskDueDate dueDate={task.due_date} />
-        <TaskCollaboratorsButton taskId={task.id} />
+        <TaskDueDate dueDate={task.due_date} status={task.status} />
+        <TaskCollaboratorsButton taskId={task.id} onClick={onToggleComplete} />
       </CardFooter>
     </Card>
   );
