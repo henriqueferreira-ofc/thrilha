@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { Task, TaskStatus } from '@/types/task';
 import { supabase } from '@/supabase/client';
@@ -50,7 +49,7 @@ export function useTaskStatus(
       setTasks(prev => {
         return prev.map(t => 
           t.id === taskId
-            ? { ...t, status: newStatus, completed: newStatus === 'done' }
+            ? { ...t, status: newStatus }
             : t
         );
       });
@@ -59,10 +58,7 @@ export function useTaskStatus(
 
       const { error } = await supabase
         .from('tasks')
-        .update({
-          status: newStatus,
-          completed: newStatus === 'done'
-        })
+        .update({ status: newStatus })
         .eq('id', taskId);
 
       if (error) {
@@ -77,8 +73,6 @@ export function useTaskStatus(
         console.log('Decrementando contador de tarefas concluídas');
         await decrementCompletedTasks();
       }
-
-      toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
     } catch (error) {
       console.error('Erro ao atualizar status da tarefa:', error);
       toast.error('Erro ao atualizar status da tarefa');
@@ -86,7 +80,7 @@ export function useTaskStatus(
       // Reverter alteração em caso de erro
       setTasks(prev =>
         prev.map(t =>
-          t.id === taskId ? { ...t, status: task.status, completed: task.status === 'done' } : t
+          t.id === taskId ? { ...t, status: task.status } : t
         )
       );
     }
