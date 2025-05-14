@@ -1,4 +1,3 @@
-
 export interface Task {
   id: string;
   title: string;
@@ -9,7 +8,6 @@ export interface Task {
   user_id: string;
   due_date?: string;
   board_id: string;
-  completed?: boolean; // Adicionando campo completed
 }
 
 export type TaskStatus = 'todo' | 'in-progress' | 'done';

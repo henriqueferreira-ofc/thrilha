@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Task, TaskStatus } from '@/types/task';
@@ -41,8 +40,7 @@ export function useTasksBoard(currentBoard: Board | null) {
           updated_at: task.updated_at || task.created_at,
           due_date: task.due_date,
           user_id: task.user_id,
-          board_id: task.board_id,
-          completed: task.status === 'done'
+          board_id: task.board_id
         })) || [];
         
         setTasks(formattedTasks);
@@ -79,8 +77,7 @@ export function useTasksBoard(currentBoard: Board | null) {
             updated_at: newTask.updated_at || newTask.created_at,
             due_date: newTask.due_date,
             user_id: newTask.user_id,
-            board_id: newTask.board_id,
-            completed: newTask.status === 'done'
+            board_id: newTask.board_id
           };
           setTasks(prev => [formattedTask, ...prev]);
         } else if (payload.eventType === 'UPDATE') {
@@ -95,8 +92,7 @@ export function useTasksBoard(currentBoard: Board | null) {
               updated_at: updatedTask.updated_at || updatedTask.created_at,
               due_date: updatedTask.due_date,
               user_id: updatedTask.user_id,
-              board_id: updatedTask.board_id,
-              completed: updatedTask.status === 'done'
+              board_id: updatedTask.board_id
             } : task)
           );
         } else if (payload.eventType === 'DELETE') {
