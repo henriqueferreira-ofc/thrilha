@@ -24,6 +24,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
     drop: (item: { id: string }) => {
       console.log(`TaskColumn - Tarefa ${item.id} sendo solta na coluna ${column.id}`);
       onDrop(item.id, column.id);
+      return { status: column.id };
     },
     hover: (item: { id: string }) => {
       console.log(`TaskColumn - Tarefa ${item.id} passando sobre a coluna ${column.id}`);
@@ -63,6 +64,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
       className={`flex flex-col h-full p-4 rounded-lg border border-white/10 ${getColumnStyle()} ${
         isOver ? 'scale-105 shadow-lg transition-transform' : 'transition-transform'
       }`}
+      data-column-id={column.id}
     >
       <h2 className="text-lg font-semibold mb-4 flex items-center justify-between">
         <div className="flex items-center gap-1">

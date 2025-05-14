@@ -37,6 +37,7 @@ export function useTaskCounter() {
       if (error) throw error;
       
       const count = doneTasks?.length || 0;
+      console.log(`Sincronizando contador: ${count} tarefas concluídas encontradas`);
       setCompletedTasks(count);
       
       // Persistir no localStorage como fallback
@@ -45,6 +46,7 @@ export function useTaskCounter() {
       // Verificar se já atingiu o limite logo na carga
       checkLimitAndRedirect(count);
       
+      return count;
     } catch (err) {
       console.error('Erro ao sincronizar contador de tarefas:', err);
       
@@ -52,7 +54,9 @@ export function useTaskCounter() {
       const storedCount = localStorage.getItem(`completedTaskCounter_${user.id}`);
       if (storedCount) {
         setCompletedTasks(parseInt(storedCount));
+        return parseInt(storedCount);
       }
+      return 0;
     }
   };
 
@@ -84,6 +88,7 @@ export function useTaskCounter() {
     if (!user || isPro) return; // Não contabiliza para usuários Pro
 
     const newCount = completedTasks + 1;
+    console.log(`Incrementando contador de ${completedTasks} para ${newCount}`);
     setCompletedTasks(newCount);
     
     // Persistir no localStorage
@@ -100,6 +105,7 @@ export function useTaskCounter() {
     if (!user || isPro) return; // Não contabiliza para usuários Pro
 
     const newCount = Math.max(0, completedTasks - 1);
+    console.log(`Decrementando contador de ${completedTasks} para ${newCount}`);
     setCompletedTasks(newCount);
     
     // Persistir no localStorage

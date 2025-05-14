@@ -28,9 +28,16 @@ export function TaskBoard({ tasks = [], onDelete, onUpdate, onChangeStatus }: Ta
     const task = tasks.find(t => t.id === taskId);
     if (task) {
       console.log(`TaskBoard - Movendo tarefa "${task.title}" do status ${task.status} para ${newStatus}`);
+      
+      // Só fazer a mudança se o status for diferente
+      if (task.status !== newStatus) {
+        onChangeStatus(taskId, newStatus);
+      } else {
+        console.log(`TaskBoard - Tarefa já está no status ${newStatus}, ignorando`);
+      }
+    } else {
+      console.error(`TaskBoard - Tarefa com ID ${taskId} não encontrada`);
     }
-    
-    onChangeStatus(taskId, newStatus);
   };
 
   return (

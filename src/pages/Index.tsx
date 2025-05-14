@@ -36,9 +36,10 @@ const Index = () => {
   // Sincronizar o contador de tarefas concluídas quando as tarefas são carregadas
   useEffect(() => {
     if (tasks && tasks.length > 0) {
+      console.log(`Index - Sincronizando contador com ${tasks.length} tarefas carregadas`);
       syncCompletedTasksCount();
     }
-  }, [tasks]);
+  }, [tasks, syncCompletedTasksCount]);
 
   // Importar as operações específicas do quadro
   const { addTask, updateTask, deleteTask, changeTaskStatus } = useTaskOperationsBoard(
@@ -52,11 +53,17 @@ const Index = () => {
       return;
     }
     
+    console.log(`Index - Criando nova tarefa no quadro ${currentBoard.id}`);
+    
     // Agora incluímos o board_id na criação da tarefa
-    await addTask({
+    const task = await addTask({
       ...data,
       board_id: currentBoard.id
     });
+    
+    if (task) {
+      console.log(`Index - Tarefa criada com sucesso: ${task.id}`);
+    }
     
     setIsCreateDialogOpen(false);
   };
@@ -85,7 +92,10 @@ const Index = () => {
             
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="purple-gradient-bg">
+                <Button 
+                  className="purple-gradient-bg"
+                  disabled={!currentBoard || limitReached}
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Nova Tarefa
                 </Button>

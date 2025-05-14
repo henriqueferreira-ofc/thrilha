@@ -88,8 +88,10 @@ export function useTaskStatus(
       // Atualizar o contador de tarefas concluídas
       if (isCompletingTask) {
         incrementCompletedTasks();
+        console.log('Incrementando contador de tarefas concluídas');
       } else if (isUncompletingTask) {
         decrementCompletedTasks();
+        console.log('Decrementando contador de tarefas concluídas');
       }
 
       console.log(`Status alterado com sucesso no servidor: ${taskId} para ${newStatus}`);
