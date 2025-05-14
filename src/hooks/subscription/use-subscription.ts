@@ -10,7 +10,7 @@ import {
   createCustomerPortalSessionAPI,
   fetchUserSubscriptionAPI,
   setupSubscriptionListener
-} from './subscription-api';
+} from './api';
 import { UseSubscriptionReturn } from './types';
 
 export function useSubscription(): UseSubscriptionReturn {
