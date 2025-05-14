@@ -39,15 +39,15 @@ export function useTaskCounter() {
     if (newCount >= FREE_PLAN_LIMIT && !isPro) {
       setShowUpgradeModal(true);
       toast({
-        title: "Limite de tarefas atingido!",
+        title: "Limite de tarefas concluídas atingido!",
         description: "Você atingiu o limite de tarefas concluídas do plano gratuito.",
         variant: "destructive"
       });
     } else if (newCount === FREE_PLAN_LIMIT - 1) {
-      // Aviso quando estiver próximo do limite - mudando de "warning" para "default"
+      // Aviso quando estiver próximo do limite
       toast({
         title: "Aviso de limite",
-        description: `Você está próximo do limite de tarefas concluídas (${newCount}/${FREE_PLAN_LIMIT}).`,
+        description: `Você está próximo do limite de tarefas concluídas (${newCount}/${FREE_PLAN_LIMIT}). No plano gratuito, você pode marcar até ${FREE_PLAN_LIMIT} tarefas como concluídas.`,
         variant: "default"
       });
     }

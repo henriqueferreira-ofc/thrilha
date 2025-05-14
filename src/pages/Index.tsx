@@ -5,7 +5,7 @@ import { TaskBoard } from '@/components/task-board';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/task-form';
-import { Plus, Mountain } from 'lucide-react';
+import { Plus, Mountain, Info } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useBoards } from '@/hooks/boards';
@@ -15,6 +15,7 @@ import { BoardSelector } from '@/components/boards/board-selector';
 import { TaskFormData } from '@/types/task';
 import { TaskProgress } from '@/components/task-progress';
 import { useSubscription } from '@/hooks/use-subscription';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const Index = () => {
   const { user } = useAuth();
@@ -91,7 +92,24 @@ const Index = () => {
             {currentBoard ? (
               <>
                 {/* Mostrar indicador de progresso apenas para usuários do plano gratuito */}
-                {!isPro && <TaskProgress />}
+                {!isPro && (
+                  <div className="mb-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-sm font-medium text-gray-300">Plano Gratuito</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-gray-400 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>No plano gratuito, você pode criar quantas tarefas quiser, mas pode marcar apenas 3 como concluídas.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <TaskProgress />
+                  </div>
+                )}
                 
                 <TaskBoard
                   tasks={tasks || []} 
