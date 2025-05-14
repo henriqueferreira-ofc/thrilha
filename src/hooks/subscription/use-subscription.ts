@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/toast';
 import { SubscriptionPlan } from '@/types/board';
@@ -108,7 +107,6 @@ export function useSubscription(): UseSubscriptionReturn {
         console.log("Redirecionando para o checkout do Stripe:", result.url);
         
         // Usar window.location.href para redirecionamento completo
-        // Isso é mais confiável que abrir em uma nova aba
         window.location.href = result.url;
         return true;
       } else {
@@ -180,12 +178,21 @@ export function useSubscription(): UseSubscriptionReturn {
         window.history.replaceState({}, document.title, newUrl);
         
         // Verificar status da assinatura
-        checkSubscriptionStatus();
+        checkSubscriptionStatus().then(success => {
+          if (success) {
+            // Redirecionar para a página de tarefas se o checkout foi bem-sucedido
+            if (urlParams.get('success') === 'true') {
+              toast.success('Assinatura Pro ativada com sucesso!');
+              // Redirecionar para a página de tarefas após uma pequena pausa
+              setTimeout(() => {
+                window.location.href = '/app';
+              }, 1500);
+            }
+          }
+        });
         
-        // Mostrar mensagem apropriada
-        if (success === 'true') {
-          toast.success('Assinatura Pro ativada com sucesso!');
-        } else if (canceled === 'true') {
+        // Mostrar mensagem apropriada baseada no parâmetro da URL
+        if (canceled === 'true') {
           toast.info('Processo de checkout cancelado');
         }
       }
