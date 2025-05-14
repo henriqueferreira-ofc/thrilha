@@ -111,3 +111,17 @@ export const isTaskOverdue = (task: Task): boolean => {
   const today = new Date();
   return dueDate < today && task.status !== 'done';
 };
+
+// Helper function to get readable status name
+export const getStatusName = (status: TaskStatus): string => {
+  switch (status) {
+    case 'todo':
+      return 'A Fazer';
+    case 'in-progress':
+      return 'Em Progresso';
+    case 'done':
+      return 'Concluída';
+    default:
+      return status;
+  }
+};
