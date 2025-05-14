@@ -8,8 +8,9 @@ import { TaskForm } from '@/components/task-form';
 import { Plus, Mountain } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useBoards } from '@/hooks/use-boards';
+import { useBoards } from '@/hooks/boards';
 import { useTasksBoard } from '@/hooks/use-tasks-board';
+import { useTaskOperationsBoard } from '@/hooks/tasks/use-task-operations-board';
 import { BoardSelector } from '@/components/boards/board-selector';
 import { TaskFormData } from '@/types/task';
 
@@ -23,7 +24,7 @@ const Index = () => {
     createBoard 
   } = useBoards();
   
-  const { tasks, loading } = useTasksBoard(currentBoard);
+  const { tasks, loading, setTasks } = useTasksBoard(currentBoard);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   // Importar as operações específicas do quadro
