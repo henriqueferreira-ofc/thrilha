@@ -105,30 +105,24 @@ serve(async (req) => {
     const returnUrl = (requestBody as any).returnUrl || Deno.env.get("SITE_URL") || req.headers.get("origin") || "http://localhost:8080";
     log("URL de origem para redirecionamento:", returnUrl);
     
+    // Usar o ID do preço específico fornecido
+    const pricePlanId = "price_1ROJxKQovJyvXFNJCRpnp3gE";
+    log("Usando ID de preço específico:", pricePlanId);
+    
     // Criar sessão de checkout
-    log("Criando sessão de checkout");
+    log("Criando sessão de checkout com ID do preço específico");
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
       line_items: [
         {
-          price_data: {
-            currency: "brl",
-            product_data: {
-              name: "Assinatura Pro",
-              description: "Acesso completo a todas as funcionalidades do aplicativo",
-            },
-            unit_amount: 1990, // R$19,90
-            recurring: {
-              interval: "month",
-            },
-          },
+          price: pricePlanId,
           quantity: 1,
         },
       ],
       mode: "subscription",
-      success_url: `${returnUrl}?success=true`,
-      cancel_url: `${returnUrl}?canceled=true`,
+      success_url: `${returnUrl}/subscription?success=true`,
+      cancel_url: `${returnUrl}/subscription?canceled=true`,
       allow_promotion_codes: true,
       billing_address_collection: "auto",
       metadata: {
