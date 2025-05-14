@@ -27,7 +27,7 @@ const Index = () => {
     createBoard 
   } = useBoards();
   
-  const { tasks, loading, setTasks } = useTasksBoard(currentBoard);
+  const { tasks, loading, setTasks, optimisticUpdate } = useTasksBoard(currentBoard);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { isPro } = useSubscription();
   const { limitReached, syncCompletedTasksCount } = useTaskCounter(currentBoard);
@@ -44,7 +44,8 @@ const Index = () => {
   const { addTask, updateTask, deleteTask, changeTaskStatus } = useTaskOperationsBoard(
     tasks,
     setTasks,
-    currentBoard
+    currentBoard,
+    optimisticUpdate
   );
 
   const handleCreateTask = async (data: TaskFormData) => {
