@@ -2,12 +2,16 @@
 import { toast } from 'sonner';
 import { Task, TaskStatus } from '@/types/task';
 import { supabase } from '@/supabase/client';
+import { useTaskCounter } from '../use-task-counter';
 
 export function useTaskStatus(
   tasks: Task[], 
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>, 
   user: any | null
 ) {
+  // Integrar o contador de tarefas
+  const { incrementCompletedTasks } = useTaskCounter();
+
   // Alterar o status de uma tarefa
   const changeTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
     if (!user) {
@@ -16,6 +20,10 @@ export function useTaskStatus(
     }
 
     try {
+      // Verificar se a tarefa está sendo marcada como concluída
+      const targetTask = tasks.find(task => task.id === taskId);
+      const isCompletingTask = newStatus === 'done' && targetTask?.status !== 'done';
+
       // Atualizar o estado local imediatamente
       setTasks(prev => 
         prev.map(task => 
@@ -41,6 +49,11 @@ export function useTaskStatus(
           )
         );
         throw error;
+      }
+
+      // Se a tarefa foi concluída (mudada para 'done'), incrementar o contador
+      if (isCompletingTask) {
+        incrementCompletedTasks();
       }
 
       toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);

@@ -13,6 +13,8 @@ import { useTasksBoard } from '@/hooks/use-tasks-board';
 import { useTaskOperationsBoard } from '@/hooks/tasks/use-task-operations-board';
 import { BoardSelector } from '@/components/boards/board-selector';
 import { TaskFormData } from '@/types/task';
+import { TaskProgress } from '@/components/task-progress';
+import { useSubscription } from '@/hooks/use-subscription';
 
 const Index = () => {
   const { user } = useAuth();
@@ -26,6 +28,7 @@ const Index = () => {
   
   const { tasks, loading, setTasks } = useTasksBoard(currentBoard);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { isPro } = useSubscription();
 
   // Importar as operações específicas do quadro
   const { addTask, updateTask, deleteTask, changeTaskStatus } = useTaskOperationsBoard(
@@ -86,12 +89,17 @@ const Index = () => {
           
           <main className="flex-1 overflow-hidden p-4">
             {currentBoard ? (
-              <TaskBoard
-                tasks={tasks || []} 
-                onDelete={deleteTask}
-                onUpdate={updateTask}
-                onChangeStatus={changeTaskStatus}
-              />
+              <>
+                {/* Mostrar indicador de progresso apenas para usuários do plano gratuito */}
+                {!isPro && <TaskProgress />}
+                
+                <TaskBoard
+                  tasks={tasks || []} 
+                  onDelete={deleteTask}
+                  onUpdate={updateTask}
+                  onChangeStatus={changeTaskStatus}
+                />
+              </>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center p-4">
                 <h2 className="text-xl font-semibold mb-2">Nenhum quadro selecionado</h2>
