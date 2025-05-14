@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/task-form';
 import { Plus, Mountain, Info } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useBoards } from '@/hooks/boards';
 import { useTasksBoard } from '@/hooks/use-tasks-board';
@@ -31,7 +31,14 @@ const Index = () => {
   const { tasks, loading, setTasks } = useTasksBoard(currentBoard);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { isPro } = useSubscription();
-  const { limitReached } = useTaskCounter();
+  const { limitReached, syncCompletedTasksCount } = useTaskCounter();
+
+  // Sincronizar o contador de tarefas concluídas quando as tarefas são carregadas
+  useEffect(() => {
+    if (tasks && tasks.length > 0) {
+      syncCompletedTasksCount();
+    }
+  }, [tasks]);
 
   // Importar as operações específicas do quadro
   const { addTask, updateTask, deleteTask, changeTaskStatus } = useTaskOperationsBoard(
@@ -78,7 +85,7 @@ const Index = () => {
             
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="purple-gradient-bg" disabled={!currentBoard || limitReached}>
+                <Button className="purple-gradient-bg">
                   <Plus className="mr-2 h-4 w-4" />
                   Nova Tarefa
                 </Button>
@@ -104,7 +111,7 @@ const Index = () => {
                             <Info className="h-4 w-4 text-gray-400 cursor-help" />
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs">
-                            <p>No plano gratuito, você pode criar apenas 3 tarefas. Faça upgrade para o plano Pro para criar tarefas ilimitadas.</p>
+                            <p>No plano gratuito, você pode ter apenas 3 tarefas concluídas. Faça upgrade para o plano Pro para tarefas concluídas ilimitadas.</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

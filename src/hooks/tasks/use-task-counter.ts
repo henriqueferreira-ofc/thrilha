@@ -4,9 +4,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/hooks/use-subscription';
 import { toast } from '@/hooks/toast';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/supabase/client';
 
 export function useTaskCounter() {
-  const [createdTasks, setCreatedTasks] = useState<number>(0);
+  const [completedTasks, setCompletedTasks] = useState<number>(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
   const { user } = useAuth();
   const { isPro } = useSubscription();
@@ -14,54 +15,105 @@ export function useTaskCounter() {
   
   const FREE_PLAN_LIMIT = 3;
 
-  // Carregar contador do localStorage quando componente é montado
+  // Carregar contador de tarefas concluídas quando componente é montado
   useEffect(() => {
     if (user) {
-      const storedCount = localStorage.getItem(`taskCreatedCounter_${user.id}`);
-      if (storedCount) {
-        setCreatedTasks(parseInt(storedCount));
-      }
+      syncCompletedTasksCount();
     }
   }, [user]);
 
-  // Incrementar contador de tarefas criadas
-  const incrementCreatedTasks = () => {
-    if (!user || isPro) return; // Não contabiliza para usuários Pro
+  // Função para sincronizar o contador com o estado real das tarefas concluídas
+  const syncCompletedTasksCount = async () => {
+    if (!user) return;
+    
+    try {
+      // Verificar número real de tarefas concluídas no banco de dados
+      const { data: doneTasks, error } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'done');
 
-    const newCount = createdTasks + 1;
-    setCreatedTasks(newCount);
-    
-    // Persistir no localStorage
-    if (user) {
-      localStorage.setItem(`taskCreatedCounter_${user.id}`, newCount.toString());
+      if (error) throw error;
+      
+      const count = doneTasks?.length || 0;
+      setCompletedTasks(count);
+      
+      // Persistir no localStorage como fallback
+      localStorage.setItem(`completedTaskCounter_${user.id}`, count.toString());
+      
+      // Verificar se já atingiu o limite logo na carga
+      checkLimitAndRedirect(count);
+      
+    } catch (err) {
+      console.error('Erro ao sincronizar contador de tarefas:', err);
+      
+      // Fallback para localStorage se houver erro ao consultar BD
+      const storedCount = localStorage.getItem(`completedTaskCounter_${user.id}`);
+      if (storedCount) {
+        setCompletedTasks(parseInt(storedCount));
+      }
     }
-    
-    // Verificar se atingiu o limite
-    if (newCount >= FREE_PLAN_LIMIT && !isPro) {
+  };
+
+  // Verificar limite e redirecionar se necessário
+  const checkLimitAndRedirect = (count: number) => {
+    if (!isPro && count >= FREE_PLAN_LIMIT) {
       setShowUpgradeModal(true);
+      
       toast({
-        title: "Limite de tarefas atingido!",
-        description: "Você atingiu o limite de tarefas criadas do plano gratuito.",
+        title: "Limite de tarefas concluídas atingido!",
+        description: "Você atingiu o limite de tarefas concluídas do plano gratuito.",
         variant: "destructive"
       });
       
       // Redirecionar para a página de planos
       navigate('/subscription');
-    } else if (newCount === FREE_PLAN_LIMIT - 1) {
+    } else if (count === FREE_PLAN_LIMIT - 1 && !isPro) {
       // Aviso quando estiver próximo do limite
       toast({
         title: "Aviso de limite",
-        description: `Você está próximo do limite de tarefas criadas (${newCount}/${FREE_PLAN_LIMIT}). No plano gratuito, você pode criar até ${FREE_PLAN_LIMIT} tarefas.`,
+        description: `Você está próximo do limite de tarefas concluídas (${count}/${FREE_PLAN_LIMIT}). No plano gratuito, você pode ter até ${FREE_PLAN_LIMIT} tarefas concluídas.`,
         variant: "default"
       });
     }
   };
 
+  // Incrementar contador de tarefas concluídas
+  const incrementCompletedTasks = () => {
+    if (!user || isPro) return; // Não contabiliza para usuários Pro
+
+    const newCount = completedTasks + 1;
+    setCompletedTasks(newCount);
+    
+    // Persistir no localStorage
+    if (user) {
+      localStorage.setItem(`completedTaskCounter_${user.id}`, newCount.toString());
+    }
+    
+    // Verificar se atingiu o limite
+    checkLimitAndRedirect(newCount);
+  };
+
+  // Decrementar contador quando tarefa for movida de "concluída" para outro status
+  const decrementCompletedTasks = () => {
+    if (!user || isPro) return; // Não contabiliza para usuários Pro
+
+    const newCount = Math.max(0, completedTasks - 1);
+    setCompletedTasks(newCount);
+    
+    // Persistir no localStorage
+    if (user) {
+      localStorage.setItem(`completedTaskCounter_${user.id}`, newCount.toString());
+    }
+  };
+
   // Resetar contador
   const resetCounter = () => {
-    setCreatedTasks(0);
+    setCompletedTasks(0);
     if (user) {
-      localStorage.removeItem(`taskCreatedCounter_${user.id}`);
+      localStorage.removeItem(`completedTaskCounter_${user.id}`);
+      localStorage.removeItem(`taskCreatedCounter_${user.id}`); // Remover o contador antigo também
     }
     setShowUpgradeModal(false);
   };
@@ -72,13 +124,15 @@ export function useTaskCounter() {
   };
 
   return {
-    createdTasks,
-    remainingTasks: Math.max(0, FREE_PLAN_LIMIT - createdTasks),
+    completedTasks,
+    remainingTasks: Math.max(0, FREE_PLAN_LIMIT - completedTasks),
     totalLimit: FREE_PLAN_LIMIT,
-    incrementCreatedTasks,
+    incrementCompletedTasks,
+    decrementCompletedTasks,
+    syncCompletedTasksCount,
     resetCounter,
     showUpgradeModal,
     closeUpgradeModal,
-    limitReached: createdTasks >= FREE_PLAN_LIMIT && !isPro
+    limitReached: !isPro && completedTasks >= FREE_PLAN_LIMIT
   };
 }

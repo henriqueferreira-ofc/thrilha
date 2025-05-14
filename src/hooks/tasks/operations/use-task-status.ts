@@ -12,7 +12,7 @@ export function useTaskStatus(
   user: any | null
 ) {
   // Integrar o contador de tarefas e verificador de assinatura
-  const { limitReached } = useTaskCounter();
+  const { limitReached, incrementCompletedTasks, decrementCompletedTasks } = useTaskCounter();
   const { isPro } = useSubscription();
 
   // Alterar o status de uma tarefa
@@ -34,8 +34,7 @@ export function useTaskStatus(
     
     console.log(`Tarefa encontrada: ${task.id}, status atual: ${task.status}, novo status: ${newStatus}`);
 
-    // IMPORTANTE: Só verificar o limite se estiver movendo PARA o status "done"
-    // Nunca aplicar esta verificação quando estiver movendo DE "done" para outro status
+    // Verificar se está completando ou descompletando uma tarefa
     const isCompletingTask = newStatus === 'done' && task.status !== 'done';
     const isUncompletingTask = task.status === 'done' && newStatus !== 'done';
 
@@ -43,8 +42,8 @@ export function useTaskStatus(
 
     // Se está tentando marcar como concluída e já atingiu o limite (sem ser Pro)
     if (isCompletingTask && limitReached && !isPro) {
-      toast.error('Você atingiu o limite de tarefas no plano gratuito. Faça upgrade para o plano Pro.');
-      console.log('Tentativa de mover para concluído bloqueada por limite atingido no plano gratuito');
+      toast.error('Você atingiu o limite de tarefas concluídas no plano gratuito. Faça upgrade para o plano Pro.');
+      console.log('Tentativa de concluir tarefa bloqueada por limite atingido no plano gratuito');
       return;
     }
 
@@ -84,6 +83,13 @@ export function useTaskStatus(
           )
         );
         return;
+      }
+
+      // Atualizar o contador de tarefas concluídas
+      if (isCompletingTask) {
+        incrementCompletedTasks();
+      } else if (isUncompletingTask) {
+        decrementCompletedTasks();
       }
 
       console.log(`Status alterado com sucesso no servidor: ${taskId} para ${newStatus}`);
