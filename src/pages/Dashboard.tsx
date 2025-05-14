@@ -20,7 +20,7 @@ const Dashboard = () => {
           
           <main className="flex-1 p-6">
             <TaskBoard 
-              tasks={tasks}
+              tasks={tasks || []}
               onDelete={deleteTask}
               onUpdate={updateTask}
               onChangeStatus={changeTaskStatus}

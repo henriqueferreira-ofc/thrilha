@@ -1,3 +1,4 @@
+
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { TaskBoard } from '@/components/task-board';
@@ -46,7 +47,7 @@ const Index = () => {
           
           <main className="flex-1 overflow-hidden p-4">
             <TaskBoard
-              tasks={tasks}
+              tasks={tasks || []} 
               onDelete={deleteTask}
               onUpdate={updateTask}
               onChangeStatus={changeTaskStatus}

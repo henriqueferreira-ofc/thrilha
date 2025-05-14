@@ -43,7 +43,7 @@ export const formatDate = (dateString: string): string => {
 };
 
 // Group tasks by status
-export const groupTasksByStatus = (tasks: Task[]) => {
+export const groupTasksByStatus = (tasks: Task[] = []) => {
   const columns = {
     todo: {
       id: "todo" as TaskStatus,
@@ -62,9 +62,19 @@ export const groupTasksByStatus = (tasks: Task[]) => {
     }
   };
 
-  tasks.forEach((task) => {
-    columns[task.status].tasks.push(task);
-  });
+  // Garantir que tasks é um array antes de iterar
+  if (Array.isArray(tasks)) {
+    tasks.forEach((task) => {
+      // Verificar se o status da tarefa é válido
+      if (task && task.status && columns[task.status]) {
+        columns[task.status].tasks.push(task);
+      } else if (task) {
+        // Se o status não for válido, coloque na coluna "todo" por padrão
+        console.warn(`Tarefa com status inválido encontrada: ${task.id}, status: ${task.status}`);
+        columns.todo.tasks.push({...task, status: 'todo'});
+      }
+    });
+  }
 
   return [columns.todo, columns["in-progress"], columns.done];
 };

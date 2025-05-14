@@ -13,9 +13,12 @@ interface TaskBoardProps {
   onChangeStatus: (taskId: string, newStatus: TaskStatus) => void;
 }
 
-export function TaskBoard({ tasks, onDelete, onUpdate, onChangeStatus }: TaskBoardProps) {
-  // Group tasks by status
-  const columns = useMemo(() => groupTasksByStatus(tasks), [tasks]);
+export function TaskBoard({ tasks = [], onDelete, onUpdate, onChangeStatus }: TaskBoardProps) {
+  // Group tasks by status, garantindo que tasks é um array
+  const columns = useMemo(() => 
+    groupTasksByStatus(Array.isArray(tasks) ? tasks : []), 
+    [tasks]
+  );
 
   return (
     <DndProvider backend={HTML5Backend}>
