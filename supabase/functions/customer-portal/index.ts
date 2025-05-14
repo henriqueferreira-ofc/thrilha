@@ -7,7 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, pragma, x-requested-with",
+  "Access-Control-Allow-Headers": "*",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -19,10 +19,10 @@ const log = (message: string, data?: any) => {
 serve(async (req) => {
   log("Requisição recebida - método: " + req.method);
   
-  // Handle CORS preflight requests
+  // Lidar com requisições preflight do CORS
   if (req.method === "OPTIONS") {
     log("Requisição OPTIONS de CORS recebida");
-    return new Response(null, { 
+    return new Response(null, {
       headers: corsHeaders,
       status: 204
     });
@@ -77,40 +77,21 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Buscar cliente Stripe
-    log("Buscando dados de assinatura para o usuário:", user.id);
+    // Verificar se o cliente já existe no Stripe
+    log("Verificando cliente Stripe para:", user.email);
     try {
-      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
-        .from("subscriptions")
-        .select("stripe_customer_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (subscriptionError) {
-        log("Erro ao buscar dados de assinatura:", subscriptionError);
-        throw new Error(`Erro ao buscar dados de assinatura: ${subscriptionError.message}`);
+      const customers = await stripe.customers.list({
+        email: user.email,
+        limit: 1,
+      });
+      
+      if (customers.data.length === 0) {
+        log("Erro: Cliente não encontrado no Stripe");
+        throw new Error("Você não tem uma assinatura ativa. Faça upgrade para o plano Pro primeiro.");
       }
-
-      // Se não há registro de cliente Stripe, tentar buscar pelo e-mail
-      let stripeCustomerId = subscriptionData?.stripe_customer_id;
-
-      if (!stripeCustomerId) {
-        log("Cliente Stripe não encontrado no banco, buscando por e-mail:", user.email);
-        const customers = await stripe.customers.list({
-          email: user.email,
-          limit: 1,
-        });
-        
-        if (customers.data.length === 0) {
-          log("Nenhum cliente Stripe encontrado para este usuário");
-          throw new Error("Cliente Stripe não encontrado. Você precisa fazer upgrade para o plano Pro primeiro.");
-        }
-        
-        stripeCustomerId = customers.data[0].id;
-        log("Cliente Stripe encontrado pelo e-mail:", stripeCustomerId);
-      } else {
-        log("Cliente Stripe encontrado nos dados da assinatura:", stripeCustomerId);
-      }
+      
+      const customerId = customers.data[0].id;
+      log("Cliente Stripe encontrado:", customerId);
 
       // Definir URL de origem para redirecionamento
       let origin = req.headers.get("origin");
@@ -132,11 +113,11 @@ serve(async (req) => {
       // Criar sessão do portal do cliente
       log("Criando sessão do portal do cliente");
       const session = await stripe.billingPortal.sessions.create({
-        customer: stripeCustomerId,
+        customer: customerId,
         return_url: `${origin}/subscription`,
       });
 
-      log("Sessão do portal do cliente criada com sucesso:", { id: session.id, url: session.url });
+      log("Sessão do portal criada com sucesso:", { id: session.id, url: session.url });
 
       return new Response(JSON.stringify({ url: session.url }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

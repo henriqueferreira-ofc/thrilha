@@ -54,7 +54,7 @@ export async function createCustomerPortalSessionAPI(): Promise<{success: boolea
         error: message
       };
     }
-  } catch (error) {
+  } catch (error: any) {
     const errorMessage = error.message || 'Erro desconhecido';
     console.error('Erro ao acessar portal do cliente:', errorMessage, error);
     toast.error('Não foi possível conectar ao serviço de gerenciamento. Tente novamente mais tarde.');

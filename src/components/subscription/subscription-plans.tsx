@@ -83,14 +83,6 @@ export function SubscriptionPlans({
 
   return (
     <div className="space-y-6">
-      <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200 mb-4">
-        <h3 className="text-yellow-800 font-medium">Informações sobre testes</h3>
-        <p className="text-yellow-700 text-sm mt-1">
-          Para testes, você pode usar o número de cartão 4242 4242 4242 4242 com qualquer data futura 
-          e qualquer CVV de 3 dígitos.
-        </p>
-      </div>
-
       {isPro && onManageSubscription && (
         <div className="flex justify-center mb-8">
           <Button 

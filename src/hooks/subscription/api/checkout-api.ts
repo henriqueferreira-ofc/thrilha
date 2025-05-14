@@ -9,10 +9,7 @@ export async function createCheckoutSessionAPI(): Promise<{success: boolean, url
     
     // Chamar a função Edge do Supabase para criar a sessão de checkout do Stripe
     const { data, error } = await supabase.functions.invoke("create-checkout", {
-      headers: {
-        // Remover cabeçalhos problemáticos
-        'Cache-Control': 'no-cache',
-      }
+      // Não enviar cabeçalhos desnecessários que possam causar problemas de CORS
     });
     
     if (error) {
@@ -61,7 +58,7 @@ export async function createCheckoutSessionAPI(): Promise<{success: boolean, url
         error: message
       };
     }
-  } catch (error) {
+  } catch (error: any) {
     const errorMessage = error.message || 'Erro desconhecido';
     console.error('Erro ao atualizar plano:', errorMessage, error);
     toast.error('Não foi possível conectar ao serviço de pagamento. Tente novamente mais tarde.');
