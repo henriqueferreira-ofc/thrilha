@@ -6,11 +6,12 @@ import { useSubscription } from '@/hooks/use-subscription';
 import { getStatusName } from '@/lib/task-utils';
 import { useNavigate } from 'react-router-dom';
 import { Board } from '@/types/board';
+import { User } from '@supabase/supabase-js';
 
 export function useTaskStatus(
   tasks: Task[],
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>,
-  user: any | null,
+  user: User | null,
   currentBoard: Board | null
 ) {
   const { limitReached, syncCompletedTasksCount } = useTaskCounter(currentBoard);
