@@ -5,6 +5,7 @@ import { supabase } from '@/supabase/client';
 import { Board } from '@/types/board';
 import { useTaskCounter } from '../use-task-counter';
 import { useNavigate } from 'react-router-dom';
+import { useSubscription } from '@/hooks/use-subscription';
 
 export function useTaskCreate(
   tasks: Task[], 
@@ -14,6 +15,7 @@ export function useTaskCreate(
 ) {
   const { incrementCreatedTasks, limitReached } = useTaskCounter();
   const navigate = useNavigate();
+  const { isPro } = useSubscription();
 
   // Adicionar uma nova tarefa
   const addTask = async (taskData: TaskFormData): Promise<Task | null> => {
@@ -28,7 +30,7 @@ export function useTaskCreate(
     }
 
     // Verificar se já atingiu o limite do plano gratuito
-    if (limitReached) {
+    if (limitReached && !isPro) {
       toast.error('Você atingiu o limite de tarefas do plano gratuito. Faça upgrade para o plano Pro.');
       navigate('/subscription');
       return null;
@@ -68,7 +70,7 @@ export function useTaskCreate(
       // Adicionar nova tarefa ao estado
       setTasks(prev => [createdTask, ...prev]);
       
-      // Incrementar contador de tarefas criadas
+      // Incrementar contador de tarefas criadas após a criação com sucesso
       incrementCreatedTasks();
       
       toast.success('Tarefa criada com sucesso!');

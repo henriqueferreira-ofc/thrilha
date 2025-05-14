@@ -4,26 +4,28 @@ import { Task, TaskStatus } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { useTaskCounter } from '../use-task-counter';
 import { useSubscription } from '@/hooks/use-subscription';
+import { getStatusName } from '@/lib/task-utils';
 
 export function useTaskStatus(
-  tasks: Task[], 
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>, 
+  tasks: Task[],
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>,
   user: any | null
 ) {
   // Integrar o contador de tarefas e verificador de assinatura
-  const { incrementCreatedTasks, limitReached } = useTaskCounter();
+  const { limitReached } = useTaskCounter();
   const { isPro } = useSubscription();
 
   // Alterar o status de uma tarefa
   const changeTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
     if (!user) {
-      toast.error('Você precisa estar logado para atualizar tarefas');
+      toast.error('Você precisa estar logado para alterar o status da tarefa');
       return;
     }
 
-    // Verificar se a tarefa está sendo marcada como concluída
-    const targetTask = tasks.find(task => task.id === taskId);
-    const isCompletingTask = newStatus === 'done' && targetTask?.status !== 'done';
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const isCompletingTask = newStatus === 'done' && task.status !== 'done';
 
     // Se está tentando marcar como concluída e já atingiu o limite (sem ser Pro)
     if (isCompletingTask && limitReached && !isPro) {
@@ -32,52 +34,42 @@ export function useTaskStatus(
     }
 
     try {
-      // Atualizar o estado local imediatamente
-      setTasks(prev => 
-        prev.map(task => 
-          task.id === taskId 
-            ? { ...task, status: newStatus, completed: newStatus === 'done' }
-            : task
+      // Atualizar o estado local imediatamente para melhor experiência do usuário
+      setTasks(prev =>
+        prev.map(t =>
+          t.id === taskId
+            ? { ...t, status: newStatus, completed: newStatus === 'done' }
+            : t
         )
       );
 
-      // Atualizar no banco de dados
       const { error } = await supabase
         .from('tasks')
-        .update({ status: newStatus })
-        .eq('id', taskId);
+        .update({
+          status: newStatus,
+          completed: newStatus === 'done'
+        })
+        .eq('id', taskId)
+        .eq('user_id', user.id);
 
       if (error) {
-        // Se houver erro, reverter a alteração local
-        setTasks(prev => 
-          prev.map(task => 
-            task.id === taskId 
-              ? { ...task, status: task.status }
-              : task
+        // Se houver erro, reverter a alteração no estado local
+        console.error('Erro ao atualizar status:', error);
+        toast.error('Erro ao atualizar status da tarefa');
+
+        setTasks(prev =>
+          prev.map(t =>
+            t.id === taskId ? { ...t, status: task.status, completed: task.status === 'done' } : t
           )
         );
-        throw error;
+        return;
       }
 
-      // Se a tarefa foi concluída (mudada para 'done'), incrementar o contador
-      if (isCompletingTask) {
-        incrementCreatedTasks();
-      }
-
+      // Não incrementamos mais o contador aqui, pois contamos apenas tarefas criadas
       toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
     } catch (error: unknown) {
       console.error('Erro ao atualizar status da tarefa:', error);
       toast.error('Erro ao atualizar status da tarefa');
-    }
-  };
-
-  // Função auxiliar para obter o nome legível do status
-  const getStatusName = (status: TaskStatus): string => {
-    switch (status) {
-      case 'todo': return 'A Fazer';
-      case 'in-progress': return 'Em Progresso';
-      case 'done': return 'Concluída';
-      default: return status;
     }
   };
 
