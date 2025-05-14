@@ -16,13 +16,13 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCardProps) {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: 'TASK',
-    item: { id: task.id, status: task.status },
+  const [{ isDragging }, drag] = useDrag({
+    type: 'task', // Tipo precisa ser minúsculo para corresponder ao que é esperado em TaskColumn
+    item: { id: task.id },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
-  }));
+  });
 
   return (
     <Card 

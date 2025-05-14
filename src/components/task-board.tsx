@@ -20,6 +20,12 @@ export function TaskBoard({ tasks = [], onDelete, onUpdate, onChangeStatus }: Ta
     [tasks]
   );
 
+  // Handler para mudar status via drag & drop
+  const handleDrop = (taskId: string, newStatus: TaskStatus) => {
+    console.log(`Movendo tarefa ${taskId} para ${newStatus}`);
+    onChangeStatus(taskId, newStatus);
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 p-6">
@@ -29,7 +35,7 @@ export function TaskBoard({ tasks = [], onDelete, onUpdate, onChangeStatus }: Ta
             column={column}
             onDelete={onDelete}
             onUpdate={onUpdate}
-            onDrop={onChangeStatus}
+            onDrop={handleDrop}
           />
         ))}
       </div>

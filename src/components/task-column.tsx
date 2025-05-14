@@ -13,7 +13,7 @@ interface TaskColumnProps {
 export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnProps) {
   // Set up drop functionality
   const [{ isOver }, drop] = useDrop({
-    accept: 'task',
+    accept: 'task', // Tipo precisa ser minúsculo para corresponder ao que vem de TaskCard
     drop: (item: { id: string }) => {
       console.log(`Tarefa ${item.id} sendo movida para ${column.id}`);
       onDrop(item.id, column.id);
@@ -47,7 +47,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
     <div 
       ref={drop}
       className={`flex flex-col h-full p-4 rounded-lg border border-white/10 ${getColumnStyle()} ${
-        isOver ? 'scale-105 shadow-lg' : ''
+        isOver ? 'scale-105 shadow-lg transition-transform' : 'transition-transform'
       }`}
     >
       <h2 className="text-lg font-semibold mb-4 flex items-center justify-between">
@@ -56,7 +56,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
           {column.tasks.length}
         </span>
       </h2>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto space-y-2">
         {column.tasks.length === 0 ? (
           <div className="text-center p-4 text-muted-foreground text-sm border border-dashed border-white/10 rounded-lg">
             Sem tarefas
