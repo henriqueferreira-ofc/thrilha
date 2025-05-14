@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '../supabase/client';
 import { toast } from 'sonner';
@@ -105,8 +104,6 @@ export function useAuthService() {
       
       console.log('Usuário autenticado:', data.user?.id);
       console.log('Sessão expira em:', new Date(data.session.expires_at! * 1000).toLocaleString());
-      
-      toast.success('Login realizado com sucesso!');
       
       // Redirecionar para tarefas com um pequeno delay para garantir que 
       // eventos de autenticação sejam processados
