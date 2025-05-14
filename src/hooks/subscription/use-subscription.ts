@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { SubscriptionPlan } from '@/types/board';
@@ -65,7 +64,7 @@ export function useSubscription(): UseSubscriptionReturn {
       
       const result = await checkSubscriptionStatusAPI(user.id);
       
-      if (result.success && result.data?.subscription) {
+      if (result.success && result.data) {
         // Atualizar o estado local com os dados mais recentes
         setSubscription(prev => {
           if (!prev || prev.plan_type !== result.data.plan_type) {
@@ -74,7 +73,7 @@ export function useSubscription(): UseSubscriptionReturn {
               id: prev?.id || '',
               user_id: user.id,
               plan_type: result.data.plan_type,
-              status: 'active',
+              status: result.data.subscribed ? 'active' : 'canceled',
               start_date: prev?.start_date || new Date().toISOString(),
               end_date: result.data.end_date,
               created_at: prev?.created_at || new Date().toISOString(),

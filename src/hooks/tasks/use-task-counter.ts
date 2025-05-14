@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -37,12 +36,15 @@ export function useTaskCounter(currentBoard: Board | null = null) {
       
       const count = allTasks?.length || 0;
       console.log(`Sincronizado: ${count} tarefas encontradas no quadro ${currentBoard.id}`);
+      
+      // Atualizar o estado local imediatamente
       setTotalTasks(count);
       
       // Verificar se já atingiu o limite logo na carga
       if (!isPro && count >= FREE_PLAN_LIMIT) {
         console.log(`Limite atingido durante sincronização: ${count}/${FREE_PLAN_LIMIT}`);
         setShowUpgradeModal(true);
+        navigate('/subscription');
       }
       
       return count;
@@ -50,7 +52,7 @@ export function useTaskCounter(currentBoard: Board | null = null) {
       console.error('Erro ao sincronizar contador de tarefas:', err);
       return 0;
     }
-  }, [user, isPro, currentBoard]);
+  }, [user, isPro, currentBoard, navigate]);
 
   // Carregar contador de tarefas quando componente é montado ou quando muda o quadro
   useEffect(() => {
@@ -66,6 +68,7 @@ export function useTaskCounter(currentBoard: Board | null = null) {
           table: 'tasks',
           filter: `user_id=eq.${user.id} AND board_id=eq.${currentBoard.id}`
         }, () => {
+          // Atualizar o contador imediatamente quando houver mudanças
           syncCompletedTasksCount();
         })
         .subscribe();

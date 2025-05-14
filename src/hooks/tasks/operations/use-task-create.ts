@@ -1,4 +1,3 @@
-
 import { toast } from '@/hooks/toast';
 import { Task, TaskStatus, TaskFormData } from '@/types/task';
 import { supabase } from '@/supabase/client';
@@ -39,11 +38,13 @@ export function useTaskCreate(
       return null;
     }
 
+    let tempId = '';
+
     try {
       console.log(`Iniciando criação de tarefa no quadro ${currentBoard.id}...`);
       
       // Gerar um ID temporário para atualização otimista
-      const tempId = `temp-${Date.now()}`;
+      tempId = `temp-${Date.now()}`;
       
       // Criar objeto da nova tarefa com ID temporário
       const tempTask: Task = {
@@ -109,13 +110,12 @@ export function useTaskCreate(
       console.log('Tarefa criada com sucesso no servidor:', createdTask.id);
 
       // Atualizar o estado com o ID real (substituir a tarefa temporária)
-      // Importante: usamos filter + unshift ao invés de map para evitar duplicações
       setTasks(prev => {
         const filteredTasks = prev.filter(task => task.id !== tempId);
         return [createdTask, ...filteredTasks];
       });
 
-      // Atualizar o contador imediatamente após criar a tarefa
+      // Atualizar o contador imediatamente após criar a tarefa com sucesso
       await syncCompletedTasksCount();
       
       // Se atingiu o limite após criar, redirecionar para upgrade
@@ -129,7 +129,12 @@ export function useTaskCreate(
       toast.error('Erro ao criar tarefa');
       
       // Remover a tarefa temporária em caso de erro
-      setTasks(prev => prev.filter(task => task.id !== `temp-${Date.now()}`));
+      if (tempId) {
+        setTasks(prev => prev.filter(task => task.id !== tempId));
+      }
+      
+      // Garantir que o contador esteja sincronizado em caso de erro
+      await syncCompletedTasksCount();
       return null;
     }
   };

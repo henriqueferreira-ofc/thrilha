@@ -1,16 +1,17 @@
-
 import { toast } from '@/hooks/toast';
 import { Task } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { useTaskCounter } from '../use-task-counter';
+import { Board } from '@/types/board';
+import { User } from '@supabase/supabase-js';
 
 export function useTaskDelete(
   tasks: Task[], 
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>, 
-  user: any | null
+  user: User | null,
+  currentBoard: Board | null
 ) {
-  // Integrar o contador de tarefas
-  const { decrementCompletedTasks } = useTaskCounter();
+  const { decrementCompletedTasks, syncCompletedTasksCount } = useTaskCounter(currentBoard);
 
   // Excluir uma tarefa
   const deleteTask = async (id: string) => {
@@ -34,31 +35,36 @@ export function useTaskDelete(
       // Atualização otimista - remover a tarefa imediatamente da interface
       setTasks(prev => prev.filter(task => task.id !== id));
       
+      // Atualizar o contador imediatamente
+      if (isCompletedTask) {
+        console.log('Decrementando contador de tarefas concluídas após exclusão');
+        decrementCompletedTasks();
+      }
+      
       // Enviar para o backend
       console.log('Enviando exclusão para o servidor...');
       const { error } = await supabase
         .from('tasks')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) {
         // Reverter a atualização otimista em caso de erro
         console.error('Erro na exclusão, revertendo alterações locais:', error);
         if (taskToDelete) {
           setTasks(prev => [...prev, taskToDelete]);
+          // Reverter a atualização do contador também
+          if (isCompletedTask) {
+            syncCompletedTasksCount();
+          }
         }
         throw error;
       }
       
-      // Se a tarefa excluída estava concluída, decrementar o contador
-      if (isCompletedTask) {
-        console.log('Decrementando contador de tarefas concluídas após exclusão');
-        decrementCompletedTasks();
-      }
-      
-      console.log(`Tarefa ${id} excluída com sucesso`);
-      toast.success('Tarefa removida com sucesso!');
-    } catch (error: unknown) {
+      // Sincronizar o contador após a exclusão bem-sucedida
+      await syncCompletedTasksCount();
+    } catch (error) {
       console.error('Erro ao excluir tarefa:', error);
       toast.error('Erro ao excluir tarefa');
     }

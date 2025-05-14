@@ -1,14 +1,35 @@
-
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/supabase/client';
 
 // Criar sessão de checkout do Stripe
-export async function createCheckoutSessionAPI(): Promise<{success: boolean, url?: string}> {
+export async function createCheckoutSessionAPI(): Promise<{success: boolean, url?: string, error?: string}> {
   try {
     // Chamar a função Edge do Supabase para criar a sessão de checkout do Stripe
-    const { data, error } = await supabase.functions.invoke("create-checkout");
+    const { data, error } = await supabase.functions.invoke("create-checkout", {
+      headers: {
+        'Cache-Control': 'no-cache',
+      }
+    });
     
-    if (error) throw error;
+    if (error) {
+      const errorMessage = error.message || 'Erro desconhecido';
+      console.error('Erro ao criar sessão de checkout:', errorMessage);
+      
+      if (errorMessage.includes('authentication') || errorMessage.includes('auth')) {
+        toast.error('Sua sessão expirou. Por favor, faça login novamente.');
+      } else if (errorMessage.includes('customer')) {
+        toast.error('Não foi possível criar seu perfil de cliente. Tente novamente em alguns minutos.');
+      } else if (errorMessage.includes('Failed to send')) {
+        toast.error('Erro de conexão com o servidor. Verifique sua internet e tente novamente.');
+      } else {
+        toast.error('Ocorreu um erro ao iniciar o processo de upgrade. Por favor, tente novamente.');
+      }
+      
+      return { 
+        success: false, 
+        error: errorMessage 
+      };
+    }
     
     if (data && data.url) {
       return { 
@@ -16,11 +37,21 @@ export async function createCheckoutSessionAPI(): Promise<{success: boolean, url
         url: data.url 
       };
     } else {
-      throw new Error('URL de checkout não retornada');
+      const message = 'URL de checkout não retornada pelo servidor';
+      console.error(message);
+      toast.error('Erro ao iniciar o processo de upgrade. Por favor, tente novamente em alguns minutos.');
+      return { 
+        success: false,
+        error: message
+      };
     }
   } catch (error) {
-    console.error('Erro ao atualizar plano:', error);
-    toast.error('Erro ao atualizar para o plano Pro');
-    return { success: false };
+    const errorMessage = error.message || 'Erro desconhecido';
+    console.error('Erro ao atualizar plano:', errorMessage);
+    toast.error('Não foi possível conectar ao serviço de pagamento. Tente novamente mais tarde.');
+    return { 
+      success: false,
+      error: errorMessage
+    };
   }
 }

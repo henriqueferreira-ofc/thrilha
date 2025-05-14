@@ -28,45 +28,15 @@ export function useTaskOperationsBoard(
   );
   
   // Criar versões específicas dos hooks com otimização
-  const taskCreate = useTaskCreate(tasks, setTasks, user, currentBoard);
+  const taskCreate = useTaskCreate(tasks, setTasks, user, currentBoard, optimisticUpdate);
   const taskUpdate = useTaskUpdate(tasks, setTasks, user);
-  const taskDelete = useTaskDelete(tasks, setTasks, user);
+  const taskDelete = useTaskDelete(tasks, setTasks, user, currentBoard);
   const taskStatus = useTaskStatus(tasks, setTasks, user, currentBoard);
 
   // Funções otimizadas que usam atualização otimista
   const addTask = async (taskData: TaskFormData) => {
-    // Primeiro atualiza otimisticamente com uma tarefa temporária
-    const tempTask: Task = {
-      id: `temp-${Date.now()}`,
-      title: taskData.title,
-      description: taskData.description || '',
-      status: 'todo',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user_id: user?.id || '',
-      board_id: currentBoard?.id || '',
-      due_date: taskData.dueDate
-    };
-
-    if (optimisticUpdate) {
-      optimisticUpdate.addTask(tempTask);
-    }
-
-    // Depois tenta criar no servidor
+    // Criar no servidor diretamente, sem atualização otimista duplicada
     const result = await taskCreate.addTask(taskData);
-    
-    if (result) {
-      // Se sucesso, atualiza com os dados reais
-      if (optimisticUpdate) {
-        optimisticUpdate.updateTask(result);
-      }
-    } else {
-      // Se falhou, remove a tarefa temporária
-      if (optimisticUpdate) {
-        optimisticUpdate.deleteTask(tempTask.id);
-      }
-    }
-    
     return result;
   };
 
