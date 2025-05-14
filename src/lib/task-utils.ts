@@ -42,6 +42,15 @@ export const formatDate = (dateString: string): string => {
   return format(date, "dd 'de' MMM", { locale: ptBR });
 };
 
+// Função para normalizar o status da tarefa
+export const normalizeTaskStatus = (status: string): TaskStatus => {
+  if (status === 'inProgress') return 'in-progress';
+  if (status === 'todo' || status === 'in-progress' || status === 'done') {
+    return status as TaskStatus;
+  }
+  return 'todo'; // Default status
+};
+
 // Group tasks by status
 export const groupTasksByStatus = (tasks: Task[] = []) => {
   const columns = {
@@ -65,11 +74,17 @@ export const groupTasksByStatus = (tasks: Task[] = []) => {
   // Garantir que tasks é um array antes de iterar
   if (Array.isArray(tasks)) {
     tasks.forEach((task) => {
-      // Verificar se o status da tarefa é válido
-      if (task && task.status && columns[task.status]) {
-        columns[task.status].tasks.push(task);
-      } else if (task) {
-        // Se o status não for válido, coloque na coluna "todo" por padrão
+      if (!task) return;
+      
+      // Normalizar o status
+      const normalizedStatus = normalizeTaskStatus(task.status);
+      task.status = normalizedStatus;
+      
+      // Adicionar à coluna correspondente
+      if (columns[normalizedStatus]) {
+        columns[normalizedStatus].tasks.push(task);
+      } else {
+        // Se ainda houver status não reconhecido, coloca na coluna "todo"
         console.warn(`Tarefa com status inválido encontrada: ${task.id}, status: ${task.status}`);
         columns.todo.tasks.push({...task, status: 'todo'});
       }

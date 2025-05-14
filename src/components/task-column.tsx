@@ -37,6 +37,12 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
     }
   };
 
+  // Handler for toggling task completion
+  const handleToggleComplete = (task: Task) => {
+    const newStatus = task.status === 'done' ? 'todo' : 'done';
+    onUpdate(task.id, { status: newStatus });
+  };
+
   return (
     <div 
       ref={drop}
@@ -62,6 +68,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
               task={task} 
               onDelete={onDelete} 
               onUpdate={onUpdate}
+              onToggleComplete={() => handleToggleComplete(task)}
             />
           ))
         )}

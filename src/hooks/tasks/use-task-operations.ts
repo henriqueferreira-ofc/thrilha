@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Task, TaskStatus, TaskFormData } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { normalizeTaskStatus } from '@/lib/task-utils';
 
 export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.SetStateAction<Task[]>>) {
   const { user } = useAuth();
@@ -35,7 +36,7 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
         id: data.id,
         title: data.title,
         description: data.description || '',
-        status: data.status as TaskStatus,
+        status: normalizeTaskStatus(data.status),
         created_at: data.created_at,
         updated_at: data.updated_at || data.created_at,
         due_date: data.due_date,
@@ -62,14 +63,12 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
     }
 
     try {
+      // Se status está sendo atualizado, garantir que está no formato correto para o banco
+      const dataForDb = { ...updatedData };
+      
       const { error } = await supabase
         .from('tasks')
-        .update({
-          title: updatedData.title,
-          description: updatedData.description,
-          status: updatedData.status,
-          due_date: updatedData.due_date,
-        })
+        .update(dataForDb)
         .eq('id', id)
         .eq('user_id', user.id);
 
@@ -81,6 +80,7 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
             ? {
                 ...task,
                 ...updatedData,
+                status: updatedData.status ? normalizeTaskStatus(updatedData.status) : task.status,
                 completed: updatedData.status === 'done' || (task.completed || false)
               }
             : task
@@ -126,9 +126,11 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
     }
 
     try {
+      const normalizedStatus = normalizeTaskStatus(newStatus);
+      
       const { error } = await supabase
         .from('tasks')
-        .update({ status: newStatus })
+        .update({ status: normalizedStatus })
         .eq('id', taskId)
         .eq('user_id', user.id);
 
@@ -136,11 +138,11 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
 
       setTasks((prev) =>
         prev.map((task) =>
-          task.id === taskId ? { ...task, status: newStatus, completed: newStatus === 'done' } : task
+          task.id === taskId ? { ...task, status: normalizedStatus, completed: normalizedStatus === 'done' } : task
         )
       );
 
-      toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
+      toast.success(`Status da tarefa alterado para ${getStatusName(normalizedStatus)}!`);
     } catch (error) {
       console.error('Erro ao atualizar status da tarefa:', error);
       toast.error('Erro ao atualizar status da tarefa');

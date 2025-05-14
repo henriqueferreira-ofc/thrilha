@@ -4,6 +4,7 @@ import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Task, TaskStatus } from '@/types/task';
+import { normalizeTaskStatus } from '@/lib/task-utils';
 
 export function useTaskCore() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -29,7 +30,7 @@ export function useTaskCore() {
           id: task.id,
           title: task.title,
           description: task.description || '',
-          status: task.status as TaskStatus,
+          status: normalizeTaskStatus(task.status),
           created_at: task.created_at,
           updated_at: task.updated_at || task.created_at,
           due_date: task.due_date,
