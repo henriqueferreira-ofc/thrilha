@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Task, TaskStatus } from '@/types/task';
@@ -57,6 +58,7 @@ export function useTasksBoard(currentBoard: Board | null) {
         
         const formattedTasks = (data || []).map(task => formatTask(task as DatabaseTask));
         setTasks(formattedTasks);
+        console.log(`Carregadas ${formattedTasks.length} tarefas do quadro ${currentBoard.id}`);
       } catch (error: unknown) {
         console.error('Erro ao buscar tarefas:', error);
         toast.error('Erro ao carregar tarefas');
@@ -67,7 +69,7 @@ export function useTasksBoard(currentBoard: Board | null) {
 
     fetchTasks();
     
-    // Configurar listener para atualizações em tempo real
+    // Configurar listener para atualizações em tempo real com melhor gerenciamento de erros
     const tasksSubscription = supabase
       .channel(`tasks-board-${currentBoard.id}`)
       .on('postgres_changes', { 
@@ -78,32 +80,55 @@ export function useTasksBoard(currentBoard: Board | null) {
       }, (payload) => {
         console.log('Alteração em tarefas recebida:', payload);
         
-        let newTask: Task;
-        let updatedTask: Task;
-        let deletedTaskId: string;
-        
-        switch (payload.eventType) {
-          case 'INSERT':
-            newTask = formatTask(payload.new as DatabaseTask);
-            setTasks(prev => [newTask, ...prev]);
-            break;
-            
-          case 'UPDATE':
-            updatedTask = formatTask(payload.new as DatabaseTask);
-            setTasks(prev => prev.map(task => 
-              task.id === updatedTask.id ? updatedTask : task
-            ));
-            break;
-            
-          case 'DELETE':
-            deletedTaskId = (payload.old as DatabaseTask).id;
-            setTasks(prev => prev.filter(task => task.id !== deletedTaskId));
-            break;
+        try {
+          switch (payload.eventType) {
+            case 'INSERT': {
+              const newTask = formatTask(payload.new as DatabaseTask);
+              console.log('Nova tarefa detectada:', newTask.title);
+              setTasks(prev => [newTask, ...prev]);
+              break;
+            }
+              
+            case 'UPDATE': {
+              const updatedTask = formatTask(payload.new as DatabaseTask);
+              console.log('Tarefa atualizada:', updatedTask.title);
+              setTasks(prev => prev.map(task => 
+                task.id === updatedTask.id ? updatedTask : task
+              ));
+              break;
+            }
+              
+            case 'DELETE': {
+              const deletedTaskId = (payload.old as DatabaseTask).id;
+              console.log('Tarefa removida com ID:', deletedTaskId);
+              setTasks(prev => prev.filter(task => task.id !== deletedTaskId));
+              break;
+            }
+
+            default:
+              console.log('Evento desconhecido:', payload.eventType);
+          }
+        } catch (error) {
+          console.error('Erro ao processar alteração em tempo real:', error);
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Subscription status para ${currentBoard.id}:`, status);
+        
+        if (status === 'SUBSCRIBED') {
+          console.log(`Inscrição em tempo real ativa para o quadro ${currentBoard.id}`);
+        } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
+          console.error(`Erro na inscrição em tempo real para o quadro ${currentBoard.id}: ${status}`);
+          // Tentar reconectar após um breve atraso
+          setTimeout(() => {
+            console.log('Tentando reconectar...');
+            tasksSubscription.subscribe();
+          }, 3000);
+        }
+      });
 
     return () => {
+      console.log(`Removendo inscrição em tempo real para o quadro ${currentBoard?.id}`);
       supabase.removeChannel(tasksSubscription);
     };
   }, [user, currentBoard]);

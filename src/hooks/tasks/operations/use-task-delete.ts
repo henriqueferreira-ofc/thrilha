@@ -1,5 +1,5 @@
 
-import { toast } from 'sonner';
+import { toast } from '@/hooks/toast';
 import { Task } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { useTaskCounter } from '../use-task-counter';
@@ -24,18 +24,29 @@ export function useTaskDelete(
       const taskToDelete = tasks.find(task => task.id === id);
       const isCompletedTask = taskToDelete && taskToDelete.status === 'done';
       
+      // Atualização otimista - remover a tarefa imediatamente da interface
+      setTasks(prev => prev.filter(task => task.id !== id));
+      
+      console.log(`Excluindo tarefa ${id}, status: ${isCompletedTask ? 'concluída' : 'não concluída'}`);
+      
+      // Enviar para o backend
       const { error } = await supabase
         .from('tasks')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
-
-      // Atualizar o estado local
-      setTasks(prev => prev.filter(task => task.id !== id));
+      if (error) {
+        // Reverter a atualização otimista em caso de erro
+        console.error('Erro na exclusão, revertendo alterações locais');
+        if (taskToDelete) {
+          setTasks(prev => [...prev, taskToDelete]);
+        }
+        throw error;
+      }
       
       // Se a tarefa excluída estava concluída, decrementar o contador
       if (isCompletedTask) {
+        console.log('Decrementando contador de tarefas concluídas após exclusão');
         decrementCompletedTasks();
       }
       

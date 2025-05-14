@@ -1,10 +1,11 @@
-import { toast } from 'sonner';
+
+import { toast } from '@/hooks/toast';
 import { Task, TaskStatus, TaskFormData } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { Board } from '@/types/board';
 import { useTaskCounter } from '../use-task-counter';
 import { useNavigate } from 'react-router-dom';
-import { useSubscription } from '@/hooks/use-subscription';
+import { useSubscription } from '@/hooks/subscription';
 import { User } from '@supabase/supabase-js';
 
 export function useTaskCreate(
@@ -55,6 +56,8 @@ export function useTaskCreate(
       const tempId = `temp-${Date.now()}`;
       const tempTask: Task = { ...newTask, id: tempId };
       
+      console.log('Criando tarefa com atualização otimista:', tempTask.title);
+      
       if (optimisticUpdate) {
         optimisticUpdate.addTask(tempTask);
       } else {
@@ -68,7 +71,12 @@ export function useTaskCreate(
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Reverter a atualização otimista em caso de erro
+        console.error('Erro na criação, revertendo alterações locais');
+        setTasks(prev => prev.filter(task => task.id !== tempId));
+        throw error;
+      }
 
       const createdTask: Task = {
         id: data.id,
@@ -86,6 +94,8 @@ export function useTaskCreate(
       setTasks(prev => prev.map(task => 
         task.id === tempId ? createdTask : task
       ));
+
+      console.log('Tarefa criada com sucesso:', createdTask.title);
 
       // Atualizar o contador imediatamente após criar a tarefa
       await syncCompletedTasksCount();

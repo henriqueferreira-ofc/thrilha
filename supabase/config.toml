@@ -3,3 +3,7 @@ project_id = "yieihrvcbshzmxieflsv"
 
 [realtime]
 enabled = true
+
+[api]
+enabled = true
+
