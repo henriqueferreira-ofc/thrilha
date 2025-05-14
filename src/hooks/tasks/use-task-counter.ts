@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/hooks/use-subscription';
 import { toast } from '@/hooks/toast';
@@ -15,15 +15,8 @@ export function useTaskCounter() {
   
   const FREE_PLAN_LIMIT = 3;
 
-  // Carregar contador de tarefas concluídas quando componente é montado
-  useEffect(() => {
-    if (user) {
-      syncCompletedTasksCount();
-    }
-  }, [user]);
-
   // Função para sincronizar o contador com o estado real das tarefas concluídas
-  const syncCompletedTasksCount = async () => {
+  const syncCompletedTasksCount = useCallback(async () => {
     if (!user) return 0;
     
     try {
@@ -42,11 +35,12 @@ export function useTaskCounter() {
       }
       
       const count = doneTasks?.length || 0;
-      console.log(`Sincronizando contador: ${count} tarefas concluídas encontradas`);
+      console.log(`Sincronizado: ${count} tarefas concluídas encontradas`);
       setCompletedTasks(count);
       
       // Verificar se já atingiu o limite logo na carga
       if (!isPro && count >= FREE_PLAN_LIMIT) {
+        console.log(`Limite atingido durante sincronização: ${count}/${FREE_PLAN_LIMIT}`);
         setShowUpgradeModal(true);
       }
       
@@ -55,7 +49,14 @@ export function useTaskCounter() {
       console.error('Erro ao sincronizar contador de tarefas:', err);
       return 0;
     }
-  };
+  }, [user, isPro, FREE_PLAN_LIMIT]);
+
+  // Carregar contador de tarefas concluídas quando componente é montado
+  useEffect(() => {
+    if (user) {
+      syncCompletedTasksCount();
+    }
+  }, [user, syncCompletedTasksCount]);
 
   // Incrementar contador de tarefas concluídas
   const incrementCompletedTasks = async () => {
@@ -74,9 +75,6 @@ export function useTaskCounter() {
         description: "Você atingiu o limite de tarefas concluídas do plano gratuito.",
         variant: "destructive"
       });
-      
-      // Redirecionar para a página de planos
-      navigate('/subscription');
     } else if (newCount === FREE_PLAN_LIMIT - 1) {
       // Aviso quando estiver próximo do limite
       toast({
@@ -94,17 +92,19 @@ export function useTaskCounter() {
     const newCount = Math.max(0, completedTasks - 1);
     console.log(`Decrementando contador de ${completedTasks} para ${newCount}`);
     setCompletedTasks(newCount);
+    
+    // Se estava no limite e decrementou, não mostrar mais o modal
+    if (completedTasks >= FREE_PLAN_LIMIT && newCount < FREE_PLAN_LIMIT) {
+      setShowUpgradeModal(false);
+    }
   };
 
-  // Resetar contador
-  const resetCounter = () => {
-    setCompletedTasks(0);
-    setShowUpgradeModal(false);
-  };
-
-  // Fechar modal de upgrade
-  const closeUpgradeModal = () => {
-    setShowUpgradeModal(false);
+  // Resetar contador - útil para situações onde há inconsistências
+  const resetCounter = async () => {
+    if (!user) return;
+    
+    console.log("Resetando contador de tarefas concluídas...");
+    await syncCompletedTasksCount();
   };
 
   return {
@@ -116,7 +116,7 @@ export function useTaskCounter() {
     syncCompletedTasksCount,
     resetCounter,
     showUpgradeModal,
-    closeUpgradeModal,
+    closeUpgradeModal: () => setShowUpgradeModal(false),
     limitReached: !isPro && completedTasks >= FREE_PLAN_LIMIT
   };
 }

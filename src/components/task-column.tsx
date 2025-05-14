@@ -15,7 +15,7 @@ interface TaskColumnProps {
 }
 
 export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnProps) {
-  const { limitReached } = useTaskCounter();
+  const { limitReached, resetCounter } = useTaskCounter();
   const { isPro } = useSubscription();
   
   // Configurar funcionalidade de drop
@@ -23,6 +23,14 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
     accept: 'task',
     drop: (item: { id: string }) => {
       console.log(`TaskColumn: Tarefa ${item.id} solta na coluna ${column.id}`);
+      
+      // Verificar se a coluna é "done" e se o limite foi atingido
+      if (column.id === 'done' && limitReached && !isPro) {
+        console.log(`TaskColumn: Limite atingido, não é possível mover para "done"`);
+        // Não chamamos onDrop, pois esse bloqueio deve ser tratado em useTaskStatus
+      }
+      
+      // Sempre permitir o drop, o bloqueio ocorre no useTaskStatus
       onDrop(item.id, column.id);
       return { status: column.id };
     },
@@ -49,6 +57,13 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
   const handleToggleComplete = (task: Task) => {
     console.log(`TaskColumn: Alternando status da tarefa ${task.id}`);
     const newStatus = task.status === 'done' ? 'todo' : 'done';
+    
+    // Se estiver tentando marcar como concluído e o limite foi atingido
+    if (newStatus === 'done' && limitReached && !isPro) {
+      console.log(`TaskColumn: Limite atingido, não é possível marcar como concluída`);
+      // O bloqueio será tratado na função useTaskStatus
+    }
+    
     onDrop(task.id, newStatus);
   };
 
