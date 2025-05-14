@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type {
@@ -139,7 +140,15 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
+interface ToastFunction {
+  (props: Toast): { id: string; dismiss: () => void; update: (props: ToasterToast) => void };
+  error: (message: string) => { id: string; dismiss: () => void; update: (props: ToasterToast) => void };
+  success: (message: string) => { id: string; dismiss: () => void; update: (props: ToasterToast) => void };
+  info: (message: string) => { id: string; dismiss: () => void; update: (props: ToasterToast) => void };
+  warning: (message: string) => { id: string; dismiss: () => void; update: (props: ToasterToast) => void };
+}
+
+const toast = (({ ...props }: Toast) => {
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -166,6 +175,37 @@ function toast({ ...props }: Toast) {
     dismiss,
     update,
   }
+}) as ToastFunction
+
+// Adicionar métodos de conveniência
+toast.error = (message: string) => {
+  return toast({
+    variant: "destructive",
+    title: "Erro",
+    description: message,
+  })
+}
+
+toast.success = (message: string) => {
+  return toast({
+    title: "Sucesso",
+    description: message,
+  })
+}
+
+toast.info = (message: string) => {
+  return toast({
+    title: "Informação",
+    description: message,
+  })
+}
+
+toast.warning = (message: string) => {
+  return toast({
+    variant: "destructive", 
+    title: "Aviso",
+    description: message,
+  })
 }
 
 function useToast() {
