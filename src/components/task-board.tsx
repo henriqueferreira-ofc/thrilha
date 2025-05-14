@@ -23,6 +23,13 @@ export function TaskBoard({ tasks = [], onDelete, onUpdate, onChangeStatus }: Ta
   // Handler para mudar status via drag & drop com logs detalhados
   const handleDrop = (taskId: string, newStatus: TaskStatus) => {
     console.log(`TaskBoard - Processando movimentação da tarefa ${taskId} para ${newStatus}`);
+    
+    // Encontrar a tarefa atual para logar mais detalhes
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      console.log(`TaskBoard - Movendo tarefa "${task.title}" do status ${task.status} para ${newStatus}`);
+    }
+    
     onChangeStatus(taskId, newStatus);
   };
 

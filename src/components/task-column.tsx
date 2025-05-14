@@ -19,7 +19,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
   const { isPro } = useSubscription();
   
   // Set up drop functionality with more detailed logging
-  const [{ isOver }, drop] = useDrop({
+  const [{ isOver }, drop] = useDrop(() => ({
     accept: 'task',
     drop: (item: { id: string }) => {
       console.log(`TaskColumn - Tarefa ${item.id} sendo solta na coluna ${column.id}`);
@@ -31,7 +31,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
-  });
+  }), [column.id, onDrop]);
 
   // Estilo específico para cada tipo de coluna
   const getColumnStyle = () => {

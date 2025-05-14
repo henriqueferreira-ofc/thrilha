@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/hooks/use-subscription';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/toast';
 import { useNavigate } from 'react-router-dom';
 
 export function useTaskCounter() {
@@ -10,7 +10,6 @@ export function useTaskCounter() {
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
   const { user } = useAuth();
   const { isPro } = useSubscription();
-  const { toast } = useToast();
   const navigate = useNavigate();
   
   const FREE_PLAN_LIMIT = 3;
