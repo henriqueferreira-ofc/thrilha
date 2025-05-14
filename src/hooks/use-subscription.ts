@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { SubscriptionPlan } from '@/types/board';
 import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 export function useSubscription() {
   const [subscription, setSubscription] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checkingOut, setCheckingOut] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -16,6 +17,8 @@ export function useSubscription() {
     const fetchSubscription = async () => {
       try {
         setLoading(true);
+        
+        // Buscar dados da assinatura do Supabase
         const { data, error } = await supabase
           .from('subscriptions')
           .select('*')
@@ -61,7 +64,52 @@ export function useSubscription() {
     };
   }, [user]);
 
-  // Atualizar plano para Pro (simulação - em produção, integração com gateway de pagamento)
+  // Verificar status da assinatura com Stripe
+  const checkSubscriptionStatus = async (): Promise<boolean> => {
+    if (!user) {
+      toast.error('Você precisa estar logado para verificar seu plano');
+      return false;
+    }
+
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke("check-subscription");
+      
+      if (error) throw error;
+      
+      // Atualizar o estado local com os dados mais recentes
+      if (data.subscription) {
+        // Não precisamos atualizar o Supabase aqui, a função Edge já fez isso
+        setSubscription(prev => {
+          if (!prev || prev.plan_type !== data.plan_type) {
+            return {
+              ...prev,
+              id: prev?.id || '',
+              user_id: user.id,
+              plan_type: data.plan_type,
+              status: 'active',
+              start_date: prev?.start_date || new Date().toISOString(),
+              end_date: data.end_date,
+              created_at: prev?.created_at || new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+          }
+          return prev;
+        });
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao verificar status da assinatura:', error);
+      toast.error('Erro ao verificar status da assinatura');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Atualizar plano para Pro usando Stripe
   const upgradeToPro = async (): Promise<boolean> => {
     if (!user) {
       toast.error('Você precisa estar logado para atualizar seu plano');
@@ -69,78 +117,103 @@ export function useSubscription() {
     }
 
     try {
-      // Em produção, aqui teria a integração com o gateway de pagamento
-      // Por enquanto, apenas simulamos a atualização do plano
+      setCheckingOut(true);
       
-      const { error } = await supabase
-        .from('subscriptions')
-        .upsert({
-          user_id: user.id,
-          plan_type: 'pro',
-          status: 'active',
-          start_date: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-
+      // Chamar a função Edge do Supabase para criar a sessão de checkout do Stripe
+      const { data, error } = await supabase.functions.invoke("create-checkout");
+      
       if (error) throw error;
-
-      toast.success('Parabéns! Você agora é um usuário Pro!');
-      return true;
+      
+      if (data && data.url) {
+        // Redirecionar para o checkout do Stripe
+        window.location.href = data.url;
+        return true;
+      } else {
+        throw new Error('URL de checkout não retornada');
+      }
     } catch (error) {
       console.error('Erro ao atualizar plano:', error);
       toast.error('Erro ao atualizar para o plano Pro');
       return false;
+    } finally {
+      setCheckingOut(false);
     }
   };
 
-  // Downgrade para o plano gratuito
-  const downgradeToFree = async (): Promise<boolean> => {
+  // Acessar portal do cliente para gerenciar assinatura
+  const manageSubscription = async (): Promise<boolean> => {
     if (!user) {
-      toast.error('Você precisa estar logado para alterar seu plano');
+      toast.error('Você precisa estar logado para gerenciar sua assinatura');
       return false;
     }
 
     try {
-      // Verificar número de quadros ativos
-      const { data: boardsData, error: boardsError } = await supabase
-        .from('boards')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('is_archived', false);
+      setLoading(true);
       
-      if (boardsError) throw boardsError;
+      // Chamar a função Edge do Supabase para criar a sessão do portal do cliente
+      const { data, error } = await supabase.functions.invoke("customer-portal");
       
-      // Verificar se tem mais de 3 quadros
-      if (boardsData && boardsData.length > 3) {
-        toast.error('Você precisa arquivar alguns quadros antes de fazer downgrade. O plano gratuito permite apenas 3 quadros ativos.');
-        return false;
-      }
-
-      const { error } = await supabase
-        .from('subscriptions')
-        .upsert({
-          user_id: user.id,
-          plan_type: 'free',
-          status: 'active',
-          updated_at: new Date().toISOString()
-        });
-
       if (error) throw error;
-
-      toast.success('Seu plano foi alterado para o gratuito');
-      return true;
+      
+      if (data && data.url) {
+        // Redirecionar para o portal do cliente Stripe
+        window.location.href = data.url;
+        return true;
+      } else {
+        throw new Error('URL do portal não retornada');
+      }
     } catch (error) {
-      console.error('Erro ao alterar plano:', error);
-      toast.error('Erro ao alterar para o plano gratuito');
+      console.error('Erro ao acessar portal de assinatura:', error);
+      toast.error('Erro ao acessar portal de gerenciamento da assinatura');
       return false;
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Downgrade para o plano gratuito (agora feito via portal do cliente)
+  const downgradeToFree = async (): Promise<boolean> => {
+    return manageSubscription();
+  };
+
+  // Verificar se é plano pro ou já está no checkout
+  const isPro = subscription?.plan_type === 'pro';
+  const isCheckingOut = checkingOut;
+
+  // Checar status em casos específicos (primeira carga, após checkout, etc)
+  useEffect(() => {
+    if (user) {
+      // Verificar parâmetros de URL para sucesso ou cancelamento do checkout
+      const urlParams = new URLSearchParams(window.location.search);
+      const success = urlParams.get('success');
+      const canceled = urlParams.get('canceled');
+      
+      if (success === 'true' || canceled === 'true') {
+        // Limpar parâmetros da URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        
+        // Verificar status da assinatura
+        checkSubscriptionStatus();
+        
+        // Mostrar mensagem apropriada
+        if (success === 'true') {
+          toast.success('Assinatura Pro ativada com sucesso!');
+        } else if (canceled === 'true') {
+          toast.info('Processo de checkout cancelado');
+        }
+      }
+    }
+  }, [user]);
 
   return {
     subscription,
     loading,
-    isPro: subscription?.plan_type === 'pro',
+    checkingOut: isCheckingOut,
+    isPro,
     upgradeToPro,
-    downgradeToFree
+    downgradeToFree,
+    checkSubscriptionStatus,
+    manageSubscription
   };
 }

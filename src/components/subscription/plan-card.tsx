@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, X } from "lucide-react";
+import { Check, X, Loader2 } from "lucide-react";
 
 interface PlanFeature {
   name: string;
@@ -17,6 +17,7 @@ interface PlanCardProps {
   actionLabel: string;
   onAction: () => void;
   disabled?: boolean;
+  loading?: boolean;
 }
 
 export function PlanCard({
@@ -27,7 +28,8 @@ export function PlanCard({
   isCurrentPlan,
   actionLabel,
   onAction,
-  disabled = false
+  disabled = false,
+  loading = false
 }: PlanCardProps) {
   return (
     <Card className={`w-full ${isCurrentPlan ? 'border-primary' : ''}`}>
@@ -69,7 +71,14 @@ export function PlanCard({
           onClick={onAction}
           variant={title === 'Pro' ? 'default' : 'outline'}
         >
-          {actionLabel}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processando...
+            </>
+          ) : (
+            actionLabel
+          )}
         </Button>
       </CardFooter>
     </Card>
