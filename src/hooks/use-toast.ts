@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type {
@@ -139,6 +140,7 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
+// Função base de toast que será estendida para diferentes tipos
 function toast({ ...props }: Toast) {
   const id = genId()
 
@@ -167,6 +169,29 @@ function toast({ ...props }: Toast) {
     update,
   }
 }
+
+// Estendendo o objeto toast com funções de utilidade para diferentes tipos de toast
+toast.error = (message: string) => {
+  return toast({
+    variant: "destructive",
+    title: "Erro",
+    description: message,
+  });
+};
+
+toast.success = (message: string) => {
+  return toast({
+    title: "Sucesso",
+    description: message,
+  });
+};
+
+toast.info = (message: string) => {
+  return toast({
+    title: "Informação",
+    description: message,
+  });
+};
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
