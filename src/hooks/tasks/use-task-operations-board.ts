@@ -13,6 +13,14 @@ export function useTaskOperationsBoard(
   currentBoard: Board | null
 ) {
   const { user } = useAuth();
+  
+  // Gerar logs para debug
+  console.log('useTaskOperationsBoard - Inicializado com', 
+    `tarefas: ${tasks?.length || 0}`, 
+    `quadro atual: ${currentBoard?.id || 'nenhum'}`,
+    `usuário: ${user?.id || 'não autenticado'}`
+  );
+  
   const { addTask } = useTaskCreate(tasks, setTasks, user, currentBoard);
   const { updateTask } = useTaskUpdate(tasks, setTasks, user);
   const { deleteTask } = useTaskDelete(tasks, setTasks, user);

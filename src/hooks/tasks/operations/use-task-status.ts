@@ -22,11 +22,17 @@ export function useTaskStatus(
       return;
     }
 
+    console.log(`Iniciando solicitação para alterar status da tarefa: ${taskId} para ${newStatus}`);
+
+    // Encontra a tarefa no estado atual
     const task = tasks.find(t => t.id === taskId);
+    
     if (!task) {
       console.error('Tarefa não encontrada:', taskId);
       return;
     }
+    
+    console.log(`Tarefa encontrada: ${task.id}, status atual: ${task.status}, novo status: ${newStatus}`);
 
     // Só verificar o limite se estiver movendo PARA o status "done"
     // Não aplicar esta verificação quando estiver movendo DE "done" para outro status
@@ -35,22 +41,25 @@ export function useTaskStatus(
     // Se está tentando marcar como concluída e já atingiu o limite (sem ser Pro)
     if (isCompletingTask && limitReached && !isPro) {
       toast.error('Você atingiu o limite de tarefas no plano gratuito. Faça upgrade para o plano Pro.');
+      console.log('Tentativa de mover para concluído bloqueada por limite atingido no plano gratuito');
       return;
     }
 
     try {
-      console.log(`Iniciando alteração de status: tarefa ${taskId} de ${task.status} para ${newStatus}`);
+      console.log(`Atualizando estado local: tarefa ${taskId} de ${task.status} para ${newStatus}`);
       
       // Atualizar o estado local imediatamente para melhor experiência do usuário
-      setTasks(prev =>
-        prev.map(t =>
+      setTasks(prev => {
+        const updatedTasks = prev.map(t => 
           t.id === taskId
             ? { ...t, status: newStatus, completed: newStatus === 'done' }
             : t
-        )
-      );
+        );
+        console.log('Estado local atualizado com sucesso');
+        return updatedTasks;
+      });
 
-      console.log(`Estado local atualizado. Enviando para o servidor: ${taskId} para ${newStatus}`);
+      console.log(`Enviando atualização para o servidor: tarefa ${taskId} para status ${newStatus}`);
 
       const { error } = await supabase
         .from('tasks')
@@ -63,7 +72,7 @@ export function useTaskStatus(
 
       if (error) {
         // Se houver erro, reverter a alteração no estado local
-        console.error('Erro ao atualizar status:', error);
+        console.error('Erro ao atualizar status no servidor:', error);
         toast.error('Erro ao atualizar status da tarefa');
 
         setTasks(prev =>
@@ -74,7 +83,7 @@ export function useTaskStatus(
         return;
       }
 
-      console.log(`Status alterado com sucesso: ${taskId} para ${newStatus}`);
+      console.log(`Status alterado com sucesso no servidor: ${taskId} para ${newStatus}`);
       toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
     } catch (error: unknown) {
       console.error('Erro ao atualizar status da tarefa:', error);

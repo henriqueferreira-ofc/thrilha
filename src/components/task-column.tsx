@@ -18,12 +18,15 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
   const { limitReached } = useTaskCounter();
   const { isPro } = useSubscription();
   
-  // Set up drop functionality
+  // Set up drop functionality with more detailed logging
   const [{ isOver }, drop] = useDrop({
     accept: 'task',
     drop: (item: { id: string }) => {
-      console.log(`Tarefa ${item.id} sendo movida para ${column.id}`);
+      console.log(`TaskColumn - Tarefa ${item.id} sendo solta na coluna ${column.id}`);
       onDrop(item.id, column.id);
+    },
+    hover: (item: { id: string }) => {
+      console.log(`TaskColumn - Tarefa ${item.id} passando sobre a coluna ${column.id}`);
     },
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
@@ -46,8 +49,9 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
 
   // Handler for toggling task completion
   const handleToggleComplete = (task: Task) => {
+    console.log(`TaskColumn - Alternando status da tarefa ${task.id} de ${task.status} para ${task.status === 'done' ? 'todo' : 'done'}`);
     const newStatus = task.status === 'done' ? 'todo' : 'done';
-    onUpdate(task.id, { status: newStatus, completed: newStatus === 'done' });
+    onDrop(task.id, newStatus);
   };
 
   // Verificar se deve exibir o aviso na coluna de "Concluídas"

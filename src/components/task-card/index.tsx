@@ -21,6 +21,14 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
+    begin: () => {
+      console.log(`TaskCard - Iniciando arrasto da tarefa ${task.id}`);
+      return { id: task.id };
+    },
+    end: (item, monitor) => {
+      const didDrop = monitor.didDrop();
+      console.log(`TaskCard - Finalizando arrasto da tarefa ${task.id}, sucesso: ${didDrop}`);
+    }
   });
 
   // Estilo baseado no status da tarefa
