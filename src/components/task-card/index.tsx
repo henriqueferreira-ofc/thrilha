@@ -15,21 +15,17 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCardProps) {
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag] = useDrag(() => ({
     type: 'task',
     item: { id: task.id },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
-    begin: () => {
-      console.log(`TaskCard - Iniciando arrasto da tarefa ${task.id}`);
-      return { id: task.id };
-    },
     end: (item, monitor) => {
       const didDrop = monitor.didDrop();
       console.log(`TaskCard - Finalizando arrasto da tarefa ${task.id}, sucesso: ${didDrop}`);
     }
-  });
+  }), [task.id]);
 
   // Estilo baseado no status da tarefa
   const getTaskStyle = () => {
