@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -12,20 +13,7 @@ export type ToastContextType = {
 
 export const ToastContext = React.createContext<ToastContextType | undefined>(undefined);
 
-const ToastProvider = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Provider>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Provider> & {
-    children: React.ReactNode;
-    value: ToastContextType;
-  }
->(({ children, value, ...props }, ref) => (
-  <ToastContext.Provider value={value}>
-    <ToastPrimitives.Provider {...props}>
-      {children}
-    </ToastPrimitives.Provider>
-  </ToastContext.Provider>
-))
-ToastProvider.displayName = "ToastProvider"
+const ToastProvider = ToastPrimitives.Provider
 
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
