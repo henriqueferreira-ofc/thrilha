@@ -1,17 +1,22 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Usar as variáveis de ambiente para configuração ou valores fixos para demonstração
+// Usar as variáveis de ambiente para configuração
 const supabaseUrl = 'https://yieihrvcbshzmxieflsv.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpZWlocnZjYnNoem14aWVmbHN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwMjU2MDYsImV4cCI6MjA1OTYwMTYwNn0.fOBINx1LP_fxvnboVkJEAYTI_GVcI9gzKBhVAqXPrsY';
 
-// Criar uma única instância do cliente Supabase
+// Criar uma única instância do cliente Supabase com configurações melhoradas
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storage: localStorage
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10 // Aumentar limite de eventos por segundo
+    }
   },
   global: {
     headers: {

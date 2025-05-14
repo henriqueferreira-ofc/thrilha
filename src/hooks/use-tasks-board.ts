@@ -6,6 +6,7 @@ import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Board } from '@/types/board';
 import { useTaskOperationsBoard } from './tasks/use-task-operations-board';
+import { useRealtimeSubscription } from './subscription/use-realtime-subscription';
 
 interface DatabaseTask {
   id: string;
@@ -48,6 +49,8 @@ export function useTasksBoard(currentBoard: Board | null) {
     const fetchTasks = async () => {
       try {
         setLoading(true);
+        console.log(`Buscando tarefas do quadro ${currentBoard.id}...`);
+        
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
@@ -68,70 +71,6 @@ export function useTasksBoard(currentBoard: Board | null) {
     };
 
     fetchTasks();
-    
-    // Configurar listener para atualizações em tempo real com melhor gerenciamento de erros
-    const tasksSubscription = supabase
-      .channel(`tasks-board-${currentBoard.id}`)
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public',
-        table: 'tasks',
-        filter: `board_id=eq.${currentBoard.id}`
-      }, (payload: any) => {
-        console.log('Alteração em tarefas recebida:', payload);
-        
-        try {
-          const eventType = payload.eventType as string;
-          switch (eventType) {
-            case 'INSERT': {
-              const newTask = formatTask(payload.new as DatabaseTask);
-              console.log('Nova tarefa detectada:', newTask.title);
-              setTasks(prev => [newTask, ...prev]);
-              break;
-            }
-              
-            case 'UPDATE': {
-              const updatedTask = formatTask(payload.new as DatabaseTask);
-              console.log('Tarefa atualizada:', updatedTask.title);
-              setTasks(prev => prev.map(task => 
-                task.id === updatedTask.id ? updatedTask : task
-              ));
-              break;
-            }
-              
-            case 'DELETE': {
-              const deletedTaskId = (payload.old as DatabaseTask).id;
-              console.log('Tarefa removida com ID:', deletedTaskId);
-              setTasks(prev => prev.filter(task => task.id !== deletedTaskId));
-              break;
-            }
-
-            default:
-              console.log('Evento desconhecido:', eventType);
-          }
-        } catch (error) {
-          console.error('Erro ao processar alteração em tempo real:', error);
-        }
-      })
-      .subscribe((status) => {
-        console.log(`Subscription status para ${currentBoard.id}:`, status);
-        
-        if (status === 'SUBSCRIBED') {
-          console.log(`Inscrição em tempo real ativa para o quadro ${currentBoard.id}`);
-        } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
-          console.error(`Erro na inscrição em tempo real para o quadro ${currentBoard.id}: ${status}`);
-          // Tentar reconectar após um breve atraso
-          setTimeout(() => {
-            console.log('Tentando reconectar...');
-            tasksSubscription.subscribe();
-          }, 3000);
-        }
-      });
-
-    return () => {
-      console.log(`Removendo inscrição em tempo real para o quadro ${currentBoard?.id}`);
-      supabase.removeChannel(tasksSubscription);
-    };
   }, [user, currentBoard]);
 
   // Função para atualização otimista do estado
@@ -151,6 +90,36 @@ export function useTasksBoard(currentBoard: Board | null) {
       setTasks(prev => prev.filter(task => task.id !== taskId));
     }
   };
+
+  // Configurar handlers para eventos em tempo real
+  const realtimeHandlers = {
+    onInsert: (newTask: Task) => {
+      console.log('Evento em tempo real - Adicionando tarefa:', newTask.title);
+      // Verificar se a tarefa já existe no estado (para evitar duplicação)
+      setTasks(prev => {
+        if (!prev.some(task => task.id === newTask.id)) {
+          return [newTask, ...prev];
+        }
+        return prev;
+      });
+    },
+    onUpdate: (updatedTask: Task) => {
+      console.log('Evento em tempo real - Atualizando tarefa:', updatedTask.title);
+      setTasks(prev => prev.map(task => 
+        task.id === updatedTask.id ? updatedTask : task
+      ));
+    },
+    onDelete: (deletedTaskId: string) => {
+      console.log('Evento em tempo real - Removendo tarefa:', deletedTaskId);
+      setTasks(prev => prev.filter(task => task.id !== deletedTaskId));
+    }
+  };
+
+  // Usar o hook de tempo real
+  useRealtimeSubscription(
+    currentBoard?.id,
+    realtimeHandlers
+  );
 
   return {
     tasks,

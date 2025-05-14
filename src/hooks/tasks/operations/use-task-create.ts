@@ -5,7 +5,7 @@ import { supabase } from '@/supabase/client';
 import { Board } from '@/types/board';
 import { useTaskCounter } from '../use-task-counter';
 import { useNavigate } from 'react-router-dom';
-import { useSubscription } from '@/hooks/subscription';
+import { useSubscription } from '@/hooks/subscription/use-subscription';
 import { User } from '@supabase/supabase-js';
 
 export function useTaskCreate(
@@ -40,7 +40,33 @@ export function useTaskCreate(
     }
 
     try {
-      // Criar objeto da nova tarefa
+      console.log(`Iniciando criação de tarefa no quadro ${currentBoard.id}...`);
+      
+      // Gerar um ID temporário para atualização otimista
+      const tempId = `temp-${Date.now()}`;
+      
+      // Criar objeto da nova tarefa com ID temporário
+      const tempTask: Task = {
+        id: tempId,
+        title: taskData.title,
+        description: taskData.description || '',
+        status: 'todo' as TaskStatus,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        due_date: taskData.dueDate,
+        board_id: currentBoard.id,
+        user_id: user.id
+      };
+
+      // Aplicar atualização otimista SEMPRE antes da operação de banco de dados
+      console.log('Aplicando atualização otimista com tempTask:', tempTask.title);
+      if (optimisticUpdate) {
+        optimisticUpdate.addTask(tempTask);
+      } else {
+        setTasks(prev => [tempTask, ...prev]);
+      }
+
+      // Preparar dados para enviar ao servidor (sem o ID temporário)
       const newTask: Omit<Task, 'id'> = {
         title: taskData.title,
         description: taskData.description || '',
@@ -52,19 +78,8 @@ export function useTaskCreate(
         user_id: user.id
       };
 
-      // Atualização otimista do estado
-      const tempId = `temp-${Date.now()}`;
-      const tempTask: Task = { ...newTask, id: tempId };
-      
-      console.log('Criando tarefa com atualização otimista:', tempTask.title);
-      
-      if (optimisticUpdate) {
-        optimisticUpdate.addTask(tempTask);
-      } else {
-        setTasks(prev => [tempTask, ...prev]);
-      }
-
       // Enviar para o backend
+      console.log('Enviando tarefa para o backend:', newTask.title);
       const { data, error } = await supabase
         .from('tasks')
         .insert(newTask)
@@ -73,11 +88,12 @@ export function useTaskCreate(
 
       if (error) {
         // Reverter a atualização otimista em caso de erro
-        console.error('Erro na criação, revertendo alterações locais');
+        console.error('Erro na criação, revertendo alterações locais:', error);
         setTasks(prev => prev.filter(task => task.id !== tempId));
         throw error;
       }
 
+      // Converter resposta para o formato Task
       const createdTask: Task = {
         id: data.id,
         title: data.title,
@@ -90,12 +106,12 @@ export function useTaskCreate(
         board_id: data.board_id
       };
 
-      // Atualizar o estado com o ID real
+      console.log('Tarefa criada com sucesso no servidor:', createdTask.id);
+
+      // Atualizar o estado com o ID real (substituir a tarefa temporária)
       setTasks(prev => prev.map(task => 
         task.id === tempId ? createdTask : task
       ));
-
-      console.log('Tarefa criada com sucesso:', createdTask.title);
 
       // Atualizar o contador imediatamente após criar a tarefa
       await syncCompletedTasksCount();

@@ -3,8 +3,7 @@ import { toast } from '@/hooks/toast';
 import { Task, TaskStatus } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { useTaskCounter } from '../use-task-counter';
-import { useSubscription } from '@/hooks/use-subscription';
-import { getStatusName } from '@/lib/task-utils';
+import { useSubscription } from '@/hooks/subscription/use-subscription';
 import { useNavigate } from 'react-router-dom';
 import { Board } from '@/types/board';
 import { User } from '@supabase/supabase-js';
@@ -36,7 +35,6 @@ export function useTaskStatus(
     
     // Verificar se está completando ou descompletando uma tarefa
     const isCompletingTask = newStatus === 'done' && task.status !== 'done';
-    const isUncompletingTask = task.status === 'done' && newStatus !== 'done';
 
     // IMPORTANTE: Só bloqueia a movimentação PARA "done" se atingiu o limite (sem ser Pro)
     // Sempre permitir mover PARA FORA de "done", independente do limite
@@ -46,6 +44,8 @@ export function useTaskStatus(
     }
 
     try {
+      console.log(`Alterando status da tarefa ${taskId} de "${task.status}" para "${newStatus}"`);
+      
       // Atualizar o estado local imediatamente para melhor experiência do usuário
       setTasks(prev => {
         return prev.map(t => 
@@ -55,26 +55,33 @@ export function useTaskStatus(
         );
       });
 
+      // Enviar atualização para o backend
+      console.log('Enviando atualização de status para o servidor...');
       const { error } = await supabase
         .from('tasks')
         .update({ status: newStatus })
         .eq('id', taskId);
 
       if (error) {
+        console.error('Erro ao atualizar status no servidor:', error);
+        
+        // Reverter alteração em caso de erro
+        setTasks(prev =>
+          prev.map(t =>
+            t.id === taskId ? { ...t, status: task.status } : t
+          )
+        );
+        
         throw error;
       }
 
-      // Atualizar o contador imediatamente
+      // Atualizar o contador se necessário
       await syncCompletedTasksCount();
+      
+      console.log(`Status da tarefa ${taskId} atualizado com sucesso para "${newStatus}"`);
     } catch (error) {
       console.error('Erro ao atualizar status da tarefa:', error);
-      
-      // Reverter alteração em caso de erro
-      setTasks(prev =>
-        prev.map(t =>
-          t.id === taskId ? { ...t, status: task.status } : t
-        )
-      );
+      toast.error('Erro ao atualizar status da tarefa');
     }
   };
 
