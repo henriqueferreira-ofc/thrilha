@@ -65,7 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false);
           setAuthInitialized(true);
           
-          if (event === 'SIGNED_OUT') {
+          if (event === 'SIGNED_IN') {
+            toast.success('Login realizado com sucesso!');
+          } else if (event === 'SIGNED_OUT') {
             toast.info('Você saiu do sistema');
           } else if (event === 'TOKEN_REFRESHED') {
             console.log('Token atualizado com sucesso');
