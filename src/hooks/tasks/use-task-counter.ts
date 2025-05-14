@@ -4,8 +4,9 @@ import { useSubscription } from '@/hooks/use-subscription';
 import { toast } from '@/hooks/toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabase/client';
+import { Board } from '@/types/board';
 
-export function useTaskCounter() {
+export function useTaskCounter(currentBoard: Board | null) {
   const [totalTasks, setTotalTasks] = useState<number>(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
   const { user } = useAuth();
@@ -16,16 +17,17 @@ export function useTaskCounter() {
 
   // Função para sincronizar o contador com o estado real das tarefas
   const syncCompletedTasksCount = useCallback(async () => {
-    if (!user) return 0;
+    if (!user || !currentBoard) return 0;
     
     try {
       console.log("Sincronizando contador de tarefas...");
       
-      // Verificar número total de tarefas no banco de dados
+      // Verificar número total de tarefas no banco de dados para o quadro atual
       const { data: allTasks, error } = await supabase
         .from('tasks')
         .select('id')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('board_id', currentBoard.id);
 
       if (error) {
         console.error("Erro ao buscar tarefas:", error);
@@ -33,7 +35,7 @@ export function useTaskCounter() {
       }
       
       const count = allTasks?.length || 0;
-      console.log(`Sincronizado: ${count} tarefas encontradas`);
+      console.log(`Sincronizado: ${count} tarefas encontradas no quadro ${currentBoard.id}`);
       setTotalTasks(count);
       
       // Verificar se já atingiu o limite logo na carga
@@ -47,11 +49,11 @@ export function useTaskCounter() {
       console.error('Erro ao sincronizar contador de tarefas:', err);
       return 0;
     }
-  }, [user, isPro]);
+  }, [user, isPro, currentBoard]);
 
-  // Carregar contador de tarefas quando componente é montado
+  // Carregar contador de tarefas quando componente é montado ou quando muda o quadro
   useEffect(() => {
-    if (user) {
+    if (user && currentBoard) {
       syncCompletedTasksCount();
 
       // Inscrever para atualizações em tempo real
@@ -61,7 +63,7 @@ export function useTaskCounter() {
           event: '*',
           schema: 'public',
           table: 'tasks',
-          filter: `user_id=eq.${user.id}`
+          filter: `user_id=eq.${user.id} AND board_id=eq.${currentBoard.id}`
         }, () => {
           syncCompletedTasksCount();
         })
@@ -71,7 +73,7 @@ export function useTaskCounter() {
         supabase.removeChannel(tasksSubscription);
       };
     }
-  }, [user, syncCompletedTasksCount]);
+  }, [user, currentBoard, syncCompletedTasksCount]);
 
   // Incrementar contador de tarefas
   const incrementCompletedTasks = async () => {

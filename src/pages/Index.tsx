@@ -30,7 +30,7 @@ const Index = () => {
   const { tasks, loading, setTasks } = useTasksBoard(currentBoard);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { isPro } = useSubscription();
-  const { limitReached, syncCompletedTasksCount } = useTaskCounter();
+  const { limitReached, syncCompletedTasksCount } = useTaskCounter(currentBoard);
 
   // Sincronizar o contador de tarefas concluídas quando as tarefas são carregadas
   useEffect(() => {
@@ -112,7 +112,7 @@ const Index = () => {
                         </Tooltip>
                       </TooltipProvider>
                     </div>
-                    <TaskProgress />
+                    <TaskProgress currentBoard={currentBoard} />
                   </div>
                 )}
                 

@@ -1,4 +1,3 @@
-
 import { Task, TaskFormData } from '@/types/task';
 import { useAuth } from '@/context/AuthContext';
 import { Board } from '@/types/board';
@@ -24,7 +23,7 @@ export function useTaskOperationsBoard(
   const { addTask } = useTaskCreate(tasks, setTasks, user, currentBoard);
   const { updateTask } = useTaskUpdate(tasks, setTasks, user);
   const { deleteTask } = useTaskDelete(tasks, setTasks, user);
-  const { changeTaskStatus } = useTaskStatus(tasks, setTasks, user);
+  const { changeTaskStatus } = useTaskStatus(tasks, setTasks, user, currentBoard);
 
   return {
     addTask,
