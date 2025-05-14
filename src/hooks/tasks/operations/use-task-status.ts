@@ -34,6 +34,8 @@ export function useTaskStatus(
     }
 
     try {
+      console.log(`Iniciando alteração de status: tarefa ${taskId} de ${task.status} para ${newStatus}`);
+      
       // Atualizar o estado local imediatamente para melhor experiência do usuário
       setTasks(prev =>
         prev.map(t =>
@@ -43,7 +45,7 @@ export function useTaskStatus(
         )
       );
 
-      console.log(`Alterando status da tarefa ${taskId} para ${newStatus}`);
+      console.log(`Estado local atualizado. Enviando para o servidor: ${taskId} para ${newStatus}`);
 
       const { error } = await supabase
         .from('tasks')
@@ -67,6 +69,7 @@ export function useTaskStatus(
         return;
       }
 
+      console.log(`Status alterado com sucesso: ${taskId} para ${newStatus}`);
       toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
     } catch (error: unknown) {
       console.error('Erro ao atualizar status da tarefa:', error);

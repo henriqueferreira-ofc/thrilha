@@ -22,7 +22,7 @@ export function TaskBoard({ tasks = [], onDelete, onUpdate, onChangeStatus }: Ta
 
   // Handler para mudar status via drag & drop
   const handleDrop = (taskId: string, newStatus: TaskStatus) => {
-    console.log(`Movendo tarefa ${taskId} para ${newStatus}`);
+    console.log(`TaskBoard - Movendo tarefa ${taskId} para ${newStatus}`);
     onChangeStatus(taskId, newStatus);
   };
 
