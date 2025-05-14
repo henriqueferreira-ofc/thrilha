@@ -44,11 +44,11 @@ export function useTaskCounter() {
         variant: "destructive"
       });
     } else if (newCount === FREE_PLAN_LIMIT - 1) {
-      // Aviso quando estiver próximo do limite
+      // Aviso quando estiver próximo do limite - mudando de "warning" para "default"
       toast({
         title: "Aviso de limite",
         description: `Você está próximo do limite de tarefas concluídas (${newCount}/${FREE_PLAN_LIMIT}).`,
-        variant: "warning"
+        variant: "default"
       });
     }
   };
