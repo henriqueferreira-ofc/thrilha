@@ -43,6 +43,8 @@ export function useTaskStatus(
         )
       );
 
+      console.log(`Alterando status da tarefa ${taskId} para ${newStatus}`);
+
       const { error } = await supabase
         .from('tasks')
         .update({
@@ -65,7 +67,6 @@ export function useTaskStatus(
         return;
       }
 
-      // Não incrementamos mais o contador aqui, pois contamos apenas tarefas criadas
       toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
     } catch (error: unknown) {
       console.error('Erro ao atualizar status da tarefa:', error);
