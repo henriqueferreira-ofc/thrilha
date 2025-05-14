@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -159,6 +160,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               
               {/* Rotas protegidas com verificação de autenticação */}
+              <Route path="/app" element={<ProtectedRoute element={<Index />} />} />
               <Route path="/tasks" element={<ProtectedRoute element={<Index />} />} />
               <Route path="/calendar" element={<ProtectedRoute element={<Calendar />} />} />
               <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />

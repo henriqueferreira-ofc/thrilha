@@ -26,3 +26,12 @@ export const formatTaskDueDate = (dueDate?: string): string => {
   const dueDateObj = new Date(dueDate);
   return format(dueDateObj, "dd 'de' MMM", { locale: ptBR });
 };
+
+// Normalizar status da tarefa
+export const normalizeTaskStatus = (status: string): 'todo' | 'in-progress' | 'done' => {
+  if (status === 'inProgress') return 'in-progress';
+  if (status === 'todo' || status === 'in-progress' || status === 'done') {
+    return status as 'todo' | 'in-progress' | 'done';
+  }
+  return 'todo'; // Default status
+};
