@@ -23,8 +23,13 @@ export function useTaskStatus(
     }
 
     const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
+    if (!task) {
+      console.error('Tarefa não encontrada:', taskId);
+      return;
+    }
 
+    // Só verificar o limite se estiver movendo PARA o status "done"
+    // Não aplicar esta verificação quando estiver movendo DE "done" para outro status
     const isCompletingTask = newStatus === 'done' && task.status !== 'done';
 
     // Se está tentando marcar como concluída e já atingiu o limite (sem ser Pro)

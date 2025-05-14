@@ -1,3 +1,3 @@
 
 // Re-export from new modular structure
-export { useSubscription } from './subscription/index';
+export { useSubscription } from './subscription/use-subscription';
