@@ -1,17 +1,15 @@
 
-import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Task } from '@/types/task';
-import { TaskActionsMenu } from './task-actions-menu';
-import { TaskDueDate } from './task-due-date';
-import { TaskCollaboratorsButton } from './task-collaborators-button';
 import { useDrag } from 'react-dnd';
-import { cn } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
+import { Task } from '@/types/task';
+import { TaskDueDate } from './task-due-date';
+import { TaskActionsMenu } from './task-actions-menu';
+import { TaskCollaboratorsButton } from './task-collaborators-button';
 
 interface TaskCardProps {
   task: Task;
-  onDelete?: (id: string) => void;
-  onUpdate?: (id: string, updatedData: Partial<Task>) => void;
+  onDelete: (id: string) => void;
+  onUpdate: (id: string, updatedData: Partial<Task>) => void;
   onToggleComplete?: () => void;
 }
 
@@ -24,37 +22,49 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
     }),
   });
 
+  // Estilo baseado no status da tarefa
+  const getTaskStyle = () => {
+    switch (task.status) {
+      case 'todo':
+        return 'border-l-4 border-l-purple-500/70';
+      case 'in-progress':
+        return 'border-l-4 border-l-blue-500/70';
+      case 'done':
+        return 'border-l-4 border-l-green-500/70';
+      default:
+        return '';
+    }
+  };
+
   return (
     <Card 
       ref={drag}
-      className={cn(
-        "mb-3 shadow-sm border border-border bg-card hover:shadow-md transition-all cursor-grab",
-        isDragging ? "opacity-50" : "opacity-100"
-      )}
+      className={`p-4 mb-2 bg-black ${getTaskStyle()} shadow-sm hover:shadow-md transition-all cursor-grab ${
+        isDragging ? 'opacity-50' : 'opacity-100'
+      }`}
     >
-      <CardHeader className="p-3 pb-0 flex flex-row items-start justify-between">
-        <h3 className="text-sm font-medium break-words pr-4">{task.title}</h3>
-        <TaskActionsMenu 
-          task={task} 
-          onDelete={onDelete} 
-          onUpdate={onUpdate} 
-        />
-      </CardHeader>
+      <div className="flex justify-between items-start gap-2">
+        <div className="flex-1">
+          <h3 className="text-base font-medium">{task.title}</h3>
+          {task.description && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+              {task.description}
+            </p>
+          )}
+        </div>
+        
+        <TaskActionsMenu task={task} onDelete={onDelete} onUpdate={onUpdate} />
+      </div>
       
-      <CardContent className="p-3 pt-2">
-        {task.description && (
-          <p className="text-xs text-muted-foreground break-words">
-            {task.description.length > 100 
-              ? `${task.description.substring(0, 100)}...` 
-              : task.description}
-          </p>
+      <div className="flex items-center justify-between mt-4">
+        {task.due_date && (
+          <TaskDueDate dueDate={task.due_date} status={task.status} />
         )}
-      </CardContent>
-      
-      <CardFooter className="p-3 pt-0 flex items-center justify-between">
-        <TaskDueDate dueDate={task.due_date} status={task.status} />
-        <TaskCollaboratorsButton taskId={task.id} onClick={onToggleComplete} />
-      </CardFooter>
+        
+        <div className="flex items-center space-x-2">
+          <TaskCollaboratorsButton task={task} />
+        </div>
+      </div>
     </Card>
   );
 }
