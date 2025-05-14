@@ -1,3 +1,5 @@
 
 // Export toast functions from the appropriate place
-export { useToast, toast } from './use-toast';
+import { useToast, toast } from './use-toast';
+
+export { useToast, toast };

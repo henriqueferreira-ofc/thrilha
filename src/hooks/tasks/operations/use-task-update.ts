@@ -1,5 +1,5 @@
 
-import { toast } from 'sonner';
+import { toast } from '@/hooks/toast';
 import { Task } from '@/types/task';
 import { supabase } from '@/supabase/client';
 

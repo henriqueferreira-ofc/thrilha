@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -6,13 +7,19 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
+  ToastContextType
 } from "@/components/ui/toast"
 
 export function Toaster() {
   const { toasts } = useToast()
 
+  // Create the context value to provide
+  const contextValue: ToastContextType = {
+    toasts: toasts
+  };
+
   return (
-    <ToastProvider>
+    <ToastProvider value={contextValue}>
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>

@@ -5,7 +5,27 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const ToastProvider = ToastPrimitives.Provider
+// Create a Toast context for our useToast hook
+export type ToastContextType = {
+  toasts: ToastProps[];
+};
+
+export const ToastContext = React.createContext<ToastContextType | undefined>(undefined);
+
+const ToastProvider = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Provider>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Provider> & {
+    children: React.ReactNode;
+    value: ToastContextType;
+  }
+>(({ children, value, ...props }, ref) => (
+  <ToastContext.Provider value={value}>
+    <ToastPrimitives.Provider {...props}>
+      {children}
+    </ToastPrimitives.Provider>
+  </ToastContext.Provider>
+))
+ToastProvider.displayName = "ToastProvider"
 
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
