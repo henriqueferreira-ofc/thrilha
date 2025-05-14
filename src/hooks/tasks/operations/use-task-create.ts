@@ -3,6 +3,8 @@ import { toast } from 'sonner';
 import { Task, TaskStatus, TaskFormData } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { Board } from '@/types/board';
+import { useTaskCounter } from '../use-task-counter';
+import { useSubscription } from '@/hooks/use-subscription';
 
 export function useTaskCreate(
   tasks: Task[], 
@@ -10,6 +12,10 @@ export function useTaskCreate(
   user: any | null,
   currentBoard: Board | null
 ) {
+  // Integrar verificador de limites e status da assinatura
+  const { limitReached } = useTaskCounter();
+  const { isPro } = useSubscription();
+
   // Adicionar uma nova tarefa
   const addTask = async (taskData: TaskFormData): Promise<Task | null> => {
     if (!user) {
@@ -19,6 +25,12 @@ export function useTaskCreate(
 
     if (!currentBoard) {
       toast.error('Você precisa selecionar um quadro para criar tarefas');
+      return null;
+    }
+
+    // Verificar limite de tarefas concluídas para usuários do plano gratuito
+    if (limitReached && !isPro) {
+      toast.error('Você atingiu o limite de tarefas do plano gratuito. Faça upgrade para o plano Pro.');
       return null;
     }
 

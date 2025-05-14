@@ -3,14 +3,16 @@ import { toast } from 'sonner';
 import { Task, TaskStatus } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { useTaskCounter } from '../use-task-counter';
+import { useSubscription } from '@/hooks/use-subscription';
 
 export function useTaskStatus(
   tasks: Task[], 
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>, 
   user: any | null
 ) {
-  // Integrar o contador de tarefas
-  const { incrementCompletedTasks } = useTaskCounter();
+  // Integrar o contador de tarefas e verificador de assinatura
+  const { incrementCompletedTasks, limitReached } = useTaskCounter();
+  const { isPro } = useSubscription();
 
   // Alterar o status de uma tarefa
   const changeTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
@@ -19,11 +21,17 @@ export function useTaskStatus(
       return;
     }
 
-    try {
-      // Verificar se a tarefa está sendo marcada como concluída
-      const targetTask = tasks.find(task => task.id === taskId);
-      const isCompletingTask = newStatus === 'done' && targetTask?.status !== 'done';
+    // Verificar se a tarefa está sendo marcada como concluída
+    const targetTask = tasks.find(task => task.id === taskId);
+    const isCompletingTask = newStatus === 'done' && targetTask?.status !== 'done';
 
+    // Se está tentando marcar como concluída e já atingiu o limite (sem ser Pro)
+    if (isCompletingTask && limitReached && !isPro) {
+      toast.error('Você atingiu o limite de tarefas concluídas no plano gratuito. Faça upgrade para o plano Pro.');
+      return;
+    }
+
+    try {
       // Atualizar o estado local imediatamente
       setTasks(prev => 
         prev.map(task => 

@@ -46,7 +46,7 @@ export function TaskProgress() {
           <div className="flex items-center mt-2 space-x-2">
             <BadgePercent className="h-4 w-4 text-amber-400" />
             <p className="text-xs text-amber-400">
-              Limite atingido! Faça upgrade para o plano Pro.
+              Limite atingido! Faça upgrade para o plano Pro para criar e concluir mais tarefas.
             </p>
           </div>
         )}
