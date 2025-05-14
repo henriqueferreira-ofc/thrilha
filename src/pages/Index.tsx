@@ -16,6 +16,7 @@ import { TaskFormData } from '@/types/task';
 import { TaskProgress } from '@/components/task-progress';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTaskCounter } from '@/hooks/tasks/use-task-counter';
 
 const Index = () => {
   const { user } = useAuth();
@@ -30,6 +31,7 @@ const Index = () => {
   const { tasks, loading, setTasks } = useTasksBoard(currentBoard);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { isPro } = useSubscription();
+  const { limitReached } = useTaskCounter();
 
   // Importar as operações específicas do quadro
   const { addTask, updateTask, deleteTask, changeTaskStatus } = useTaskOperationsBoard(
@@ -76,7 +78,7 @@ const Index = () => {
             
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="purple-gradient-bg" disabled={!currentBoard}>
+                <Button className="purple-gradient-bg" disabled={!currentBoard || limitReached}>
                   <Plus className="mr-2 h-4 w-4" />
                   Nova Tarefa
                 </Button>
@@ -102,7 +104,7 @@ const Index = () => {
                             <Info className="h-4 w-4 text-gray-400 cursor-help" />
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs">
-                            <p>No plano gratuito, você pode criar quantas tarefas quiser, mas pode marcar apenas 3 como concluídas.</p>
+                            <p>No plano gratuito, você pode criar apenas 3 tarefas. Faça upgrade para o plano Pro para criar tarefas ilimitadas.</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

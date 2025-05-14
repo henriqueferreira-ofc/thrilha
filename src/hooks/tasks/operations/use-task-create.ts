@@ -3,6 +3,8 @@ import { toast } from 'sonner';
 import { Task, TaskStatus, TaskFormData } from '@/types/task';
 import { supabase } from '@/supabase/client';
 import { Board } from '@/types/board';
+import { useTaskCounter } from '../use-task-counter';
+import { useNavigate } from 'react-router-dom';
 
 export function useTaskCreate(
   tasks: Task[], 
@@ -10,6 +12,9 @@ export function useTaskCreate(
   user: any | null,
   currentBoard: Board | null
 ) {
+  const { incrementCreatedTasks, limitReached } = useTaskCounter();
+  const navigate = useNavigate();
+
   // Adicionar uma nova tarefa
   const addTask = async (taskData: TaskFormData): Promise<Task | null> => {
     if (!user) {
@@ -19,6 +24,13 @@ export function useTaskCreate(
 
     if (!currentBoard) {
       toast.error('Você precisa selecionar um quadro para criar tarefas');
+      return null;
+    }
+
+    // Verificar se já atingiu o limite do plano gratuito
+    if (limitReached) {
+      toast.error('Você atingiu o limite de tarefas do plano gratuito. Faça upgrade para o plano Pro.');
+      navigate('/subscription');
       return null;
     }
 
@@ -55,6 +67,9 @@ export function useTaskCreate(
 
       // Adicionar nova tarefa ao estado
       setTasks(prev => [createdTask, ...prev]);
+      
+      // Incrementar contador de tarefas criadas
+      incrementCreatedTasks();
       
       toast.success('Tarefa criada com sucesso!');
       return createdTask;

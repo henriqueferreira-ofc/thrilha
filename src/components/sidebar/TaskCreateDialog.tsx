@@ -6,6 +6,7 @@ import { TaskForm } from '@/components/task-form';
 import { PlusCircle } from 'lucide-react';
 import { TaskFormData } from '@/types/task';
 import { Board } from '@/types/board';
+import { useTaskCounter } from '@/hooks/tasks/use-task-counter';
 
 interface TaskCreateDialogProps {
   onCreateTask: (data: TaskFormData) => void;
@@ -14,6 +15,7 @@ interface TaskCreateDialogProps {
 
 export function TaskCreateDialog({ onCreateTask, currentBoard }: TaskCreateDialogProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { limitReached } = useTaskCounter();
   
   const handleCreateTask = (data: TaskFormData) => {
     onCreateTask({
@@ -29,7 +31,7 @@ export function TaskCreateDialog({ onCreateTask, currentBoard }: TaskCreateDialo
         <Button 
           className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 mt-4" 
           size="sm"
-          disabled={!currentBoard}
+          disabled={!currentBoard || limitReached}
         >
           <PlusCircle className="mr-2 h-4 w-4" />
           Nova Tarefa
