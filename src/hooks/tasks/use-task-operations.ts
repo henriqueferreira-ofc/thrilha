@@ -127,10 +127,14 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
 
     try {
       const normalizedStatus = normalizeTaskStatus(newStatus);
+      const completed = normalizedStatus === 'done';
       
       const { error } = await supabase
         .from('tasks')
-        .update({ status: normalizedStatus })
+        .update({ 
+          status: normalizedStatus,
+          completed: completed
+        })
         .eq('id', taskId)
         .eq('user_id', user.id);
 
@@ -138,11 +142,11 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
 
       setTasks((prev) =>
         prev.map((task) =>
-          task.id === taskId ? { ...task, status: normalizedStatus, completed: normalizedStatus === 'done' } : task
+          task.id === taskId ? { ...task, status: normalizedStatus, completed: completed } : task
         )
       );
 
-      toast.success(`Status da tarefa alterado para ${getStatusName(normalizedStatus)}!`);
+      // Removed toast notification for status changes
     } catch (error) {
       console.error('Erro ao atualizar status da tarefa:', error);
       toast.error('Erro ao atualizar status da tarefa');

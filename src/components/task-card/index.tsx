@@ -5,6 +5,7 @@ import { Task } from '@/types/task';
 import { TaskDueDate } from './task-due-date';
 import { TaskActionsMenu } from './task-actions-menu';
 import { TaskCollaboratorsButton } from './task-collaborators-button';
+import { Check } from 'lucide-react';
 
 interface TaskCardProps {
   task: Task;
@@ -45,7 +46,14 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
     >
       <div className="flex justify-between items-start gap-2">
         <div className="flex-1">
-          <h3 className="text-base font-medium">{task.title}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-medium">{task.title}</h3>
+            {task.completed && (
+              <span className="inline-flex items-center justify-center bg-green-500/20 p-1 rounded-full">
+                <Check className="h-3.5 w-3.5 text-green-500" />
+              </span>
+            )}
+          </div>
           {task.description && (
             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
               {task.description}
