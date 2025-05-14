@@ -11,7 +11,7 @@ export function useTaskStatus(
   user: any | null
 ) {
   // Integrar o contador de tarefas e verificador de assinatura
-  const { incrementCompletedTasks, limitReached } = useTaskCounter();
+  const { incrementCreatedTasks, limitReached } = useTaskCounter();
   const { isPro } = useSubscription();
 
   // Alterar o status de uma tarefa
@@ -27,7 +27,7 @@ export function useTaskStatus(
 
     // Se está tentando marcar como concluída e já atingiu o limite (sem ser Pro)
     if (isCompletingTask && limitReached && !isPro) {
-      toast.error('Você atingiu o limite de tarefas concluídas no plano gratuito. Faça upgrade para o plano Pro.');
+      toast.error('Você atingiu o limite de tarefas no plano gratuito. Faça upgrade para o plano Pro.');
       return;
     }
 
@@ -61,7 +61,7 @@ export function useTaskStatus(
 
       // Se a tarefa foi concluída (mudada para 'done'), incrementar o contador
       if (isCompletingTask) {
-        incrementCompletedTasks();
+        incrementCreatedTasks();
       }
 
       toast.success(`Status da tarefa alterado para ${getStatusName(newStatus)}!`);
