@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/toast';
 import { SubscriptionPlan } from '@/types/board';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/supabase/client';
@@ -107,7 +107,8 @@ export function useSubscription(): UseSubscriptionReturn {
       if (result.success && result.url) {
         console.log("Redirecionando para o checkout do Stripe:", result.url);
         
-        // Redirecionar para o checkout do Stripe
+        // Usar window.location.href para redirecionamento completo
+        // Isso é mais confiável que abrir em uma nova aba
         window.location.href = result.url;
         return true;
       } else {
@@ -139,7 +140,7 @@ export function useSubscription(): UseSubscriptionReturn {
       
       if (result.success && result.url) {
         console.log("Redirecionando para o portal do cliente Stripe:", result.url);
-        // Redirecionar para o portal do cliente Stripe
+        // Usar window.location.href para garantir redirecionamento completo
         window.location.href = result.url;
         return true;
       } else {

@@ -3,10 +3,11 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+// Configurações de cabeçalhos CORS expandidas para incluir mais cabeçalhos permitidos
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, x-requested-with",
+  "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, pragma, x-requested-with",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -16,11 +17,14 @@ const log = (message: string, data?: any) => {
 };
 
 serve(async (req) => {
+  log("Requisição recebida - método: " + req.method);
+  
   // Lidar com requisições preflight do CORS
   if (req.method === "OPTIONS") {
     log("Requisição OPTIONS de CORS recebida");
     return new Response(null, {
       headers: corsHeaders,
+      status: 204
     });
   }
 
@@ -106,10 +110,10 @@ serve(async (req) => {
           try {
             origin = new URL(referer).origin;
           } catch {
-            origin = "http://localhost:3000";
+            origin = "http://localhost:8080";
           }
         } else {
-          origin = "http://localhost:3000";
+          origin = "http://localhost:8080";
         }
       }
 

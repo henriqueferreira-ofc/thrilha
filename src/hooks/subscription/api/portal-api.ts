@@ -1,5 +1,5 @@
 
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/toast';
 import { supabase } from '@/supabase/client';
 
 // Criar sessão do portal do cliente para gerenciar assinatura
@@ -8,11 +8,8 @@ export async function createCustomerPortalSessionAPI(): Promise<{success: boolea
     console.log("Iniciando criação da sessão do portal do cliente Stripe");
     
     // Chamar a função Edge do Supabase para criar a sessão do portal do cliente Stripe
-    const { data, error } = await supabase.functions.invoke("customer-portal", {
-      headers: {
-        'Cache-Control': 'no-cache',
-      }
-    });
+    // Removendo cabeçalhos problemáticos
+    const { data, error } = await supabase.functions.invoke("customer-portal");
     
     if (error) {
       const errorMessage = error.message || 'Erro desconhecido';

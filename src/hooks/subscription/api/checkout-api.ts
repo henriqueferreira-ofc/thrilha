@@ -1,5 +1,5 @@
 
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/toast';
 import { supabase } from '@/supabase/client';
 
 // Criar sessão de checkout do Stripe
@@ -10,6 +10,7 @@ export async function createCheckoutSessionAPI(): Promise<{success: boolean, url
     // Chamar a função Edge do Supabase para criar a sessão de checkout do Stripe
     const { data, error } = await supabase.functions.invoke("create-checkout", {
       headers: {
+        // Remover cabeçalhos problemáticos
         'Cache-Control': 'no-cache',
       }
     });
