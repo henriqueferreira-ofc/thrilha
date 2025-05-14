@@ -2,12 +2,12 @@
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/supabase/client';
 
-// Acessar portal do cliente para gerenciar assinatura
+// Criar sessão do portal do cliente para gerenciar assinatura
 export async function createCustomerPortalSessionAPI(): Promise<{success: boolean, url?: string, error?: string}> {
   try {
-    console.log("Iniciando criação de sessão do portal do cliente");
+    console.log("Iniciando criação da sessão do portal do cliente Stripe");
     
-    // Chamar a função Edge do Supabase para criar a sessão do portal do cliente
+    // Chamar a função Edge do Supabase para criar a sessão do portal do cliente Stripe
     const { data, error } = await supabase.functions.invoke("customer-portal", {
       headers: {
         'Cache-Control': 'no-cache',
@@ -16,16 +16,16 @@ export async function createCustomerPortalSessionAPI(): Promise<{success: boolea
     
     if (error) {
       const errorMessage = error.message || 'Erro desconhecido';
-      console.error('Erro ao criar sessão do portal:', errorMessage);
+      console.error('Erro ao criar sessão do portal do cliente:', errorMessage, error);
       
       if (errorMessage.includes('authentication') || errorMessage.includes('auth')) {
         toast.error('Sua sessão expirou. Por favor, faça login novamente.');
-      } else if (errorMessage.includes('cliente') || errorMessage.includes('customer')) {
-        toast.error('Não foi possível encontrar seu perfil de cliente. Você precisa fazer uma assinatura primeiro.');
+      } else if (errorMessage.includes('cliente')) {
+        toast.error('Você não possui uma assinatura ativa. Faça upgrade para o plano Pro primeiro.');
       } else if (errorMessage.includes('Failed to send')) {
         toast.error('Erro de conexão com o servidor. Verifique sua internet e tente novamente.');
       } else {
-        toast.error('Ocorreu um erro ao acessar o portal de gerenciamento. Por favor, tente novamente.');
+        toast.error('Ocorreu um erro ao acessar o portal do cliente. Por favor, tente novamente.');
       }
       
       return { 
@@ -35,15 +35,23 @@ export async function createCustomerPortalSessionAPI(): Promise<{success: boolea
     }
     
     if (data && data.url) {
-      console.log("URL do portal gerada com sucesso");
-      return {
+      console.log("URL do portal do cliente gerada com sucesso:", data.url);
+      return { 
         success: true,
-        url: data.url
+        url: data.url 
+      };
+    } else if (data && data.error) {
+      // Caso a função retorne erro no objeto data
+      console.error("Erro retornado pela função:", data.error, data.details || '');
+      toast.error('Erro ao processar o acesso ao portal: ' + data.error);
+      return {
+        success: false,
+        error: data.error
       };
     } else {
-      const message = 'URL do portal não retornada pelo servidor';
+      const message = 'URL do portal do cliente não retornada pelo servidor';
       console.error(message);
-      toast.error('Erro ao acessar portal de gerenciamento da assinatura. Por favor, tente novamente.');
+      toast.error('Erro ao acessar o portal do cliente. Por favor, tente novamente em alguns minutos.');
       return { 
         success: false,
         error: message
@@ -51,7 +59,7 @@ export async function createCustomerPortalSessionAPI(): Promise<{success: boolea
     }
   } catch (error) {
     const errorMessage = error.message || 'Erro desconhecido';
-    console.error('Erro ao acessar portal de assinatura:', errorMessage);
+    console.error('Erro ao acessar portal do cliente:', errorMessage, error);
     toast.error('Não foi possível conectar ao serviço de gerenciamento. Tente novamente mais tarde.');
     return { 
       success: false,

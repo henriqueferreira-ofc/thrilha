@@ -106,16 +106,18 @@ export function useSubscription(): UseSubscriptionReturn {
       
       if (result.success && result.url) {
         console.log("Redirecionando para o checkout do Stripe:", result.url);
+        
         // Redirecionar para o checkout do Stripe
         window.location.href = result.url;
         return true;
+      } else {
+        console.error("Falha ao criar URL de checkout:", result.error);
+        toast.error(`Não foi possível acessar o checkout: ${result.error || 'Erro desconhecido'}`);
+        return false;
       }
-      
-      console.error("Falha ao criar URL de checkout:", result.error);
-      return false;
     } catch (error) {
       console.error("Erro durante o processo de upgrade:", error);
-      toast.error('Ocorreu um erro inesperado. Por favor, tente novamente.');
+      toast.error('Ocorreu um erro inesperado ao tentar fazer o upgrade. Por favor, tente novamente.');
       return false;
     } finally {
       setCheckingOut(false);
@@ -140,10 +142,11 @@ export function useSubscription(): UseSubscriptionReturn {
         // Redirecionar para o portal do cliente Stripe
         window.location.href = result.url;
         return true;
+      } else {
+        console.error("Falha ao criar portal do cliente:", result.error);
+        toast.error(`Não foi possível acessar o portal: ${result.error || 'Erro desconhecido'}`);
+        return false;
       }
-      
-      console.error("Falha ao criar portal do cliente");
-      return false;
     } catch (error) {
       console.error("Erro durante o acesso ao portal:", error);
       toast.error('Ocorreu um erro inesperado. Por favor, tente novamente.');
