@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -7,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabase/client';
 
 export function useTaskCounter() {
-  const [completedTasks, setCompletedTasks] = useState<number>(0);
+  const [totalTasks, setTotalTasks] = useState<number>(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
   const { user } = useAuth();
   const { isPro } = useSubscription();
@@ -15,28 +14,27 @@ export function useTaskCounter() {
   
   const FREE_PLAN_LIMIT = 3;
 
-  // Função para sincronizar o contador com o estado real das tarefas concluídas
+  // Função para sincronizar o contador com o estado real das tarefas
   const syncCompletedTasksCount = useCallback(async () => {
     if (!user) return 0;
     
     try {
-      console.log("Sincronizando contador de tarefas concluídas...");
+      console.log("Sincronizando contador de tarefas...");
       
-      // Verificar número real de tarefas concluídas no banco de dados
-      const { data: doneTasks, error } = await supabase
+      // Verificar número total de tarefas no banco de dados
+      const { data: allTasks, error } = await supabase
         .from('tasks')
         .select('id')
-        .eq('user_id', user.id)
-        .eq('status', 'done');
+        .eq('user_id', user.id);
 
       if (error) {
-        console.error("Erro ao buscar tarefas concluídas:", error);
+        console.error("Erro ao buscar tarefas:", error);
         throw error;
       }
       
-      const count = doneTasks?.length || 0;
-      console.log(`Sincronizado: ${count} tarefas concluídas encontradas`);
-      setCompletedTasks(count);
+      const count = allTasks?.length || 0;
+      console.log(`Sincronizado: ${count} tarefas encontradas`);
+      setTotalTasks(count);
       
       // Verificar se já atingiu o limite logo na carga
       if (!isPro && count >= FREE_PLAN_LIMIT) {
@@ -49,74 +47,92 @@ export function useTaskCounter() {
       console.error('Erro ao sincronizar contador de tarefas:', err);
       return 0;
     }
-  }, [user, isPro, FREE_PLAN_LIMIT]);
+  }, [user, isPro]);
 
-  // Carregar contador de tarefas concluídas quando componente é montado
+  // Carregar contador de tarefas quando componente é montado
   useEffect(() => {
     if (user) {
       syncCompletedTasksCount();
+
+      // Inscrever para atualizações em tempo real
+      const tasksSubscription = supabase
+        .channel('tasks_counter')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `user_id=eq.${user.id}`
+        }, () => {
+          syncCompletedTasksCount();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(tasksSubscription);
+      };
     }
   }, [user, syncCompletedTasksCount]);
 
-  // Incrementar contador de tarefas concluídas
+  // Incrementar contador de tarefas
   const incrementCompletedTasks = async () => {
-    if (!user || isPro) return; // Não contabiliza para usuários Pro
+    if (!user || isPro) return;
 
-    const newCount = completedTasks + 1;
-    console.log(`Incrementando contador de ${completedTasks} para ${newCount}`);
-    setCompletedTasks(newCount);
+    // Atualizar o estado imediatamente para feedback instantâneo
+    const newCount = totalTasks + 1;
+    setTotalTasks(newCount);
+    console.log(`Incrementando contador de ${totalTasks} para ${newCount}`);
     
     // Verificar se atingiu o limite
     if (newCount >= FREE_PLAN_LIMIT) {
       setShowUpgradeModal(true);
       
       toast({
-        title: "Limite de tarefas concluídas atingido!",
-        description: "Você atingiu o limite de tarefas concluídas do plano gratuito.",
+        title: "Limite de tarefas atingido!",
+        description: "Você atingiu o limite de tarefas do plano gratuito.",
         variant: "destructive"
       });
+      
+      navigate('/subscription');
     } else if (newCount === FREE_PLAN_LIMIT - 1) {
       // Aviso quando estiver próximo do limite
       toast({
         title: "Aviso de limite",
-        description: `Você está próximo do limite de tarefas concluídas (${newCount}/${FREE_PLAN_LIMIT}).`,
+        description: `Você está próximo do limite de tarefas (${newCount}/${FREE_PLAN_LIMIT}).`,
         variant: "default"
       });
     }
-  };
 
-  // Decrementar contador quando tarefa for movida de "concluída" para outro status
-  const decrementCompletedTasks = () => {
-    if (!user || isPro) return; // Não contabiliza para usuários Pro
-
-    const newCount = Math.max(0, completedTasks - 1);
-    console.log(`Decrementando contador de ${completedTasks} para ${newCount}`);
-    setCompletedTasks(newCount);
-    
-    // Se estava no limite e decrementou, não mostrar mais o modal
-    if (completedTasks >= FREE_PLAN_LIMIT && newCount < FREE_PLAN_LIMIT) {
-      setShowUpgradeModal(false);
-    }
-  };
-
-  // Resetar contador - útil para situações onde há inconsistências
-  const resetCounter = async () => {
-    if (!user) return;
-    
-    console.log("Resetando contador de tarefas concluídas...");
+    // Sincronizar com o servidor em segundo plano
     await syncCompletedTasksCount();
   };
 
+  // Decrementar contador quando uma tarefa for excluída
+  const decrementCompletedTasks = () => {
+    if (!user || isPro) return;
+
+    // Atualizar o estado imediatamente para feedback instantâneo
+    const newCount = Math.max(0, totalTasks - 1);
+    setTotalTasks(newCount);
+    console.log(`Decrementando contador de ${totalTasks} para ${newCount}`);
+    
+    // Se estava no limite e decrementou, não mostrar mais o modal
+    if (totalTasks >= FREE_PLAN_LIMIT && newCount < FREE_PLAN_LIMIT) {
+      setShowUpgradeModal(false);
+    }
+
+    // Sincronizar com o servidor em segundo plano
+    syncCompletedTasksCount();
+  };
+
   return {
-    completedTasks,
-    remainingTasks: Math.max(0, FREE_PLAN_LIMIT - completedTasks),
+    totalTasks,
+    remainingTasks: Math.max(0, FREE_PLAN_LIMIT - totalTasks),
     totalLimit: FREE_PLAN_LIMIT,
     incrementCompletedTasks,
     decrementCompletedTasks,
     syncCompletedTasksCount,
-    resetCounter,
     showUpgradeModal,
     closeUpgradeModal: () => setShowUpgradeModal(false),
-    limitReached: !isPro && completedTasks >= FREE_PLAN_LIMIT
+    limitReached: !isPro && totalTasks >= FREE_PLAN_LIMIT
   };
 }

@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { Task, TaskStatus, TaskFormData } from '@/types/task';
 import { supabase } from '@/supabase/client';
@@ -13,7 +12,7 @@ export function useTaskCreate(
   user: any | null,
   currentBoard: Board | null
 ) {
-  const { limitReached } = useTaskCounter();
+  const { totalTasks, totalLimit, incrementCompletedTasks } = useTaskCounter();
   const navigate = useNavigate();
   const { isPro } = useSubscription();
 
@@ -30,8 +29,8 @@ export function useTaskCreate(
     }
 
     // Verificar se já atingiu o limite do plano gratuito
-    if (limitReached && !isPro) {
-      toast.error('Você atingiu o limite de tarefas concluídas do plano gratuito. Faça upgrade para o plano Pro.');
+    if (!isPro && totalTasks >= totalLimit) {
+      toast.error(`Você atingiu o limite de ${totalLimit} tarefas do plano gratuito. Faça upgrade para o plano Pro.`);
       navigate('/subscription');
       return null;
     }
@@ -39,7 +38,8 @@ export function useTaskCreate(
     try {
       console.log("Criando nova tarefa:", {
         board: currentBoard.id,
-        title: taskData.title
+        title: taskData.title,
+        totalTasks
       });
       
       const newTask = {
@@ -76,6 +76,18 @@ export function useTaskCreate(
       
       // Adicionar nova tarefa ao estado
       setTasks(prev => [createdTask, ...prev]);
+
+      // Incrementar o contador DEPOIS de criar a tarefa com sucesso
+      if (!isPro) {
+        await incrementCompletedTasks();
+        
+        // Se atingiu o limite após criar, redirecionar para upgrade
+        if (totalTasks + 1 >= totalLimit) {
+          toast.error(`Você atingiu o limite de ${totalLimit} tarefas do plano gratuito. Faça upgrade para continuar.`);
+          navigate('/subscription');
+          return createdTask;
+        }
+      }
       
       toast.success('Tarefa criada com sucesso!');
       return createdTask;

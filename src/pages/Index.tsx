@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { TaskBoard } from '@/components/task-board';
@@ -75,20 +74,7 @@ const Index = () => {
         
         <div className="flex-1 flex flex-col">
           <header className="p-6 flex justify-between items-center border-b border-white/10 backdrop-blur-sm bg-black/20">
-            <div className="flex items-center gap-2">
-              <Mountain className="h-5 w-5 text-purple-300" />
-              <h1 className="text-xl font-bold purple-gradient-text">Minhas Tarefas</h1>
-            </div>
-            
-            {boards && boards.length > 0 && (
-              <BoardSelector
-                boards={boards}
-                currentBoard={currentBoard}
-                onBoardChange={setCurrentBoard}
-                canCreateMoreBoards={canCreateMoreBoards}
-                onCreateBoard={createBoard}
-              />
-            )}
+            <h1 className="text-xl font-bold text-white">Tarefas</h1>
             
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
