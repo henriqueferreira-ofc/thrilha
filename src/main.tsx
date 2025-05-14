@@ -18,29 +18,13 @@ import Calendar from './pages/Calendar'
 import SubscriptionPage from './pages/Subscription'
 import AcceptInvite from './pages/AcceptInvite'
 import viteSpaPlugin from './vite-spa-plugin'
+import App from './App'
 
 // Install SPA plugin
 viteSpaPlugin();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <SettingsProvider>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/app" element={<Dashboard />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/subscription" element={<SubscriptionPage />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/invite/:token" element={<AcceptInvite />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-        </SettingsProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <App />
   </React.StrictMode>,
 )
