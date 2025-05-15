@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -32,7 +31,7 @@ export function useSubscription() {
    * Buscar dados da assinatura do usuário
    */
   const fetchUserSubscription = useCallback(async () => {
-    if (!user) return;
+    if (!user) return false;
     
     try {
       setLoading(true);
@@ -44,14 +43,16 @@ export function useSubscription() {
       if (error) {
         console.error('Erro ao buscar assinatura:', error);
         toast.error('Não foi possível obter informações de sua assinatura');
-        return;
+        return false;
       }
 
       console.log('Dados de assinatura obtidos:', data);
       setSubscription(data);
+      return true;
     } catch (error) {
       console.error('Exceção ao buscar assinatura:', error);
       toast.error('Erro ao verificar sua assinatura');
+      return false;
     } finally {
       setLoading(false);
     }
@@ -64,7 +65,7 @@ export function useSubscription() {
     if (!user) {
       toast.error('Você precisa estar logado para verificar seu plano');
       navigate('/auth');
-      return;
+      return false;
     }
     
     try {
@@ -76,14 +77,16 @@ export function useSubscription() {
       
       if (!success) {
         toast.error('Não foi possível verificar o status de sua assinatura');
-        return;
+        return false;
       }
 
       console.log('Status de assinatura atualizado com dados do Stripe:', data);
       await fetchUserSubscription();
+      return true;
     } catch (error) {
       console.error('Erro ao verificar status da assinatura:', error);
       toast.error('Erro ao verificar status da assinatura');
+      return false;
     } finally {
       setLoading(false);
     }
@@ -96,7 +99,7 @@ export function useSubscription() {
     if (!user) {
       toast.error('Você precisa estar logado para assinar o plano Pro');
       navigate('/auth');
-      return;
+      return false;
     }
     
     try {
@@ -108,15 +111,17 @@ export function useSubscription() {
       if (!success || !url) {
         console.error('Erro no checkout:', error);
         toast.error(`Erro ao iniciar checkout: ${error || 'Falha na comunicação'}`);
-        return;
+        return false;
       }
 
       console.log('Redirecionando para URL de checkout:', url);
       // Usar redirecionamento com window.location para garantir mudança completa de contexto
       window.location.href = url;
+      return true;
     } catch (error) {
       console.error('Erro ao fazer upgrade:', error);
       toast.error('Não foi possível iniciar o processo de assinatura');
+      return false;
     } finally {
       setCheckingOut(false);
     }
@@ -129,7 +134,7 @@ export function useSubscription() {
     if (!user) {
       toast.error('Você precisa estar logado para gerenciar seu plano');
       navigate('/auth');
-      return;
+      return false;
     }
     
     try {
@@ -141,15 +146,17 @@ export function useSubscription() {
       if (!success || !url) {
         console.error('Erro ao acessar portal:', error);
         toast.error(`Erro ao acessar portal de gerenciamento: ${error || 'Falha na comunicação'}`);
-        return;
+        return false;
       }
 
       console.log('Redirecionando para portal de gerenciamento:', url);
       // Usar redirecionamento com window.location para garantir mudança completa de contexto
       window.location.href = url;
+      return true;
     } catch (error) {
       console.error('Erro ao fazer downgrade:', error);
       toast.error('Não foi possível acessar o portal de gerenciamento');
+      return false;
     } finally {
       setLoading(false);
     }
@@ -162,7 +169,7 @@ export function useSubscription() {
     if (!user) {
       toast.error('Você precisa estar logado para gerenciar sua assinatura');
       navigate('/auth');
-      return;
+      return false;
     }
     
     try {
@@ -174,15 +181,17 @@ export function useSubscription() {
       if (!success || !url) {
         console.error('Erro ao acessar portal:', error);
         toast.error(`Erro ao acessar portal de gerenciamento: ${error || 'Falha na comunicação'}`);
-        return;
+        return false;
       }
 
       console.log('Redirecionando para portal de gerenciamento:', url);
       // Usar redirecionamento com window.location para garantir mudança completa de contexto
       window.location.href = url;
+      return true;
     } catch (error) {
       console.error('Erro ao gerenciar assinatura:', error);
       toast.error('Não foi possível acessar o portal de gerenciamento');
+      return false;
     } finally {
       setLoading(false);
     }

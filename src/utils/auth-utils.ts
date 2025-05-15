@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for auth-related operations
  */
@@ -18,10 +17,14 @@ export const clearAuthData = () => {
   
   try {
     // Tentar obter o token atual antes de limpar para adicionar à blacklist
-    const session = supabase.auth.session();
-    if (session?.access_token) {
-      invalidatedTokens.add(session.access_token);
-    }
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session?.access_token) {
+        invalidatedTokens.add(data.session.access_token);
+      }
+    };
+    
+    getSession();
     
     // Lista de chaves específicas do Supabase para remover
     const supabaseKeys = [
