@@ -11,7 +11,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: localStorage
+    storage: localStorage,
+    flowType: 'pkce', // Usar PKCE para maior segurança
   },
   realtime: {
     params: {
@@ -23,7 +24,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       'Pragma': 'no-cache',
       'Expires': '0',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-XSS-Protection': '1; mode=block',
     },
+  },
+  db: {
+    schema: 'public'
   }
 });
 
@@ -58,24 +65,28 @@ export async function checkBucketExists(): Promise<boolean> {
   }
 }
 
-// Função para gerar URLs públicas de avatar
+// Função para gerar URLs públicas de avatar com sanitização de entrada
 export function getAvatarPublicUrl(filePath: string): string {
   if (!filePath) return '';
   
   try {
-    // Se já é uma URL completa, retorná-la limpa
-    if (filePath.startsWith('http')) {
-      // Remover possíveis parâmetros de query
-      return filePath.split('?')[0];
-    }
+    // Sanitizar o caminho do arquivo
+    // Remover caracteres potencialmente perigosos
+    const sanitizedPath = filePath
+      .replace(/[^\w\s.\/-]/g, '') // Remover caracteres especiais exceto alguns seguros
+      .replace(/\.{2,}/g, '.') // Prevenir directory traversal
+      .replace(/^\/|\/$/g, ''); // Remover barras iniciais e finais
     
-    // Remover barras iniciais e finais
-    const cleanPath = filePath.replace(/^\/|\/$/g, '');
+    // Se já é uma URL completa, retorná-la limpa
+    if (sanitizedPath.startsWith('http')) {
+      // Remover possíveis parâmetros de query
+      return sanitizedPath.split('?')[0];
+    }
     
     // Usar o método do Supabase para obter a URL pública
     const { data } = supabase.storage
       .from(AVATARS_BUCKET)
-      .getPublicUrl(cleanPath);
+      .getPublicUrl(sanitizedPath);
     
     return data.publicUrl;
   } catch (error) {
@@ -84,20 +95,41 @@ export function getAvatarPublicUrl(filePath: string): string {
   }
 }
 
-// Função para upload de arquivos que retorna uma URL pública
+// Função para upload de arquivos com validação e sanitização
 export async function uploadToAvatarsBucket(
   file: File, 
   filePath: string
 ): Promise<string> {
   try {
-    console.log(`Iniciando upload para ${AVATARS_BUCKET}/${filePath}`);
+    if (!file) throw new Error('Nenhum arquivo fornecido');
     
-    // Upload do arquivo
+    // Validar tipo e tamanho do arquivo
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const maxSize = 3 * 1024 * 1024; // 3MB
+    
+    if (!validTypes.includes(file.type)) {
+      throw new Error('Tipo de arquivo não permitido. Use JPEG, PNG, GIF ou WebP.');
+    }
+    
+    if (file.size > maxSize) {
+      throw new Error('Arquivo muito grande. O limite é de 3MB.');
+    }
+    
+    // Sanitizar o caminho do arquivo
+    const sanitizedPath = filePath
+      .replace(/[^\w\s.\/-]/g, '')
+      .replace(/\.{2,}/g, '.')
+      .replace(/^\/|\/$/g, '');
+    
+    console.log(`Iniciando upload para ${AVATARS_BUCKET}/${sanitizedPath}`);
+    
+    // Upload do arquivo com controle de cache e metadata de segurança
     const { data, error } = await supabase.storage
       .from(AVATARS_BUCKET)
-      .upload(filePath, file, {
-        cacheControl: '0',
-        upsert: true
+      .upload(sanitizedPath, file, {
+        cacheControl: '3600', // 1 hora de cache
+        upsert: true,
+        contentType: file.type,
       });
     
     if (error) {

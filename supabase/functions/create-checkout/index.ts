@@ -3,151 +3,176 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-// Cabeçalhos CORS expandidos para permitir todos os headers necessários
+// Configuração CORS segura
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "*", // Permitir todos os headers
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Max-Age": "86400",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Content-Security-Policy': "default-src 'self'; frame-ancestors 'none';",
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Content-Type': 'application/json',
+  'Cache-Control': 'no-store, private, must-revalidate',
+  'X-Content-Type-Options': 'nosniff',
 };
 
-// Função para log com prefixo para facilitar a depuração
-const log = (message: string, data?: any) => {
-  const logMessage = data 
-    ? `[CREATE-CHECKOUT] ${message}: ${typeof data === 'object' ? JSON.stringify(data) : data}`
-    : `[CREATE-CHECKOUT] ${message}`;
-  console.log(logMessage);
+// Inicializar Stripe com configurações robustas
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+  apiVersion: "2023-10-16",
+  httpClient: Stripe.createFetchHttpClient(),
+  maxNetworkRetries: 3,
+});
+
+// Preço real do plano Pro
+const PRICE_ID = 'price_1ROJxKQovJyvXFNJCRpnp3gE';
+
+// Logger aprimorado com timestamp
+const log = (level: string, message: string, data?: any) => {
+  const timestamp = new Date().toISOString();
+  console.log(JSON.stringify({
+    timestamp,
+    level,
+    service: 'create-checkout',
+    message,
+    ...(data ? { data } : {})
+  }));
 };
 
 serve(async (req) => {
-  log(`Requisição recebida - método: ${req.method}`);
-  
-  // Lidar com requisições OPTIONS para CORS
-  if (req.method === "OPTIONS") {
-    log("Requisição OPTIONS de CORS recebida");
+  // Tratamento de CORS preflight
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders, status: 204 });
   }
   
+  // Validar método
+  if (req.method !== 'POST') {
+    log('error', 'Método não permitido', { method: req.method });
+    return new Response(JSON.stringify({
+      error: "Método não permitido"
+    }), { headers: corsHeaders, status: 405 });
+  }
+  
   try {
-    log("Edge function create-checkout iniciada");
-    
-    // Verificar token de autenticação
-    log("Verificando token de autenticação");
-    const authHeader = req.headers.get("Authorization");
+    // Verificar autenticação
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error("Token de autenticação não fornecido");
+      log('error', 'Sem cabeçalho de autorização');
+      return new Response(JSON.stringify({
+        error: "Não autorizado"
+      }), { headers: corsHeaders, status: 401 });
     }
     
-    const token = authHeader.replace("Bearer ", "");
-    
-    // Inicializar cliente Supabase com o token do usuário
+    // Inicializar cliente Supabase
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: `Bearer ${token}` } } }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { 
+        auth: { 
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+        global: {
+          headers: { 'X-Client-Info': 'checkout-function' },
+        }
+      }
     );
     
-    // Obter dados do usuário autenticado
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !userData.user) {
-      log("Erro ao autenticar usuário", userError || "Usuário não encontrado");
-      throw new Error("Erro de autenticação: " + (userError?.message || "Usuário não encontrado"));
+    // Obter usuário atual a partir do JWT
+    log('info', 'Verificando sessão do usuário');
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    if (userError || !user) {
+      log('error', 'Erro ao obter usuário', { error: userError });
+      return new Response(JSON.stringify({
+        error: "Usuário não autenticado"
+      }), { headers: corsHeaders, status: 401 });
     }
     
-    const user = userData.user;
-    log("Usuário autenticado com sucesso", { id: user.id, email: user.email });
+    log('info', 'Usuário autenticado', { userId: user.id });
     
-    // Verificar API key do Stripe
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      log("API key do Stripe não encontrada nas variáveis de ambiente");
-      throw new Error("Configuração do servidor incompleta: Stripe API key não encontrada");
+    // Obter parâmetros do corpo da requisição
+    let params: { returnUrl?: string };
+    try {
+      params = await req.json();
+    } catch (e) {
+      params = {};
+      log('warn', 'Erro ao analisar corpo da requisição', { error: e.message });
     }
     
-    // Inicializar o Stripe
-    const stripe = new Stripe(stripeKey, {
-      apiVersion: "2023-10-16",
-    });
+    // URL para onde o usuário será redirecionado após o checkout
+    const returnUrl = params?.returnUrl || Deno.env.get('SITE_URL') || 'http://localhost:3000';
+    log('info', 'URL de retorno definida', { returnUrl });
     
-    // Verificar cliente Stripe existente ou criar um novo
-    log("Verificando cliente Stripe para:", user.email);
-    const customers = await stripe.customers.list({
-      email: user.email,
-      limit: 1,
-    });
+    // Primeiro verificar se o cliente já existe no Stripe
+    log('info', 'Verificando cliente existente', { email: user.email });
+    const { data: existingSubscription } = await supabaseClient
+      .from('subscriptions')
+      .select('stripe_customer_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
     
     let customerId: string;
     
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      log("Cliente Stripe existente encontrado:", customerId);
+    if (existingSubscription?.stripe_customer_id) {
+      log('info', 'Cliente existente encontrado', { 
+        customerId: existingSubscription.stripe_customer_id 
+      });
+      customerId = existingSubscription.stripe_customer_id;
     } else {
-      log("Criando novo cliente Stripe");
+      // Criar um novo cliente Stripe
+      log('info', 'Criando novo cliente Stripe');
       const newCustomer = await stripe.customers.create({
         email: user.email,
         metadata: {
           user_id: user.id
         }
       });
+      
       customerId = newCustomer.id;
-      log("Novo cliente Stripe criado:", customerId);
+      log('info', 'Novo cliente criado', { customerId });
     }
     
-    // Obter URL de origem da requisição ou usar a URL fornecida no corpo
-    let requestBody = {};
-    try {
-      requestBody = await req.json();
-    } catch (e) {
-      log("Corpo da requisição vazio ou inválido");
-    }
-    
-    // Use a URL de retorno fornecida ou gere uma URL padrão
-    const returnUrl = (requestBody as any).returnUrl || Deno.env.get("SITE_URL") || req.headers.get("origin") || "http://localhost:8080";
-    log("URL de origem para redirecionamento:", returnUrl);
-    
-    // Usar o ID do preço específico fornecido
-    const pricePlanId = "price_1ROJxKQovJyvXFNJCRpnp3gE";
-    log("Usando ID de preço específico:", pricePlanId);
-    
-    // Criar sessão de checkout
-    log("Criando sessão de checkout com ID do preço específico");
+    // Criar uma sessão de checkout
+    log('info', 'Criando sessão de checkout', { priceId: PRICE_ID });
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ["card"],
       line_items: [
         {
-          price: pricePlanId,
+          price: PRICE_ID,
           quantity: 1,
         },
       ],
-      mode: "subscription",
-      success_url: `${returnUrl}/subscription?success=true`,
+      mode: 'subscription',
+      success_url: `${returnUrl}/tasks?success=true`,
       cancel_url: `${returnUrl}/subscription?canceled=true`,
-      allow_promotion_codes: true,
-      billing_address_collection: "auto",
-      metadata: {
-        user_id: user.id,
+      automatic_tax: { enabled: true },
+      customer_update: {
+        address: 'auto',
+        name: 'auto',
       },
+      payment_method_types: ['card'],
+      allow_promotion_codes: true,
+      billing_address_collection: 'required',
+      client_reference_id: user.id,
+    });
+
+    log('info', 'Sessão de checkout criada com sucesso', { 
+      sessionId: session.id,
+      url: session.url
     });
     
-    log("Sessão de checkout criada com sucesso", session);
-    
-    // Retornar URL da sessão de checkout
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    return new Response(JSON.stringify({ 
+      url: session.url,
+      sessionId: session.id,
+    }), { headers: corsHeaders });
   } catch (error) {
-    log("Erro ao criar sessão de checkout", error.message || error);
+    log('error', 'Erro ao processar solicitação de checkout', {
+      error: error.message,
+      stack: error.stack
+    });
     
-    return new Response(
-      JSON.stringify({
-        error: error.message || "Erro interno ao criar sessão de checkout",
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
-    );
+    return new Response(JSON.stringify({ 
+      error: "Erro ao criar sessão de checkout: " + error.message 
+    }), { headers: corsHeaders, status: 500 });
   }
 });

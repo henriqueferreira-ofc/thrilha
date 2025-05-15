@@ -1,208 +1,272 @@
-import { useState, useEffect } from 'react';
-import { toast } from '@/hooks/toast';
-import { SubscriptionPlan } from '@/types/board';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { SubscriptionPlan } from '@/types/board';
+
+// API functions
 import { 
-  checkSubscriptionStatusAPI, 
   createCheckoutSessionAPI, 
   createCustomerPortalSessionAPI,
   fetchUserSubscriptionAPI,
+  checkSubscriptionStatusAPI,
   setupSubscriptionListener
 } from './api';
-import { UseSubscriptionReturn } from './types';
 
-export function useSubscription(): UseSubscriptionReturn {
+/**
+ * Hook para gerenciar assinaturas do usuário
+ */
+export function useSubscription() {
   const [subscription, setSubscription] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  useEffect(() => {
+  // Determinar se o usuário tem plano Pro
+  const isPro = subscription?.plan_type === 'pro' && 
+                subscription?.status === 'active';
+
+  /**
+   * Buscar dados da assinatura do usuário
+   */
+  const fetchUserSubscription = useCallback(async () => {
     if (!user) return;
-
-    const fetchSubscription = async () => {
-      try {
-        setLoading(true);
-        
-        const { data, error } = await fetchUserSubscriptionAPI(user.id);
-
-        if (error) {
-          console.error('Erro ao buscar assinatura:', error);
-          toast.error('Erro ao carregar informações da sua assinatura');
-        } else {
-          setSubscription(data);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSubscription();
-
-    // Configurar listener para atualizações em tempo real
-    const subscriptionChannel = setupSubscriptionListener(
-      user.id,
-      (newData) => setSubscription(newData),
-      () => setSubscription(null)
-    );
-
-    return () => {
-      supabase.removeChannel(subscriptionChannel);
-    };
-  }, [user]);
-
-  // Verificar status da assinatura com Stripe
-  const checkSubscriptionStatus = async (): Promise<boolean> => {
-    if (!user) {
-      toast.error('Você precisa estar logado para verificar seu plano');
-      return false;
-    }
-
+    
     try {
       setLoading(true);
+      const userId = user.id;
+      console.log('Buscando assinatura para usuário:', userId);
       
-      const result = await checkSubscriptionStatusAPI(user.id);
+      const { data, error } = await fetchUserSubscriptionAPI(userId);
       
-      if (result.success && result.data) {
-        // Atualizar o estado local com os dados mais recentes
-        setSubscription(prev => {
-          if (!prev || prev.plan_type !== result.data.plan_type) {
-            return {
-              ...prev,
-              id: prev?.id || '',
-              user_id: user.id,
-              plan_type: result.data.plan_type,
-              status: result.data.subscribed ? 'active' : 'canceled',
-              start_date: prev?.start_date || new Date().toISOString(),
-              end_date: result.data.end_date,
-              created_at: prev?.created_at || new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            };
-          }
-          return prev;
-        });
+      if (error) {
+        console.error('Erro ao buscar assinatura:', error);
+        toast.error('Não foi possível obter informações de sua assinatura');
+        return;
       }
-      
-      return result.success;
+
+      console.log('Dados de assinatura obtidos:', data);
+      setSubscription(data);
+    } catch (error) {
+      console.error('Exceção ao buscar assinatura:', error);
+      toast.error('Erro ao verificar sua assinatura');
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  // Atualizar plano para Pro usando Stripe
-  const upgradeToPro = async (): Promise<boolean> => {
+  /**
+   * Verificar status da assinatura diretamente com o Stripe
+   */
+  const checkSubscriptionStatus = useCallback(async () => {
     if (!user) {
-      toast.error('Você precisa estar logado para atualizar seu plano');
-      return false;
+      toast.error('Você precisa estar logado para verificar seu plano');
+      navigate('/auth');
+      return;
     }
+    
+    try {
+      setLoading(true);
+      const userId = user.id;
+      console.log('Verificando status de assinatura com Stripe para:', userId);
+      
+      const { success, data } = await checkSubscriptionStatusAPI(userId);
+      
+      if (!success) {
+        toast.error('Não foi possível verificar o status de sua assinatura');
+        return;
+      }
 
+      console.log('Status de assinatura atualizado com dados do Stripe:', data);
+      await fetchUserSubscription();
+    } catch (error) {
+      console.error('Erro ao verificar status da assinatura:', error);
+      toast.error('Erro ao verificar status da assinatura');
+    } finally {
+      setLoading(false);
+    }
+  }, [user, navigate, fetchUserSubscription]);
+
+  /**
+   * Upgrade para plano Pro
+   */
+  const upgradeToPro = useCallback(async () => {
+    if (!user) {
+      toast.error('Você precisa estar logado para assinar o plano Pro');
+      navigate('/auth');
+      return;
+    }
+    
     try {
       setCheckingOut(true);
-      console.log("Iniciando processo de upgrade para plano Pro");
+      console.log('Iniciando checkout para plano Pro');
       
-      const result = await createCheckoutSessionAPI();
+      const { success, url, error } = await createCheckoutSessionAPI();
       
-      if (result.success && result.url) {
-        console.log("Redirecionando para o checkout do Stripe:", result.url);
-        
-        // Usar window.location.href para redirecionamento completo
-        window.location.href = result.url;
-        return true;
-      } else {
-        console.error("Falha ao criar URL de checkout:", result.error);
-        toast.error(`Não foi possível acessar o checkout: ${result.error || 'Erro desconhecido'}`);
-        return false;
+      if (!success || !url) {
+        console.error('Erro no checkout:', error);
+        toast.error(`Erro ao iniciar checkout: ${error || 'Falha na comunicação'}`);
+        return;
       }
+
+      console.log('Redirecionando para URL de checkout:', url);
+      // Usar redirecionamento com window.location para garantir mudança completa de contexto
+      window.location.href = url;
     } catch (error) {
-      console.error("Erro durante o processo de upgrade:", error);
-      toast.error('Ocorreu um erro inesperado ao tentar fazer o upgrade. Por favor, tente novamente.');
-      return false;
+      console.error('Erro ao fazer upgrade:', error);
+      toast.error('Não foi possível iniciar o processo de assinatura');
     } finally {
       setCheckingOut(false);
     }
-  };
+  }, [user, navigate]);
 
-  // Acessar portal do cliente para gerenciar assinatura
-  const manageSubscription = async (): Promise<boolean> => {
+  /**
+   * Downgrade para plano gratuito
+   */
+  const downgradeToFree = useCallback(async () => {
     if (!user) {
-      toast.error('Você precisa estar logado para gerenciar sua assinatura');
-      return false;
+      toast.error('Você precisa estar logado para gerenciar seu plano');
+      navigate('/auth');
+      return;
     }
-
+    
     try {
       setLoading(true);
-      console.log("Iniciando acesso ao portal do cliente");
+      console.log('Iniciando downgrade para plano gratuito');
       
-      const result = await createCustomerPortalSessionAPI();
+      const { success, url, error } = await createCustomerPortalSessionAPI();
       
-      if (result.success && result.url) {
-        console.log("Redirecionando para o portal do cliente Stripe:", result.url);
-        // Usar window.location.href para garantir redirecionamento completo
-        window.location.href = result.url;
-        return true;
-      } else {
-        console.error("Falha ao criar portal do cliente:", result.error);
-        toast.error(`Não foi possível acessar o portal: ${result.error || 'Erro desconhecido'}`);
-        return false;
+      if (!success || !url) {
+        console.error('Erro ao acessar portal:', error);
+        toast.error(`Erro ao acessar portal de gerenciamento: ${error || 'Falha na comunicação'}`);
+        return;
       }
+
+      console.log('Redirecionando para portal de gerenciamento:', url);
+      // Usar redirecionamento com window.location para garantir mudança completa de contexto
+      window.location.href = url;
     } catch (error) {
-      console.error("Erro durante o acesso ao portal:", error);
-      toast.error('Ocorreu um erro inesperado. Por favor, tente novamente.');
-      return false;
+      console.error('Erro ao fazer downgrade:', error);
+      toast.error('Não foi possível acessar o portal de gerenciamento');
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, navigate]);
 
-  // Downgrade para o plano gratuito (agora feito via portal do cliente)
-  const downgradeToFree = async (): Promise<boolean> => {
-    return manageSubscription();
-  };
+  /**
+   * Gerenciar assinatura existente
+   */
+  const manageSubscription = useCallback(async () => {
+    if (!user) {
+      toast.error('Você precisa estar logado para gerenciar sua assinatura');
+      navigate('/auth');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      console.log('Acessando portal de gerenciamento da assinatura');
+      
+      const { success, url, error } = await createCustomerPortalSessionAPI();
+      
+      if (!success || !url) {
+        console.error('Erro ao acessar portal:', error);
+        toast.error(`Erro ao acessar portal de gerenciamento: ${error || 'Falha na comunicação'}`);
+        return;
+      }
 
-  // Verificar se é plano pro ou já está no checkout
-  const isPro = subscription?.plan_type === 'pro';
-  const isCheckingOut = checkingOut;
+      console.log('Redirecionando para portal de gerenciamento:', url);
+      // Usar redirecionamento com window.location para garantir mudança completa de contexto
+      window.location.href = url;
+    } catch (error) {
+      console.error('Erro ao gerenciar assinatura:', error);
+      toast.error('Não foi possível acessar o portal de gerenciamento');
+    } finally {
+      setLoading(false);
+    }
+  }, [user, navigate]);
 
-  // Checar status em casos específicos (primeira carga, após checkout, etc)
+  // Carregar dados da assinatura quando o usuário é autenticado
   useEffect(() => {
     if (user) {
-      // Verificar parâmetros de URL para sucesso ou cancelamento do checkout
-      const urlParams = new URLSearchParams(window.location.search);
-      const success = urlParams.get('success');
-      const canceled = urlParams.get('canceled');
+      fetchUserSubscription();
+    } else {
+      setSubscription(null);
+      setLoading(false);
+    }
+  }, [user, fetchUserSubscription]);
+
+  // Configurar listener para atualizações em tempo real na assinatura
+  useEffect(() => {
+    if (!user) return;
+    
+    const handleSubscriptionUpdate = (data: SubscriptionPlan) => {
+      console.log('Assinatura atualizada em tempo real:', data);
+      setSubscription(data);
       
-      if (success === 'true' || canceled === 'true') {
-        // Limpar parâmetros da URL
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-        
-        // Verificar status da assinatura
-        checkSubscriptionStatus().then(success => {
-          if (success) {
-            // Redirecionar para a página de tarefas se o checkout foi bem-sucedido
-            if (urlParams.get('success') === 'true') {
-              toast.success('Assinatura Pro ativada com sucesso!');
-              // Redirecionar para a página de tarefas após uma pequena pausa
-              setTimeout(() => {
-                window.location.href = '/app';
-              }, 1500);
-            }
-          }
-        });
-        
-        // Mostrar mensagem apropriada baseada no parâmetro da URL
-        if (canceled === 'true') {
-          toast.info('Processo de checkout cancelado');
-        }
+      // Notificar o usuário sobre mudanças na assinatura
+      if (data.plan_type === 'pro' && data.status === 'active') {
+        toast.success('Sua assinatura Pro está ativa!');
+      } else if (data.plan_type === 'free' || data.status !== 'active') {
+        toast.info('Sua assinatura foi alterada para o plano gratuito');
+      }
+    };
+    
+    const handleSubscriptionDelete = () => {
+      console.log('Assinatura cancelada');
+      setSubscription(null);
+      toast.info('Sua assinatura foi cancelada');
+    };
+
+    // Configurar o listener de tempo real
+    const subscription = setupSubscriptionListener(
+      user.id,
+      handleSubscriptionUpdate,
+      handleSubscriptionDelete
+    );
+    
+    return () => {
+      // Limpar o listener ao desmontar
+      subscription.unsubscribe();
+    };
+  }, [user]);
+
+  // Verificar parâmetros de URL para status de pagamento
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const canceled = urlParams.get('canceled');
+    
+    if (success === 'true') {
+      console.log('Pagamento concluído com sucesso, verificando status');
+      toast.success('Pagamento processado! Atualizando informações da assinatura...');
+      checkSubscriptionStatus();
+      
+      // Limpar parâmetros da URL após processamento
+      if (window.history && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        url.search = '';
+        window.history.replaceState({}, document.title, url.toString());
+      }
+    } else if (canceled === 'true') {
+      console.log('Pagamento cancelado pelo usuário');
+      toast.info('O processo de pagamento foi cancelado');
+      
+      // Limpar parâmetros da URL após processamento
+      if (window.history && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        url.search = '';
+        window.history.replaceState({}, document.title, url.toString());
       }
     }
-  }, [user]);
+  }, [checkSubscriptionStatus]);
 
   return {
     subscription,
     loading,
-    checkingOut: isCheckingOut,
+    checkingOut,
     isPro,
     upgradeToPro,
     downgradeToFree,
