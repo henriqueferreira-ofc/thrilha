@@ -158,12 +158,12 @@ const App = () => (
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/birthdays" element={<Birthdays />} />
               
               {/* Rotas protegidas com verificação de autenticação */}
               <Route path="/app" element={<ProtectedRoute element={<Index />} />} />
               <Route path="/tasks" element={<ProtectedRoute element={<Index />} />} />
               <Route path="/calendar" element={<ProtectedRoute element={<Calendar />} />} />
+              <Route path="/birthdays" element={<ProtectedRoute element={<Birthdays />} />} />
               <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
               <Route path="/about" element={<ProtectedRoute element={<About />} />} />
               <Route path="/subscription" element={<ProtectedRoute element={<SubscriptionPage />} />} />

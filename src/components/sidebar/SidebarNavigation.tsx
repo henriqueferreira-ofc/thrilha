@@ -10,7 +10,8 @@ import {
   PersonIcon,
   ExitIcon,
   EnvelopeClosedIcon,
-  HeartFilledIcon
+  HeartFilledIcon,
+  CakeIcon
 } from '@radix-ui/react-icons';
 
 interface SidebarNavigationProps {
@@ -31,6 +32,11 @@ export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
       icon: <CalendarIcon className="h-4 w-4 mr-2" />, 
       label: 'Calendário', 
       path: '/calendar' 
+    },
+    { 
+      icon: <CakeIcon className="h-4 w-4 mr-2" />, 
+      label: 'Aniversários', 
+      path: '/birthdays' 
     },
     { 
       icon: <HeartFilledIcon className="h-4 w-4 mr-2" />, 
