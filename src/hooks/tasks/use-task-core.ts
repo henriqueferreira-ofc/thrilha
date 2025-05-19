@@ -1,10 +1,21 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Task, TaskStatus } from '@/types/task';
 import { normalizeTaskStatus } from '@/lib/task-utils';
+
+interface DatabaseTask {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string | null;
+  due_date: string | null;
+  user_id: string;
+  board_id: string | null;
+}
 
 export function useTaskCore() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -32,7 +43,7 @@ export function useTaskCore() {
 
         if (error) throw error;
 
-        const formattedTasks: Task[] = data?.map((task: any) => ({
+        const formattedTasks: Task[] = data?.map((task: DatabaseTask) => ({
           id: task.id,
           title: task.title,
           description: task.description || '',
@@ -69,7 +80,16 @@ export function useTaskCore() {
         
         if (payload.eventType === 'INSERT') {
           const newTask = payload.new as Task;
-          setTasks(prev => [newTask, ...prev]);
+          setTasks(prev => {
+            // Verificar se a tarefa já existe
+            const taskExists = prev.some(task => task.id === newTask.id);
+            if (taskExists) {
+              console.log('Tarefa já existe no estado (realtime), ignorando:', newTask.id);
+              return prev;
+            }
+            // Adicionar a nova tarefa no início, removendo qualquer duplicata
+            return [newTask, ...prev.filter(task => task.id !== newTask.id)];
+          });
         } 
         else if (payload.eventType === 'UPDATE') {
           const updatedTask = payload.new as Task;

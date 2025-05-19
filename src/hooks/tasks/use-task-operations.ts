@@ -58,11 +58,30 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
           return prev;
         }
         
-        // Criar um novo array com a nova tarefa no início
-        const updatedTasks = [formattedTask, ...prev];
+        // Criar um novo array com a nova tarefa no início, removendo qualquer duplicata
+        const updatedTasks = [formattedTask, ...prev.filter(task => task.id !== formattedTask.id)];
         console.log('Nova tarefa adicionada ao estado:', formattedTask.id);
         return updatedTasks;
       });
+
+      // Desabilitar temporariamente a sincronização em tempo real para esta tarefa
+      const channel = supabase.channel('task-creation');
+      channel
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'tasks',
+          filter: `id=eq.${formattedTask.id}`
+        }, () => {
+          // Ignorar eventos de inserção para esta tarefa específica
+          console.log('Ignorando evento de inserção para tarefa:', formattedTask.id);
+        })
+        .subscribe();
+
+      // Remover o canal após 2 segundos
+      setTimeout(() => {
+        supabase.removeChannel(channel);
+      }, 2000);
 
       toast.success('Tarefa criada com sucesso!');
       return formattedTask;
