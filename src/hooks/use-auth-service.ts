@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { clearAuthData } from '../utils/auth-utils';
+import { clearAuthData } from '../utils/auth'; // Importação atualizada
 
 export function useAuthService() {
   const [isLoading, setIsLoading] = useState(false);

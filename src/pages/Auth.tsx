@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { LogIn, UserPlus } from 'lucide-react';
-import { clearAuthData } from '@/utils/auth-utils';
+import { clearAuthData } from '@/utils/auth';
 
 // Imported components
 import { LoginForm } from '@/components/auth/LoginForm';

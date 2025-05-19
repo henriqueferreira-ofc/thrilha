@@ -1,9 +1,10 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../supabase/client';
 import { useAuthService } from '../hooks/use-auth-service';
 import { useAvatarUpload } from '../hooks/use-avatar-upload';
-import { clearAuthData } from '../utils/auth-utils';
+import { clearAuthData } from '../utils/auth'; // Importação atualizada
 import { toast } from 'sonner';
 
 interface AuthContextType {

@@ -2,7 +2,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
-import { validateSession, checkSecurityViolations } from "@/utils/auth-utils";
+import { validateSession, checkSecurityViolations } from "@/utils/auth"; // Importação atualizada
 import { toast } from "@/hooks/use-toast";
 
 export function RequireAuth() {
