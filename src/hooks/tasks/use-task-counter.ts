@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -34,9 +33,11 @@ export function useTaskCounter(currentBoard: Board | null = null) {
         throw error;
       }
       
-      const tasksCount = allTasks?.length || 0;
+      // Garantir que não haja duplicatas e contar apenas tarefas únicas
+      const uniqueTasks = Array.from(new Set(allTasks?.map(task => task.id) || []));
+      const tasksCount = uniqueTasks.length;
       
-      console.log(`Sincronizado: ${tasksCount} tarefas no total para o usuário ${user.id}`);
+      console.log(`Sincronizado: ${tasksCount} tarefas únicas no total para o usuário ${user.id}`);
       
       // Atualizar o estado local imediatamente
       setTotalTasks(tasksCount);
@@ -80,6 +81,22 @@ export function useTaskCounter(currentBoard: Board | null = null) {
       };
     }
   }, [user, syncCompletedTasksCount]);
+
+  // Função para incrementar o contador
+  const incrementTaskCount = useCallback(() => {
+    setTotalTasks(prev => {
+      const newCount = prev + 1;
+      if (!isPro && newCount >= FREE_PLAN_LIMIT) {
+        setShowUpgradeModal(true);
+      }
+      return newCount;
+    });
+  }, [isPro]);
+
+  // Função para decrementar o contador
+  const decrementTaskCount = useCallback(() => {
+    setTotalTasks(prev => Math.max(0, prev - 1));
+  }, []);
 
   // Incrementar contador de tarefas
   const incrementCompletedTasks = async () => {

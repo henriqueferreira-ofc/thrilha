@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { TaskBoard } from '@/components/task-board';
@@ -42,25 +41,45 @@ const Index = () => {
   }, [user, navigate]);
 
   const handleCreateTask = async (data: TaskFormData) => {
-    console.log(`Index - Criando nova tarefa`, data);
-    
-    // Garantir que o board_id esteja definido
-    const taskData = {
-      ...data,
-      board_id: currentBoard?.id || 'default'
-    };
-    
-    const task = await addTask(taskData);
-    
-    if (task) {
-      console.log(`Index - Tarefa criada com sucesso: ${task.id}`);
-      toast.success('Tarefa criada com sucesso!');
+    try {
+      console.log('Iniciando criação de nova tarefa:', data);
       
-      // Atualizar o contador imediatamente após a criação bem-sucedida
-      await syncCompletedTasksCount();
+      // Garantir que o board_id está definido
+      const boardId = data.board_id || 'default';
+      
+      // Criar a tarefa
+      const newTask = await addTask({
+        ...data,
+        board_id: boardId
+      });
+
+      if (newTask) {
+        console.log('Tarefa criada com sucesso:', newTask.id);
+        
+        // Fechar o diálogo antes de atualizar o contador
+        setIsCreateDialogOpen(false);
+        
+        // Atualizar o contador imediatamente
+        await syncCompletedTasksCount();
+        
+        // Mostrar mensagem de sucesso
+        toast.success('Tarefa criada com sucesso!');
+      }
+    } catch (error) {
+      console.error('Erro ao criar tarefa:', error);
+      toast.error('Erro ao criar tarefa. Tente novamente.');
     }
-    
-    setIsCreateDialogOpen(false);
+  };
+
+  const handleDeleteTask = async (id: string) => {
+    try {
+      await deleteTask(id);
+      // Atualizar o contador imediatamente após a exclusão
+      await syncCompletedTasksCount();
+    } catch (error) {
+      console.error('Erro ao excluir tarefa:', error);
+      toast.error('Erro ao excluir tarefa');
+    }
   };
 
   return (
@@ -81,7 +100,7 @@ const Index = () => {
                 <div className="mt-2 text-sm flex items-center gap-2">
                   {!limitReached ? (
                     <Badge variant="outline" className="bg-purple-500/20 text-purple-200 border-purple-500">
-                      {remainingTasks} de {totalLimit} tarefas disponíveis
+                      {totalTasks} de {totalLimit} tarefas
                     </Badge>
                   ) : (
                     <Badge variant="destructive" className="bg-red-500/20 text-red-200 border-red-500">
@@ -90,7 +109,7 @@ const Index = () => {
                   )}
                   
                   <div className="text-xs text-gray-400">
-                    Total atual: {totalTasks}/{totalLimit}
+                    Tarefas disponíveis: {remainingTasks}
                   </div>
                 </div>
               )}
@@ -128,7 +147,7 @@ const Index = () => {
             ) : (
               <TaskBoard
                 tasks={tasks || []} 
-                onDelete={deleteTask}
+                onDelete={handleDeleteTask}
                 onUpdate={updateTask}
                 onChangeStatus={changeTaskStatus}
               />
