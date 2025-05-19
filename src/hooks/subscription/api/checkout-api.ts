@@ -31,6 +31,7 @@ export async function createCheckoutSessionAPI(): Promise<{success: boolean, url
     }
     
     console.log("URL de checkout criada com sucesso:", data.url);
+    console.log("Redirecionando para Stripe Checkout...");
     
     // Para garantir que o redirecionamento funcione corretamente
     window.location.href = data.url;
