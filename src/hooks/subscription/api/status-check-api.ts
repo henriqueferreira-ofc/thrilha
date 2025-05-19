@@ -1,9 +1,12 @@
 
 import { toast } from '@/hooks/use-toast';
-import { SubscriptionPlan } from '@/types/board';
 import { supabase } from '@/supabase/client';
 
-// Verificar status da assinatura com Stripe
+/**
+ * Verificar status da assinatura com Stripe
+ * @param userId ID do usuário para verificar assinatura
+ * @returns Objeto com status da operação e dados da assinatura quando bem-sucedida
+ */
 export async function checkSubscriptionStatusAPI(userId: string): Promise<{success: boolean, data?: any}> {
   if (!userId) {
     toast.error('Você precisa estar logado para verificar seu plano');
@@ -23,25 +26,5 @@ export async function checkSubscriptionStatusAPI(userId: string): Promise<{succe
     console.error('Erro ao verificar status da assinatura:', error);
     toast.error('Erro ao verificar status da assinatura');
     return { success: false };
-  }
-}
-
-// Buscar dados da assinatura do usuário
-export async function fetchUserSubscriptionAPI(userId: string): Promise<{data: SubscriptionPlan | null, error: any | null}> {
-  try {
-    // Buscar dados da assinatura do Supabase
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      return { data: null, error };
-    }
-
-    return { data, error: null };
-  } catch (error) {
-    return { data: null, error };
   }
 }

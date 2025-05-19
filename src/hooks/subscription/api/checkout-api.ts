@@ -2,7 +2,10 @@
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/supabase/client';
 
-// Criar sessão de checkout do Stripe
+/**
+ * Criar sessão de checkout do Stripe para assinatura
+ * @returns Objeto com status da operação e URL de checkout caso bem-sucedido
+ */
 export async function createCheckoutSessionAPI(): Promise<{success: boolean, url?: string, error?: string}> {
   try {
     console.log("Iniciando criação de sessão de checkout");
