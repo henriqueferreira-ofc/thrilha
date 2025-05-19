@@ -1,6 +1,6 @@
+
 import { Task, TaskFormData } from '@/types/task';
 import { useAuth } from '@/context/AuthContext';
-import { Board } from '@/types/board';
 import { useTaskCreate } from './operations/use-task-create';
 import { useTaskUpdate } from './operations/use-task-update';
 import { useTaskDelete } from './operations/use-task-delete';
@@ -15,7 +15,6 @@ interface OptimisticUpdate {
 export function useTaskOperationsBoard(
   tasks: Task[],
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>,
-  currentBoard: Board | null,
   optimisticUpdate?: OptimisticUpdate
 ) {
   const { user } = useAuth();
@@ -23,15 +22,14 @@ export function useTaskOperationsBoard(
   // Gerar logs para debug
   console.log('useTaskOperationsBoard - Inicializado com', 
     `tarefas: ${tasks?.length || 0}`, 
-    `quadro atual: ${currentBoard?.id || 'nenhum'}`,
     `usuário: ${user?.id || 'não autenticado'}`
   );
   
   // Criar versões específicas dos hooks com otimização
-  const taskCreate = useTaskCreate(tasks, setTasks, user, currentBoard, optimisticUpdate);
+  const taskCreate = useTaskCreate(tasks, setTasks, user);
   const taskUpdate = useTaskUpdate(tasks, setTasks, user);
-  const taskDelete = useTaskDelete(tasks, setTasks, user, currentBoard);
-  const taskStatus = useTaskStatus(tasks, setTasks, user, currentBoard);
+  const taskDelete = useTaskDelete(tasks, setTasks, user);
+  const taskStatus = useTaskStatus(tasks, setTasks, user);
 
   // Funções otimizadas que usam atualização otimista
   const addTask = async (taskData: TaskFormData) => {
