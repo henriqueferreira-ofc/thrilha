@@ -105,7 +105,7 @@ const LandingPage = () => {
             
             <div className="glass-panel p-6 rounded-xl">
               <h3 className="text-xl font-semibold mb-3">Lembretes de Aniversários</h3>
-              <p className="text-white/70">Nunca mais esqueça um aniversário com nossos lembretes no WhatsApp via Zapier.</p>
+              <p className="text-white/70">Nunca mais esqueça um aniversário com nossos lembretes no WhatsApp.</p>
             </div>
           </div>
         </div>
