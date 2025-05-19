@@ -14,7 +14,7 @@ export function useTaskStatus(
   user: User | null,
   currentBoard: Board | null
 ) {
-  const { limitReached, syncCompletedTasksCount } = useTaskCounter(currentBoard);
+  const { limitReached, syncCompletedTasksCount, incrementCompletedTasks } = useTaskCounter(currentBoard);
   const { isPro } = useSubscription();
   const navigate = useNavigate();
 
@@ -35,10 +35,12 @@ export function useTaskStatus(
     
     // Verificar se está completando ou descompletando uma tarefa
     const isCompletingTask = newStatus === 'done' && task.status !== 'done';
+    const isUncompletingTask = task.status === 'done' && newStatus !== 'done';
 
     // IMPORTANTE: Só bloqueia a movimentação PARA "done" se atingiu o limite (sem ser Pro)
     // Sempre permitir mover PARA FORA de "done", independente do limite
     if (isCompletingTask && limitReached && !isPro) {
+      toast.error('Limite de tarefas concluídas atingido. Faça upgrade para o plano Pro.');
       navigate('/subscription');
       return;
     }
@@ -55,11 +57,21 @@ export function useTaskStatus(
         );
       });
 
+      // Atualizar contadores locais se necessário
+      if (isCompletingTask) {
+        incrementCompletedTasks();
+      } else if (isUncompletingTask) {
+        decrementCompletedTasks();
+      }
+
       // Enviar atualização para o backend
       console.log('Enviando atualização de status para o servidor...');
       const { error } = await supabase
         .from('tasks')
-        .update({ status: newStatus })
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString() 
+        })
         .eq('id', taskId);
 
       if (error) {
@@ -83,6 +95,18 @@ export function useTaskStatus(
       console.error('Erro ao atualizar status da tarefa:', error);
       toast.error('Erro ao atualizar status da tarefa');
     }
+  };
+
+  // Função auxiliar para decrementar contador (extraída do useTaskCounter)
+  const decrementCompletedTasks = () => {
+    if (!currentBoard) return;
+    
+    const storageKey = `completed_tasks_${currentBoard.id}`;
+    const currentCount = parseInt(localStorage.getItem(storageKey) || '0', 10);
+    const newCount = Math.max(0, currentCount - 1);
+    
+    localStorage.setItem(storageKey, newCount.toString());
+    console.log(`Decrementado contador de tarefas concluídas para ${newCount}`);
   };
 
   return { changeTaskStatus };

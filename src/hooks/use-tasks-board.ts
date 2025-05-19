@@ -55,6 +55,7 @@ export function useTasksBoard(currentBoard: Board | null) {
           .from('tasks')
           .select('*')
           .eq('board_id', currentBoard.id)
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -151,6 +152,7 @@ export function useTasksBoard(currentBoard: Board | null) {
   // Usar o hook de tempo real
   useRealtimeSubscription(
     currentBoard?.id,
+    user?.id,
     realtimeHandlers
   );
 

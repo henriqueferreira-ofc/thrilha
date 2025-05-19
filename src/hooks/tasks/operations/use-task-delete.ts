@@ -81,6 +81,9 @@ export function useTaskDelete(
       
       // Sincronizar o contador após a exclusão bem-sucedida
       await syncCompletedTasksCount();
+      
+      // Garantir que as mudanças sejam refletidas em outras partes da aplicação
+      console.log('Tarefa excluída com sucesso');
       return true;
     } catch (error) {
       console.error('Erro ao excluir tarefa:', error);

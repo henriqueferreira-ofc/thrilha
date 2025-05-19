@@ -5,7 +5,6 @@ import { TaskSidebar } from '@/components/task-sidebar';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CalendarIcon, Check, Circle } from 'lucide-react';
 import { useTasks } from '@/hooks/use-tasks';
@@ -18,10 +17,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useEffect } from 'react';
 
 const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const { tasks } = useTasks();
+  // Usar o hook de tasks padronizado para garantir consistência dos dados
+  const { tasks, loading } = useTasks();
+
+  useEffect(() => {
+    console.log('Calendar: Tasks carregadas:', tasks.length);
+  }, [tasks]);
 
   // Filtrar tarefas pela data selecionada
   const tasksForSelectedDate = tasks.filter((task) => {
@@ -63,6 +68,7 @@ const Calendar = () => {
         <div className="flex-1 flex flex-col">
           <header className="p-6 flex justify-between items-center border-b border-white/10">
             <h1 className="text-xl font-bold">Calendário</h1>
+            {loading && <span className="text-sm text-muted-foreground">Carregando tarefas...</span>}
           </header>
           
           <main className="flex-1 p-6 overflow-auto">

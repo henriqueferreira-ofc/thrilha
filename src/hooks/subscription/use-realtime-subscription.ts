@@ -11,23 +11,25 @@ interface RealtimeHandlers {
 
 export function useRealtimeSubscription(
   boardId: string | undefined,
+  userId: string | undefined,
   handlers: RealtimeHandlers
 ) {
   useEffect(() => {
-    if (!boardId) return;
+    if (!boardId || !userId) return;
 
-    console.log(`Configurando subscription para o quadro ${boardId}`);
+    console.log(`Configurando subscription para o quadro ${boardId} e usuário ${userId}`);
 
     // Criar um canal Supabase para escutar alterações na tabela tasks
+    // Importante: Usando filtros específicos para o quadro E usuário
     const channel = supabase
-      .channel(`public:tasks:board_id=eq.${boardId}`)
+      .channel(`public:tasks:board_id=eq.${boardId}:user_id=eq.${userId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'tasks',
-          filter: `board_id=eq.${boardId}`,
+          filter: `board_id=eq.${boardId} AND user_id=eq.${userId}`,
         },
         (payload) => {
           console.log('Evento Realtime (INSERT):', payload);
@@ -64,7 +66,7 @@ export function useRealtimeSubscription(
           event: 'UPDATE',
           schema: 'public',
           table: 'tasks',
-          filter: `board_id=eq.${boardId}`,
+          filter: `board_id=eq.${boardId} AND user_id=eq.${userId}`,
         },
         (payload) => {
           console.log('Evento Realtime (UPDATE):', payload);
@@ -93,7 +95,7 @@ export function useRealtimeSubscription(
           event: 'DELETE',
           schema: 'public',
           table: 'tasks',
-          filter: `board_id=eq.${boardId}`,
+          filter: `board_id=eq.${boardId} AND user_id=eq.${userId}`,
         },
         (payload) => {
           console.log('Evento Realtime (DELETE):', payload);
@@ -104,7 +106,7 @@ export function useRealtimeSubscription(
         }
       )
       .subscribe((status) => {
-        console.log(`Status da subscription para o quadro ${boardId}:`, status);
+        console.log(`Status da subscription para o quadro ${boardId} e usuário ${userId}:`, status);
       });
 
     // Limpar a subscription quando o componente for desmontado
@@ -112,5 +114,5 @@ export function useRealtimeSubscription(
       console.log(`Removendo subscription para o quadro ${boardId}`);
       supabase.removeChannel(channel);
     };
-  }, [boardId, handlers]);
+  }, [boardId, userId, handlers]);
 }
