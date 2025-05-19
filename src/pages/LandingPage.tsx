@@ -25,6 +25,11 @@ const LandingPage = () => {
     navigate('/tasks');
   };
 
+  // Função para ir para a página de aniversários
+  const goToBirthdays = () => {
+    navigate('/birthdays');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       {/* Navigation */}
@@ -33,13 +38,22 @@ const LandingPage = () => {
           <Mountain className="h-6 w-6 text-purple-300" />
           <span className="text-xl font-bold purple-gradient-text">Thrilha</span>
         </div>
-        <Button 
-          variant="outline" 
-          className="border-purple-300 text-purple-300 hover:bg-purple-300/10" 
-          onClick={goToLoginPage}
-        >
-          Login
-        </Button>
+        <div className="flex gap-4">
+          <Button 
+            variant="outline" 
+            className="border-purple-300 text-purple-300 hover:bg-purple-300/10" 
+            onClick={goToBirthdays}
+          >
+            Aniversários
+          </Button>
+          <Button 
+            variant="outline" 
+            className="border-purple-300 text-purple-300 hover:bg-purple-300/10" 
+            onClick={goToLoginPage}
+          >
+            Login
+          </Button>
+        </div>
       </nav>
 
       {/* Hero Section */}
@@ -52,7 +66,7 @@ const LandingPage = () => {
             Gerencie seus projetos e tarefas diárias com uma interface moderna e intuitiva. 
             Aumente sua produtividade com o Thrilha.
           </p>
-          <div className="flex gap-4 pt-4">
+          <div className="flex flex-wrap gap-4 pt-4">
             <Button 
               className="purple-gradient-bg text-white px-8 py-6 text-lg" 
               onClick={goToLoginPage}
@@ -65,6 +79,13 @@ const LandingPage = () => {
               className="text-white border-white/20 bg-white/5 px-8 py-6 text-lg font-normal"
             >
               Saiba Mais
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={goToBirthdays}
+              className="text-purple-300 border-purple-300 hover:bg-purple-300/10 px-8 py-6 text-lg font-normal"
+            >
+              Aniversários
             </Button>
           </div>
         </div>
@@ -102,8 +123,8 @@ const LandingPage = () => {
             </div>
             
             <div className="glass-panel p-6 rounded-xl">
-              <h3 className="text-xl font-semibold mb-3">Sincronização em Nuvem</h3>
-              <p className="text-white/70">Acesse suas tarefas de qualquer dispositivo com sincronização em tempo real.</p>
+              <h3 className="text-xl font-semibold mb-3">Lembretes de Aniversários</h3>
+              <p className="text-white/70">Nunca mais esqueça um aniversário com nossos lembretes no WhatsApp via Zapier.</p>
             </div>
           </div>
         </div>

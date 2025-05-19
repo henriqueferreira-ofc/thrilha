@@ -18,6 +18,7 @@ import LandingPage from "./pages/LandingPage";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
 import SubscriptionPage from "./pages/Subscription";
+import Birthdays from "./pages/Birthdays";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from './supabase/client';
@@ -157,6 +158,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/birthdays" element={<Birthdays />} />
               
               {/* Rotas protegidas com verificação de autenticação */}
               <Route path="/app" element={<ProtectedRoute element={<Index />} />} />
