@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Progress } from "@/components/ui/progress";
 import { useTaskCounter } from "@/hooks/tasks/use-task-counter";
 import { Board } from "@/types/board";
+import { useSubscription } from "@/hooks/use-subscription";
 
 interface TaskProgressProps {
   currentBoard: Board | null;
@@ -10,6 +11,7 @@ interface TaskProgressProps {
 
 export function TaskProgress({ currentBoard }: TaskProgressProps) {
   const { totalTasks, totalLimit, syncCompletedTasksCount } = useTaskCounter(currentBoard);
+  const { isPro } = useSubscription();
   const progressPercentage = (totalTasks / totalLimit) * 100;
 
   // Sincronizar o contador quando o componente montar ou quando mudar o quadro
@@ -24,6 +26,11 @@ export function TaskProgress({ currentBoard }: TaskProgressProps) {
     
     return () => clearInterval(intervalId);
   }, [currentBoard, syncCompletedTasksCount]);
+
+  // Não mostrar o componente para usuários Pro
+  if (isPro) {
+    return null;
+  }
 
   return (
     <div className="w-full space-y-1">

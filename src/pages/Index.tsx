@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useBoards } from '@/hooks/use-boards';
 import { useTaskCounter } from '@/hooks/tasks/use-task-counter';
 import { Badge } from '@/components/ui/badge';
+import { useSubscription } from '@/hooks/use-subscription';
 
 const Index = () => {
   const { user } = useAuth();
@@ -22,7 +23,8 @@ const Index = () => {
   const { tasks, loading, addTask, updateTask, deleteTask, changeTaskStatus } = useTasks();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { currentBoard, loading: loadingBoards } = useBoards();
-  const { totalTasks, remainingTasks, totalLimit, limitReached, incrementCompletedTasks, syncCompletedTasksCount } = useTaskCounter(currentBoard);
+  const { totalTasks, remainingTasks, totalLimit, limitReached, syncCompletedTasksCount } = useTaskCounter(currentBoard);
+  const { isPro } = useSubscription();
 
   // Sincronizar o contador de tarefas ao carregar
   useEffect(() => {
@@ -61,12 +63,6 @@ const Index = () => {
     setIsCreateDialogOpen(false);
   };
 
-  // Função para calcular o progresso
-  const calculateProgress = () => {
-    if (totalLimit === 0) return 0;
-    return (totalTasks / totalLimit) * 100;
-  };
-
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full mountain-pattern">
@@ -80,28 +76,31 @@ const Index = () => {
                 {loadingBoards && <span className="ml-2 text-sm text-purple-400">(Carregando quadros...)</span>}
               </h1>
               
-              <div className="mt-2 text-sm flex items-center gap-2">
-                {!limitReached ? (
-                  <Badge variant="outline" className="bg-purple-500/20 text-purple-200 border-purple-500">
-                    {remainingTasks} de {totalLimit} tarefas disponíveis
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive" className="bg-red-500/20 text-red-200 border-red-500">
-                    Limite de tarefas atingido
-                  </Badge>
-                )}
-                
-                <div className="text-xs text-gray-400">
-                  Total atual: {totalTasks}/{totalLimit}
+              {/* Mostrar informações de limite apenas para usuários sem plano Pro */}
+              {!isPro && (
+                <div className="mt-2 text-sm flex items-center gap-2">
+                  {!limitReached ? (
+                    <Badge variant="outline" className="bg-purple-500/20 text-purple-200 border-purple-500">
+                      {remainingTasks} de {totalLimit} tarefas disponíveis
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive" className="bg-red-500/20 text-red-200 border-red-500">
+                      Limite de tarefas atingido
+                    </Badge>
+                  )}
+                  
+                  <div className="text-xs text-gray-400">
+                    Total atual: {totalTasks}/{totalLimit}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
             
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
                   className="purple-gradient-bg" 
-                  disabled={limitReached}
+                  disabled={!isPro && limitReached}
                   onClick={() => {
                     // Forçar sincronização do contador antes de mostrar o diálogo
                     syncCompletedTasksCount();

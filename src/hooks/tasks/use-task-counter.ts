@@ -41,7 +41,7 @@ export function useTaskCounter(currentBoard: Board | null = null) {
       // Atualizar o estado local imediatamente
       setTotalTasks(tasksCount);
       
-      // Verificar se já atingiu o limite logo na carga
+      // Verificar se já atingiu o limite logo na carga (apenas para usuários sem plano Pro)
       if (!isPro && tasksCount >= FREE_PLAN_LIMIT) {
         console.log(`Limite atingido durante sincronização: ${tasksCount}/${FREE_PLAN_LIMIT}`);
         setShowUpgradeModal(true);
@@ -83,6 +83,7 @@ export function useTaskCounter(currentBoard: Board | null = null) {
 
   // Incrementar contador de tarefas
   const incrementCompletedTasks = async () => {
+    // Se o usuário tem plano Pro, não precisa verificar limites
     if (!user || isPro) return;
 
     // Atualizar o estado imediatamente para feedback instantâneo
@@ -108,6 +109,7 @@ export function useTaskCounter(currentBoard: Board | null = null) {
 
   // Decrementar contador quando uma tarefa for excluída
   const decrementCompletedTasks = () => {
+    // Se o usuário tem plano Pro, não precisa verificar limites
     if (!user || isPro) return;
 
     // Atualizar o estado imediatamente para feedback instantâneo
@@ -130,16 +132,21 @@ export function useTaskCounter(currentBoard: Board | null = null) {
     syncCompletedTasksCount();
   };
 
+  // Para usuários Pro, alguns valores são diferentes
+  const effectiveTotalLimit = isPro ? Infinity : FREE_PLAN_LIMIT;
+  const effectiveRemainingTasks = isPro ? Infinity : Math.max(0, FREE_PLAN_LIMIT - totalTasks);
+  const effectiveLimitReached = isPro ? false : totalTasks >= FREE_PLAN_LIMIT;
+
   return {
     totalTasks,
-    remainingTasks: Math.max(0, FREE_PLAN_LIMIT - totalTasks),
-    totalLimit: FREE_PLAN_LIMIT,
+    remainingTasks: effectiveRemainingTasks,
+    totalLimit: effectiveTotalLimit,
     incrementCompletedTasks,
     decrementCompletedTasks,
     syncCompletedTasksCount,
     showUpgradeModal,
     closeUpgradeModal: () => setShowUpgradeModal(false),
-    limitReached: !isPro && totalTasks >= FREE_PLAN_LIMIT,
+    limitReached: effectiveLimitReached,
     resetCounter
   };
 }
