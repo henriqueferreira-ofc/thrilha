@@ -63,27 +63,12 @@ export function useTaskDelete(
         throw error;
       }
       
-      // Verificar se a tarefa ainda existe (pode falhar silenciosamente)
-      const { data: checkData } = await supabase
-        .from('tasks')
-        .select('id')
-        .eq('id', id)
-        .maybeSingle();
-        
-      if (checkData) {
-        console.error('Tarefa ainda existe após exclusão, tentando novamente...');
-        await supabase
-          .from('tasks')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', user.id);
-      }
-      
       // Sincronizar o contador após a exclusão bem-sucedida
       await syncCompletedTasksCount();
       
       // Garantir que as mudanças sejam refletidas em outras partes da aplicação
       console.log('Tarefa excluída com sucesso');
+      toast.success('Tarefa excluída com sucesso!');
       return true;
     } catch (error) {
       console.error('Erro ao excluir tarefa:', error);

@@ -5,9 +5,8 @@ import { TaskSidebar } from '@/components/task-sidebar';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { CalendarIcon, Check, Circle } from 'lucide-react';
-import { useTasks } from '@/hooks/use-tasks';
 import { Task } from '@/types/task';
 import {
   Table,
@@ -18,11 +17,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useEffect } from 'react';
+import { useTaskCore } from '@/hooks/tasks/use-task-core';
 
 const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  // Usar o hook de tasks padronizado para garantir consistência dos dados
-  const { tasks, loading } = useTasks();
+  // Use the centralized task hook to ensure data consistency
+  const { tasks, loading } = useTaskCore();
 
   useEffect(() => {
     console.log('Calendar: Tasks carregadas:', tasks.length);

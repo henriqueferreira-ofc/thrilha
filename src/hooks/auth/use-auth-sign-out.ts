@@ -20,16 +20,19 @@ export function useAuthSignOut() {
       setLastError(null);
       
       // Primeiro limpar o estado local e navegar para a página inicial 
-      navigate('/', { replace: true });
+      // Limpar qualquer dado em cache ou localStorage relacionado a tarefas
+      localStorage.removeItem('vo-tasks');
+      localStorage.removeItem('lastBoard');
+      localStorage.removeItem('selectedBoard');
+      
+      // Fechar todas as conexões de tempo real do Supabase
+      supabase.removeAllChannels();
       
       // Em seguida, fazer logout do Supabase
       await supabase.auth.signOut();
       clearAuthData();
       
-      // Limpar qualquer dado em cache ou localStorage relacionado a tarefas
-      localStorage.removeItem('vo-tasks');
-      localStorage.removeItem('lastBoard');
-      localStorage.removeItem('selectedBoard');
+      navigate('/', { replace: true });
       
       console.log('Logout completo');
       toast.success('Você saiu com sucesso!');
@@ -49,6 +52,10 @@ export function useAuthSignOut() {
    */
   const forceLogout = () => {
     console.log('Forçando logout e limpando dados de autenticação');
+    
+    // Fechar todas as conexões de tempo real do Supabase
+    supabase.removeAllChannels();
+    
     clearAuthData();
     localStorage.removeItem('vo-tasks');
     localStorage.removeItem('lastBoard');

@@ -13,11 +13,17 @@ export function useTaskCore() {
 
   // Load tasks from Supabase when the component mounts
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
 
     const fetchTasks = async () => {
       try {
         setLoading(true);
+        console.log('useTaskCore: Carregando tarefas para usuário', user.id);
+        
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
@@ -35,10 +41,10 @@ export function useTaskCore() {
           updated_at: task.updated_at || task.created_at,
           due_date: task.due_date,
           user_id: task.user_id,
-          board_id: task.board_id,
-          completed: task.status === 'done'
+          board_id: task.board_id || ''
         })) || [];
 
+        console.log(`useTaskCore: ${formattedTasks.length} tarefas carregadas`);
         setTasks(formattedTasks);
       } catch (error) {
         console.error('Erro ao buscar tarefas:', error);
@@ -49,6 +55,38 @@ export function useTaskCore() {
     };
 
     fetchTasks();
+
+    // Configure real-time subscription
+    const channel = supabase
+      .channel('public:tasks')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tasks',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        console.log('Evento em tempo real recebido em useTaskCore:', payload);
+        
+        if (payload.eventType === 'INSERT') {
+          const newTask = payload.new as Task;
+          setTasks(prev => [newTask, ...prev]);
+        } 
+        else if (payload.eventType === 'UPDATE') {
+          const updatedTask = payload.new as Task;
+          setTasks(prev => 
+            prev.map(task => task.id === updatedTask.id ? updatedTask : task)
+          );
+        }
+        else if (payload.eventType === 'DELETE') {
+          const deletedTaskId = payload.old.id;
+          setTasks(prev => prev.filter(task => task.id !== deletedTaskId));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   return {
