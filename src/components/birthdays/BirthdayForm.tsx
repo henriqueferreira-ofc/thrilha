@@ -5,30 +5,73 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { supabase } from '@/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 interface BirthdayFormProps {
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export default function BirthdayForm({ onClose }: BirthdayFormProps) {
+export default function BirthdayForm({ onClose, onSuccess }: BirthdayFormProps) {
   const [name, setName] = useState('');
   const [birthdate, setBirthdate] = useState('');
   const [relationship, setRelationship] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast.error("Você precisa estar logado para adicionar um aniversário.");
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate saving
-    setTimeout(() => {
-      toast("Aniversário adicionado", {
+    try {
+      // Inserir no Supabase
+      const { data, error } = await supabase
+        .from('birthdays')
+        .insert({
+          user_id: user.id,
+          name,
+          birthdate,
+          relationship,
+          notes: notes || null
+        })
+        .select();
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Aniversário adicionado", {
         description: `Aniversário de ${name} foi adicionado com sucesso.`,
       });
-      setIsSubmitting(false);
+      
+      // Reset form
+      setName('');
+      setBirthdate('');
+      setRelationship('');
+      setNotes('');
+      
+      // Callback para atualizar lista
+      if (onSuccess) {
+        onSuccess();
+      }
+      
       onClose();
-    }, 500);
+    } catch (error: any) {
+      console.error('Erro ao salvar aniversário:', error);
+      toast.error("Erro ao salvar", {
+        description: error.message || "Não foi possível salvar o aniversário. Tente novamente."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

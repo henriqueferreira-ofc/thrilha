@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import BirthdayList from '@/components/birthdays/BirthdayList';
@@ -8,6 +8,14 @@ import ZapierIntegration from '@/components/birthdays/ZapierIntegration';
 
 const Birthdays = () => {
   const [showForm, setShowForm] = useState(false);
+  const birthdayListRef = useRef<any>(null);
+
+  // Função para forçar a atualização da lista de aniversários
+  const refreshList = () => {
+    if (birthdayListRef.current && typeof birthdayListRef.current.fetchBirthdays === 'function') {
+      birthdayListRef.current.fetchBirthdays();
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -29,13 +37,16 @@ const Birthdays = () => {
             <div className="max-w-4xl mx-auto space-y-8">
               <div className="glass-panel p-6 rounded-xl">
                 <h2 className="text-xl font-semibold mb-4">Lista de Aniversários</h2>
-                <BirthdayList />
+                <BirthdayList ref={birthdayListRef} />
               </div>
               
               {showForm && (
                 <div className="glass-panel p-6 rounded-xl">
                   <h2 className="text-xl font-semibold mb-4">Adicionar Novo Aniversário</h2>
-                  <BirthdayForm onClose={() => setShowForm(false)} />
+                  <BirthdayForm 
+                    onClose={() => setShowForm(false)} 
+                    onSuccess={refreshList}
+                  />
                 </div>
               )}
               

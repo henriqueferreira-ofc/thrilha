@@ -25,43 +25,45 @@ export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
   const isActive = (path: string) => location.pathname === path;
 
   // Items comuns para todos os usuários
-  const commonItems = [
+  let navItems = [
     { 
       icon: <HomeIcon className="h-4 w-4 mr-2" />, 
       label: 'Tarefas', 
       path: '/app' 
-    },
-    { 
-      icon: <CalendarIcon className="h-4 w-4 mr-2" />, 
-      label: 'Calendário', 
-      path: '/calendar' 
-    },
-    { 
-      icon: <HeartFilledIcon className="h-4 w-4 mr-2" />, 
-      label: 'Planos', 
-      path: '/subscription' 
-    },
-    { 
-      icon: <GearIcon className="h-4 w-4 mr-2" />, 
-      label: 'Configurações', 
-      path: '/settings' 
-    },
-    { 
-      icon: <PersonIcon className="h-4 w-4 mr-2" />, 
-      label: 'Sobre', 
-      path: '/about' 
     }
   ];
 
   // Adiciona itens específicos apenas para usuários autenticados
-  const navItems = user ? [
-    ...commonItems,
-    { 
-      icon: <Cake className="h-4 w-4 mr-2" />, 
-      label: 'Aniversários', 
-      path: '/birthdays' 
-    }
-  ] : commonItems;
+  if (user) {
+    navItems = [
+      ...navItems,
+      { 
+        icon: <Cake className="h-4 w-4 mr-2" />, 
+        label: 'Aniversários', 
+        path: '/birthdays' 
+      },
+      { 
+        icon: <CalendarIcon className="h-4 w-4 mr-2" />, 
+        label: 'Calendário', 
+        path: '/calendar' 
+      },
+      { 
+        icon: <HeartFilledIcon className="h-4 w-4 mr-2" />, 
+        label: 'Planos', 
+        path: '/subscription' 
+      },
+      { 
+        icon: <GearIcon className="h-4 w-4 mr-2" />, 
+        label: 'Configurações', 
+        path: '/settings' 
+      },
+      { 
+        icon: <PersonIcon className="h-4 w-4 mr-2" />, 
+        label: 'Sobre', 
+        path: '/about' 
+      }
+    ];
+  }
 
   return (
     <ScrollArea className="flex-1 pt-2">

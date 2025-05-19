@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { toast } from 'sonner';
 import { 
   Table, 
@@ -11,8 +10,11 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Trash2, Edit } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface Birthday {
   id: string;
@@ -22,42 +24,83 @@ interface Birthday {
   notes?: string;
 }
 
-const SAMPLE_BIRTHDAYS: Birthday[] = [
-  {
-    id: '1',
-    name: 'Maria Silva',
-    birthdate: '1980-05-12',
-    relationship: 'Mãe',
-    notes: 'Gosta de chocolates',
-  },
-  {
-    id: '2',
-    name: 'João Oliveira',
-    birthdate: '1975-08-23',
-    relationship: 'Pai',
-  },
-  {
-    id: '3',
-    name: 'Ana Costa',
-    birthdate: '1990-11-03',
-    relationship: 'Irmã',
-    notes: 'Prefere presentes feitos à mão',
-  }
-];
+interface BirthdayListRef {
+  fetchBirthdays: () => Promise<void>;
+}
 
-export default function BirthdayList() {
-  const [birthdays, setBirthdays] = useState<Birthday[]>(SAMPLE_BIRTHDAYS);
+const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
+  const [birthdays, setBirthdays] = useState<Birthday[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  const deleteBirthday = (id: string) => {
-    setBirthdays(birthdays.filter(birthday => birthday.id !== id));
-    toast("Aniversário excluído", {
-      description: "O aniversário foi removido com sucesso.",
-    });
+  // Função para buscar aniversários
+  const fetchBirthdays = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('birthdays')
+        .select('*')
+        .order('birthdate', { ascending: true });
+      
+      if (error) {
+        throw error;
+      }
+      
+      setBirthdays(data || []);
+    } catch (error: any) {
+      console.error('Erro ao buscar aniversários:', error);
+      toast.error('Erro ao carregar aniversários');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Expor a função fetchBirthdays via ref
+  useImperativeHandle(ref, () => ({
+    fetchBirthdays
+  }));
+
+  // Carregar aniversários quando o componente montar
+  useEffect(() => {
+    fetchBirthdays();
+  }, [user]);
+
+  // Função para excluir aniversário
+  const deleteBirthday = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('birthdays')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Atualiza a lista local removendo o item excluído
+      setBirthdays(birthdays.filter(birthday => birthday.id !== id));
+      
+      toast.success("Aniversário excluído", {
+        description: "O aniversário foi removido com sucesso.",
+      });
+    } catch (error: any) {
+      console.error('Erro ao excluir aniversário:', error);
+      toast.error("Erro ao excluir", {
+        description: error.message || "Não foi possível excluir o aniversário. Tente novamente."
+      });
+    }
   };
 
   const formatBirthdate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "dd 'de' MMMM", { locale: ptBR });
+      // Tenta fazer o parse da data (podendo estar em formato ISO ou apenas data)
+      const date = dateString.includes('T') 
+        ? parseISO(dateString) 
+        : new Date(dateString);
+      
+      return format(date, "dd 'de' MMMM", { locale: ptBR });
     } catch (error) {
       console.error("Error formatting date:", error);
       return dateString;
@@ -66,7 +109,11 @@ export default function BirthdayList() {
 
   const calculateDaysUntilBirthday = (birthdateStr: string) => {
     const today = new Date();
-    const birthdate = new Date(birthdateStr);
+    
+    // Tenta fazer o parse da data (podendo estar em formato ISO ou apenas data)
+    const birthdate = birthdateStr.includes('T') 
+      ? parseISO(birthdateStr) 
+      : new Date(birthdateStr);
     
     const birthdateThisYear = new Date(
       today.getFullYear(),
@@ -82,6 +129,15 @@ export default function BirthdayList() {
     const diffTime = birthdateThisYear.getTime() - today.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent align-[-0.125em]"></div>
+        <p className="mt-2 text-gray-400">Carregando aniversários...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -121,13 +177,32 @@ export default function BirthdayList() {
                       <Button variant="outline" size="icon">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="icon" 
-                        onClick={() => deleteBirthday(birthday.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir Aniversário</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir o aniversário de {birthday.name}? 
+                              Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => deleteBirthday(birthday.id)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -138,4 +213,8 @@ export default function BirthdayList() {
       )}
     </div>
   );
-}
+});
+
+BirthdayList.displayName = 'BirthdayList';
+
+export default BirthdayList;
