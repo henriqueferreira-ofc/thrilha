@@ -12,12 +12,14 @@ import { useTasks } from '@/hooks/use-tasks';
 import { TaskFormData } from '@/types/task';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useBoards } from '@/hooks/use-boards';
 
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { tasks, loading, addTask, updateTask, deleteTask, changeTaskStatus } = useTasks();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { selectedBoard, loading: loadingBoards } = useBoards();
 
   // Verificar se o usuário está autenticado
   useEffect(() => {
@@ -28,9 +30,15 @@ const Index = () => {
   }, [user, navigate]);
 
   const handleCreateTask = async (data: TaskFormData) => {
-    console.log(`Index - Criando nova tarefa`);
+    console.log(`Index - Criando nova tarefa`, data);
     
-    const task = await addTask(data);
+    // Garantir que o board_id esteja definido
+    const taskData = {
+      ...data,
+      board_id: selectedBoard?.id || 'default'
+    };
+    
+    const task = await addTask(taskData);
     
     if (task) {
       console.log(`Index - Tarefa criada com sucesso: ${task.id}`);
@@ -47,7 +55,10 @@ const Index = () => {
         
         <div className="flex-1 flex flex-col">
           <header className="p-6 flex justify-between items-center border-b border-white/10 backdrop-blur-sm bg-black/20">
-            <h1 className="text-xl font-bold text-white">Tarefas</h1>
+            <h1 className="text-xl font-bold text-white">
+              {selectedBoard ? selectedBoard.name : 'Tarefas'}
+              {loadingBoards && <span className="ml-2 text-sm text-purple-400">(Carregando quadros...)</span>}
+            </h1>
             
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
@@ -58,7 +69,10 @@ const Index = () => {
               </DialogTrigger>
               <DialogContent className="glass-panel sm:max-w-[425px]">
                 <DialogTitle>Criar Nova Tarefa</DialogTitle>
-                <TaskForm onSubmit={handleCreateTask} />
+                <TaskForm 
+                  onSubmit={handleCreateTask} 
+                  boardId={selectedBoard?.id || ''} 
+                />
               </DialogContent>
             </Dialog>
           </header>

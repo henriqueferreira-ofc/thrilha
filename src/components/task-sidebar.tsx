@@ -7,6 +7,7 @@ import { SidebarProfile } from './sidebar/SidebarProfile';
 import { SidebarNavigation } from './sidebar/SidebarNavigation';
 import { TaskCreateDialog } from './sidebar/TaskCreateDialog';
 import { useSidebarProfile } from '@/hooks/use-sidebar-profile';
+import { useBoards } from '@/hooks/use-boards';
 
 interface TaskSidebarProps {
   onCreateTask?: (data: TaskFormData) => void;
@@ -15,6 +16,7 @@ interface TaskSidebarProps {
 export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
   const { user, signOut } = useAuth();
   const { avatarUrl, username, loading } = useSidebarProfile(user);
+  const { selectedBoard } = useBoards();
 
   const handleLogout = () => {
     try {
@@ -39,7 +41,12 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
 
   const handleCreateTask = (data: TaskFormData) => {
     if (onCreateTask) {
-      onCreateTask(data);
+      // Garantir que boardId está corretamente definido
+      const taskData = {
+        ...data,
+        board_id: selectedBoard?.id || 'default'
+      };
+      onCreateTask(taskData);
     }
   };
 

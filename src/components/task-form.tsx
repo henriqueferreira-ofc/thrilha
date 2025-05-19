@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface TaskFormProps {
   initialData?: {
@@ -32,26 +33,48 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
   const [date, setDate] = useState<Date | undefined>(
     initialData.dueDate ? new Date(initialData.dueDate) : undefined
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!title.trim()) {
+      toast.error('O título da tarefa é obrigatório');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      onSubmit({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        dueDate: date ? date.toISOString() : undefined,
+        board_id: boardId
+      });
 
-    if (!title.trim()) return;
-
-    onSubmit({
-      title: title.trim(),
-      description: description.trim() || undefined,
-      dueDate: date ? date.toISOString() : undefined,
-      board_id: boardId
-    });
-
-    // Reset form if it's a new task (no initialData)
-    if (!initialData.title) {
-      setTitle('');
-      setDescription('');
-      setDate(undefined);
+      // Reset form if it's a new task (no initialData)
+      if (!initialData.title) {
+        setTitle('');
+        setDescription('');
+        setDate(undefined);
+      }
+    } catch (error) {
+      console.error('Erro ao criar tarefa:', error);
+      toast.error('Erro ao criar tarefa');
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  // Verificar se há um quadro selecionado
+  const isBoardMissing = !boardId || boardId === 'undefined' || boardId === '';
+  
+  useEffect(() => {
+    if (isBoardMissing) {
+      console.log('Aviso: boardId não definido no TaskForm');
+    }
+  }, [isBoardMissing]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -107,9 +130,19 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
         </Popover>
       </div>
 
-      <Button type="submit" className="w-full" disabled={!boardId}>
-        {initialData.title ? 'Salvar Alterações' : 'Criar Tarefa'}
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={isBoardMissing || isSubmitting}
+      >
+        {isSubmitting ? 'Criando...' : (initialData.title ? 'Salvar Alterações' : 'Criar Tarefa')}
       </Button>
+      
+      {isBoardMissing && (
+        <p className="text-sm text-orange-500 text-center">
+          Selecione um quadro primeiro
+        </p>
+      )}
     </form>
   );
 }
