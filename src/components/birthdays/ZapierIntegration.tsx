@@ -3,21 +3,19 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { AlertCircle } from 'lucide-react';
 
 export default function ZapierIntegration() {
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const { toast } = useToast();
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!webhookUrl) {
-      toast({
-        title: "Erro",
+      toast("Erro", {
         description: "Por favor, insira a URL do webhook do Zapier",
         variant: "destructive",
       });
@@ -45,8 +43,7 @@ export default function ZapierIntegration() {
       });
       
       setIsConnected(true);
-      toast({
-        title: "Conectado com sucesso",
+      toast("Conectado com sucesso", {
         description: "Seu Zapier foi conectado e irá enviar lembretes para seu WhatsApp.",
       });
       
@@ -55,8 +52,7 @@ export default function ZapierIntegration() {
       
     } catch (error) {
       console.error("Erro ao conectar:", error);
-      toast({
-        title: "Erro na conexão",
+      toast("Erro na conexão", {
         description: "Não foi possível conectar ao Zapier. Verifique a URL e tente novamente.",
         variant: "destructive",
       });
@@ -69,8 +65,7 @@ export default function ZapierIntegration() {
     setIsConnected(false);
     setWebhookUrl('');
     localStorage.removeItem('birthdayZapierWebhook');
-    toast({
-      title: "Desconectado",
+    toast("Desconectado", {
       description: "A integração com o Zapier foi removida.",
     });
   };

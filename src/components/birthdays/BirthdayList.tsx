@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { 
   Table, 
   TableBody, 
@@ -47,12 +47,10 @@ const SAMPLE_BIRTHDAYS: Birthday[] = [
 
 export default function BirthdayList() {
   const [birthdays, setBirthdays] = useState<Birthday[]>(SAMPLE_BIRTHDAYS);
-  const { toast } = useToast();
 
   const deleteBirthday = (id: string) => {
     setBirthdays(birthdays.filter(birthday => birthday.id !== id));
-    toast({
-      title: "Aniversário excluído",
+    toast("Aniversário excluído", {
       description: "O aniversário foi removido com sucesso.",
     });
   };

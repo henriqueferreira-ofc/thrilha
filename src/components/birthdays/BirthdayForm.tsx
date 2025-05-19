@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 interface BirthdayFormProps {
   onClose: () => void;
@@ -16,8 +16,6 @@ export default function BirthdayForm({ onClose }: BirthdayFormProps) {
   const [relationship, setRelationship] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,8 +23,7 @@ export default function BirthdayForm({ onClose }: BirthdayFormProps) {
     
     // Simulate saving
     setTimeout(() => {
-      toast({
-        title: "Aniversário adicionado",
+      toast("Aniversário adicionado", {
         description: `Aniversário de ${name} foi adicionado com sucesso.`,
       });
       setIsSubmitting(false);
