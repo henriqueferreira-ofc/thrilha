@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,7 +26,7 @@ import { supabase } from './supabase/client';
 import { clearAuthData } from "./utils/auth";
 
 // Componente para lidar com navegação e erros
-const NavigationHandler: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const NavigationHandler = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -84,7 +85,7 @@ function ConnectionManager() {
 }
 
 // Componente para verificar autenticação e redirecionar para rotas protegidas
-const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
+const ProtectedRoute = ({ element }: { element: React.ReactElement }) => {
   const { user, loading, session } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -143,40 +144,43 @@ const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) 
   return element;
 };
 
-// Utilizamos apenas BrowserRouter para funcionar corretamente com o React Router
+// Criar uma instância do QueryClient fora do componente
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+// Componente App
+const App = () => {
+  return (
     <BrowserRouter>
-      <TooltipProvider>
-        <ConnectionManager />
-        <Toaster />
-        <Sonner />
-        <NavigationHandler>
-          <AuthProvider>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/auth" element={<Auth />} />
-              
-              {/* Rotas protegidas com verificação de autenticação */}
-              <Route path="/app" element={<ProtectedRoute element={<Index />} />} />
-              <Route path="/tasks" element={<ProtectedRoute element={<Index />} />} />
-              <Route path="/calendar" element={<ProtectedRoute element={<Calendar />} />} />
-              <Route path="/birthdays" element={<ProtectedRoute element={<Birthdays />} />} />
-              <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
-              <Route path="/about" element={<ProtectedRoute element={<About />} />} />
-              <Route path="/subscription" element={<ProtectedRoute element={<SubscriptionPage />} />} />
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ConnectionManager />
+          <Toaster />
+          <Sonner />
+          <NavigationHandler>
+            <AuthProvider>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/auth" element={<Auth />} />
+                
+                {/* Rotas protegidas com verificação de autenticação */}
+                <Route path="/app" element={<ProtectedRoute element={<Index />} />} />
+                <Route path="/tasks" element={<ProtectedRoute element={<Index />} />} />
+                <Route path="/calendar" element={<ProtectedRoute element={<Calendar />} />} />
+                <Route path="/birthdays" element={<ProtectedRoute element={<Birthdays />} />} />
+                <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
+                <Route path="/about" element={<ProtectedRoute element={<About />} />} />
+                <Route path="/subscription" element={<ProtectedRoute element={<SubscriptionPage />} />} />
 
-              {/* Rota para qualquer outra URL */}
-              <Route path="/404" element={<NotFound />} />
-              <Route path="*" element={<Navigate to="/404" replace />} />
-            </Routes>
-          </AuthProvider>
-        </NavigationHandler>
-      </TooltipProvider>
+                {/* Rota para qualquer outra URL */}
+                <Route path="/404" element={<NotFound />} />
+                <Route path="*" element={<Navigate to="/404" replace />} />
+              </Routes>
+            </AuthProvider>
+          </NavigationHandler>
+        </TooltipProvider>
+      </QueryClientProvider>
     </BrowserRouter>
-  </QueryClientProvider>
-);
+  );
+};
 
 export default App;
