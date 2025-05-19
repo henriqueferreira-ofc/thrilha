@@ -159,11 +159,11 @@ const App = () => {
           <NavigationHandler>
             <AuthProvider>
               <Routes>
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={<Navigate to="/tasks" replace />} />
                 <Route path="/auth" element={<Auth />} />
                 
                 {/* Rotas protegidas com verificação de autenticação */}
-                <Route path="/app" element={<ProtectedRoute element={<Index />} />} />
+                <Route path="/app" element={<Navigate to="/tasks" replace />} />
                 <Route path="/tasks" element={<ProtectedRoute element={<Index />} />} />
                 <Route path="/calendar" element={<ProtectedRoute element={<Calendar />} />} />
                 <Route path="/birthdays" element={<ProtectedRoute element={<Birthdays />} />} />
