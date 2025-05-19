@@ -11,23 +11,33 @@ interface RealtimeHandlers {
 
 export function useRealtimeSubscription(
   boardId: string | undefined,
+  userId: string | undefined,
   handlers: RealtimeHandlers
 ) {
   useEffect(() => {
-    if (!boardId) return;
+    if (!userId) return;
 
-    console.log(`Configurando subscription para o quadro ${boardId}`);
+    console.log(`Configurando subscription para o usuário ${userId}${boardId ? ` e quadro ${boardId}` : ''}`);
 
     // Criar um canal Supabase para escutar alterações na tabela tasks
+    // para o usuário específico e opcionalmente para um quadro específico
+    const channelFilter = boardId 
+      ? `user_id=eq.${userId}&board_id=eq.${boardId}`
+      : `user_id=eq.${userId}`;
+      
+    const channelName = boardId 
+      ? `public:tasks:${userId}:${boardId}` 
+      : `public:tasks:${userId}`;
+
     const channel = supabase
-      .channel(`public:tasks:board_id=eq.${boardId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'tasks',
-          filter: `board_id=eq.${boardId}`,
+          filter: channelFilter
         },
         (payload) => {
           console.log('Evento Realtime (INSERT):', payload);
@@ -42,18 +52,11 @@ export function useRealtimeSubscription(
             updated_at: payload.new.updated_at || payload.new.created_at,
             due_date: payload.new.due_date,
             user_id: payload.new.user_id,
-            board_id: payload.new.board_id,
+            board_id: payload.new.board_id || '',
           };
           
-          // Ignorar tarefas com IDs temporários (nossa aplicação já lidou com elas)
-          if (newTask.id.startsWith('temp-')) {
-            console.log('Ignorando tarefa temporária:', newTask.id);
-            return;
-          }
-          
           if (handlers.onInsert) {
-            // Verificamos se é uma tarefa remota antes de inserir
-            console.log('Processando inserção remota:', newTask.id);
+            console.log('Processando inserção em tempo real:', newTask.id);
             handlers.onInsert(newTask);
           }
         }
@@ -64,7 +67,7 @@ export function useRealtimeSubscription(
           event: 'UPDATE',
           schema: 'public',
           table: 'tasks',
-          filter: `board_id=eq.${boardId}`,
+          filter: channelFilter
         },
         (payload) => {
           console.log('Evento Realtime (UPDATE):', payload);
@@ -79,7 +82,7 @@ export function useRealtimeSubscription(
             updated_at: payload.new.updated_at || payload.new.created_at,
             due_date: payload.new.due_date,
             user_id: payload.new.user_id,
-            board_id: payload.new.board_id,
+            board_id: payload.new.board_id || '',
           };
           
           if (handlers.onUpdate) {
@@ -93,7 +96,7 @@ export function useRealtimeSubscription(
           event: 'DELETE',
           schema: 'public',
           table: 'tasks',
-          filter: `board_id=eq.${boardId}`,
+          filter: channelFilter
         },
         (payload) => {
           console.log('Evento Realtime (DELETE):', payload);
@@ -104,13 +107,13 @@ export function useRealtimeSubscription(
         }
       )
       .subscribe((status) => {
-        console.log(`Status da subscription para o quadro ${boardId}:`, status);
+        console.log(`Status da subscription: ${status}`);
       });
 
     // Limpar a subscription quando o componente for desmontado
     return () => {
-      console.log(`Removendo subscription para o quadro ${boardId}`);
+      console.log(`Removendo subscription para o usuário ${userId}`);
       supabase.removeChannel(channel);
     };
-  }, [boardId, handlers]);
+  }, [boardId, userId, handlers]);
 }

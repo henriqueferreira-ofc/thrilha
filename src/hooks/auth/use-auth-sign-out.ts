@@ -19,12 +19,18 @@ export function useAuthSignOut() {
       setIsLoading(true);
       setLastError(null);
       
-      // Primeiro limpar o estado local 
-      navigate('/', { replace: true });
+      // Primeiro limpar o estado local e navegar para a página inicial 
+      // Limpar qualquer dado em cache ou localStorage relacionado a tarefas
+      localStorage.removeItem('vo-tasks');
+      
+      // Fechar todas as conexões de tempo real do Supabase
+      supabase.removeAllChannels();
       
       // Em seguida, fazer logout do Supabase
       await supabase.auth.signOut();
       clearAuthData();
+      
+      navigate('/', { replace: true });
       
       console.log('Logout completo');
       toast.success('Você saiu com sucesso!');
@@ -44,7 +50,12 @@ export function useAuthSignOut() {
    */
   const forceLogout = () => {
     console.log('Forçando logout e limpando dados de autenticação');
+    
+    // Fechar todas as conexões de tempo real do Supabase
+    supabase.removeAllChannels();
+    
     clearAuthData();
+    localStorage.removeItem('vo-tasks');
     window.location.href = '/';
   };
 

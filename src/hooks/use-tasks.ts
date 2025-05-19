@@ -1,6 +1,7 @@
 
 import { useTaskCore } from './tasks/use-task-core';
 import { useTaskOperations } from './tasks/use-task-operations';
+import { getStatusName } from '@/lib/task-utils';
 
 export function useTasks() {
   const { tasks, setTasks, loading } = useTaskCore();
@@ -13,5 +14,6 @@ export function useTasks() {
     updateTask,
     deleteTask,
     changeTaskStatus,
+    getStatusName
   };
 }

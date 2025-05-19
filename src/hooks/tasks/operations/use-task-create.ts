@@ -1,25 +1,17 @@
+
 import { toast } from '@/hooks/toast';
 import { Task, TaskStatus, TaskFormData } from '@/types/task';
 import { supabase } from '@/supabase/client';
-import { Board } from '@/types/board';
-import { useTaskCounter } from '../use-task-counter';
-import { useNavigate } from 'react-router-dom';
-import { useSubscription } from '@/hooks/subscription/use-subscription';
 import { User } from '@supabase/supabase-js';
 
 export function useTaskCreate(
   tasks: Task[], 
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>, 
   user: User | null,
-  currentBoard: Board | null,
   optimisticUpdate?: {
     addTask: (task: Task) => void;
   }
 ) {
-  const { totalTasks, totalLimit, syncCompletedTasksCount } = useTaskCounter(currentBoard);
-  const navigate = useNavigate();
-  const { isPro } = useSubscription();
-
   // Adicionar uma nova tarefa
   const addTask = async (taskData: TaskFormData): Promise<Task | null> => {
     if (!user) {
@@ -27,21 +19,10 @@ export function useTaskCreate(
       return null;
     }
 
-    if (!currentBoard) {
-      toast.error('Você precisa selecionar um quadro para criar tarefas');
-      return null;
-    }
-
-    // Verificar se já atingiu o limite do plano gratuito
-    if (!isPro && totalTasks >= totalLimit) {
-      navigate('/subscription');
-      return null;
-    }
-
     let tempId = '';
 
     try {
-      console.log(`Iniciando criação de tarefa no quadro ${currentBoard.id}...`);
+      console.log(`Iniciando criação de tarefa...`);
       
       // Gerar um ID temporário para atualização otimista
       tempId = `temp-${Date.now()}`;
@@ -55,8 +36,8 @@ export function useTaskCreate(
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         due_date: taskData.dueDate,
-        board_id: currentBoard.id,
-        user_id: user.id
+        user_id: user.id,
+        board_id: taskData.board_id || 'default' // Usar o board_id fornecido ou um valor padrão
       };
 
       // Aplicar atualização otimista SEMPRE antes da operação de banco de dados
@@ -75,8 +56,8 @@ export function useTaskCreate(
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         due_date: taskData.dueDate,
-        board_id: currentBoard.id,
-        user_id: user.id
+        user_id: user.id,
+        board_id: taskData.board_id || 'default' // Usar o board_id fornecido ou um valor padrão
       };
 
       // Enviar para o backend
@@ -104,7 +85,7 @@ export function useTaskCreate(
         updated_at: data.updated_at,
         due_date: data.due_date,
         user_id: data.user_id,
-        board_id: data.board_id
+        board_id: data.board_id || 'default' // Garantir que o board_id esteja presente
       };
 
       console.log('Tarefa criada com sucesso no servidor:', createdTask.id);
@@ -114,14 +95,6 @@ export function useTaskCreate(
         const filteredTasks = prev.filter(task => task.id !== tempId);
         return [createdTask, ...filteredTasks];
       });
-
-      // Atualizar o contador imediatamente após criar a tarefa com sucesso
-      await syncCompletedTasksCount();
-      
-      // Se atingiu o limite após criar, redirecionar para upgrade
-      if (!isPro && totalTasks + 1 >= totalLimit) {
-        navigate('/subscription');
-      }
       
       return createdTask;
     } catch (error: unknown) {
@@ -133,8 +106,6 @@ export function useTaskCreate(
         setTasks(prev => prev.filter(task => task.id !== tempId));
       }
       
-      // Garantir que o contador esteja sincronizado em caso de erro
-      await syncCompletedTasksCount();
       return null;
     }
   };
