@@ -145,7 +145,6 @@ serve(async (req) => {
       mode: 'subscription',
       success_url: `${returnUrl}/tasks?success=true`,
       cancel_url: `${returnUrl}/subscription?canceled=true`,
-      automatic_tax: { enabled: true },
       customer_update: {
         address: 'auto',
         name: 'auto',

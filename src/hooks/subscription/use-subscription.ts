@@ -115,15 +115,16 @@ export function useSubscription() {
       }
 
       console.log('Redirecionando para URL de checkout:', url);
-      // Usar redirecionamento com window.location para garantir mudança completa de contexto
-      window.location.href = url;
+      // URL já é aberta diretamente no createCheckoutSessionAPI
+      // Não precisamos fazer nada aqui, só retornar success
+    
       return true;
     } catch (error) {
       console.error('Erro ao fazer upgrade:', error);
       toast.error('Não foi possível iniciar o processo de assinatura');
       return false;
     } finally {
-      setCheckingOut(false);
+      // Não definimos setCheckingOut(false) aqui pois estaremos redirecionando
     }
   }, [user, navigate]);
 
