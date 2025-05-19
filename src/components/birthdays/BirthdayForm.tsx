@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,15 +11,32 @@ import { useAuth } from '@/context/AuthContext';
 interface BirthdayFormProps {
   onClose: () => void;
   onSuccess?: () => void;
+  initialData?: {
+    id?: string;
+    name?: string;
+    birthdate?: string;
+    relationship?: string;
+    notes?: string;
+  };
 }
 
-export default function BirthdayForm({ onClose, onSuccess }: BirthdayFormProps) {
-  const [name, setName] = useState('');
-  const [birthdate, setBirthdate] = useState('');
-  const [relationship, setRelationship] = useState('');
-  const [notes, setNotes] = useState('');
+export default function BirthdayForm({ onClose, onSuccess, initialData }: BirthdayFormProps) {
+  const [name, setName] = useState(initialData?.name || '');
+  const [birthdate, setBirthdate] = useState(initialData?.birthdate || '');
+  const [relationship, setRelationship] = useState(initialData?.relationship || '');
+  const [notes, setNotes] = useState(initialData?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
+
+  // Atualizar o formulário se os dados iniciais mudarem
+  useEffect(() => {
+    if (initialData) {
+      setName(initialData.name || '');
+      setBirthdate(initialData.birthdate || '');
+      setRelationship(initialData.relationship || '');
+      setNotes(initialData.notes || '');
+    }
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,25 +49,47 @@ export default function BirthdayForm({ onClose, onSuccess }: BirthdayFormProps) 
     setIsSubmitting(true);
     
     try {
-      // Inserir no Supabase
-      const { data, error } = await supabase
-        .from('birthdays')
-        .insert({
-          user_id: user.id,
-          name,
-          birthdate,
-          relationship,
-          notes: notes || null
-        })
-        .select();
-      
-      if (error) {
-        throw error;
+      if (initialData?.id) {
+        // Atualizar um registro existente
+        const { error } = await supabase
+          .from('birthdays')
+          .update({
+            name,
+            birthdate,
+            relationship,
+            notes: notes || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', initialData.id);
+        
+        if (error) {
+          throw error;
+        }
+        
+        toast.success("Aniversário atualizado", {
+          description: `Aniversário de ${name} foi atualizado com sucesso.`,
+        });
+      } else {
+        // Inserir um novo registro
+        const { data, error } = await supabase
+          .from('birthdays')
+          .insert({
+            user_id: user.id,
+            name,
+            birthdate,
+            relationship,
+            notes: notes || null
+          })
+          .select();
+        
+        if (error) {
+          throw error;
+        }
+        
+        toast.success("Aniversário adicionado", {
+          description: `Aniversário de ${name} foi adicionado com sucesso.`,
+        });
       }
-      
-      toast.success("Aniversário adicionado", {
-        description: `Aniversário de ${name} foi adicionado com sucesso.`,
-      });
       
       // Reset form
       setName('');
@@ -132,7 +171,7 @@ export default function BirthdayForm({ onClose, onSuccess }: BirthdayFormProps) 
           type="submit" 
           disabled={isSubmitting || !name || !birthdate || !relationship}
         >
-          {isSubmitting ? "Salvando..." : "Salvar"}
+          {isSubmitting ? "Salvando..." : initialData?.id ? "Atualizar" : "Salvar"}
         </Button>
       </div>
     </form>

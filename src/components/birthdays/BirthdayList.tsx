@@ -1,3 +1,4 @@
+
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { toast } from 'sonner';
 import { 
@@ -14,7 +15,24 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import BirthdayForm from './BirthdayForm';
 
 interface Birthday {
   id: string;
@@ -31,6 +49,8 @@ interface BirthdayListRef {
 const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingBirthday, setEditingBirthday] = useState<Birthday | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { user } = useAuth();
 
   // Função para buscar aniversários
@@ -91,6 +111,18 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
         description: error.message || "Não foi possível excluir o aniversário. Tente novamente."
       });
     }
+  };
+
+  // Função para iniciar a edição de um aniversário
+  const handleEdit = (birthday: Birthday) => {
+    // Formatar a data para o formato esperado pelo input type="date" (YYYY-MM-DD)
+    const formattedBirthday = {
+      ...birthday,
+      birthdate: birthday.birthdate.split('T')[0], // Remove a parte de tempo se existir
+    };
+    
+    setEditingBirthday(formattedBirthday);
+    setIsEditDialogOpen(true);
   };
 
   const formatBirthdate = (dateString: string) => {
@@ -174,7 +206,11 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
                   <TableCell>{birthday.notes || "-"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="icon">
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => handleEdit(birthday)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       
@@ -211,6 +247,20 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
           </TableBody>
         </Table>
       )}
+
+      {/* Diálogo de edição */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Editar Aniversário</DialogTitle>
+          </DialogHeader>
+          <BirthdayForm
+            initialData={editingBirthday || undefined}
+            onClose={() => setIsEditDialogOpen(false)}
+            onSuccess={fetchBirthdays}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 });
