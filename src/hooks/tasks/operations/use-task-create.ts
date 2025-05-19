@@ -36,7 +36,8 @@ export function useTaskCreate(
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         due_date: taskData.dueDate,
-        user_id: user.id
+        user_id: user.id,
+        board_id: taskData.board_id || 'default' // Usar o board_id fornecido ou um valor padrão
       };
 
       // Aplicar atualização otimista SEMPRE antes da operação de banco de dados
@@ -55,7 +56,8 @@ export function useTaskCreate(
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         due_date: taskData.dueDate,
-        user_id: user.id
+        user_id: user.id,
+        board_id: taskData.board_id || 'default' // Usar o board_id fornecido ou um valor padrão
       };
 
       // Enviar para o backend
@@ -82,7 +84,8 @@ export function useTaskCreate(
         created_at: data.created_at,
         updated_at: data.updated_at,
         due_date: data.due_date,
-        user_id: data.user_id
+        user_id: data.user_id,
+        board_id: data.board_id || 'default' // Garantir que o board_id esteja presente
       };
 
       console.log('Tarefa criada com sucesso no servidor:', createdTask.id);
