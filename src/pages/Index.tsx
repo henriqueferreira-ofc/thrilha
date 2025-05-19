@@ -13,6 +13,8 @@ import { TaskFormData } from '@/types/task';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useBoards } from '@/hooks/use-boards';
+import { useTaskCounter } from '@/hooks/tasks/use-task-counter';
+import { Badge } from '@/components/ui/badge';
 
 const Index = () => {
   const { user } = useAuth();
@@ -20,6 +22,7 @@ const Index = () => {
   const { tasks, loading, addTask, updateTask, deleteTask, changeTaskStatus } = useTasks();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { currentBoard, loading: loadingBoards } = useBoards();
+  const { totalTasks, remainingTasks, totalLimit, limitReached } = useTaskCounter(currentBoard);
 
   // Verificar se o usuário está autenticado
   useEffect(() => {
@@ -55,14 +58,32 @@ const Index = () => {
         
         <div className="flex-1 flex flex-col">
           <header className="p-6 flex justify-between items-center border-b border-white/10 backdrop-blur-sm bg-black/20">
-            <h1 className="text-xl font-bold text-white">
-              {currentBoard ? currentBoard.name : 'Tarefas'}
-              {loadingBoards && <span className="ml-2 text-sm text-purple-400">(Carregando quadros...)</span>}
-            </h1>
+            <div>
+              <h1 className="text-xl font-bold text-white">
+                {currentBoard ? currentBoard.name : 'Tarefas'}
+                {loadingBoards && <span className="ml-2 text-sm text-purple-400">(Carregando quadros...)</span>}
+              </h1>
+              
+              {!limitReached && (
+                <div className="mt-2 text-sm">
+                  <Badge variant="outline" className="bg-purple-500/20 text-purple-200 border-purple-500">
+                    {remainingTasks} de {totalLimit} tarefas disponíveis
+                  </Badge>
+                </div>
+              )}
+              
+              {limitReached && (
+                <div className="mt-2">
+                  <Badge variant="destructive" className="bg-red-500/20 text-red-200 border-red-500">
+                    Limite de tarefas atingido
+                  </Badge>
+                </div>
+              )}
+            </div>
             
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="purple-gradient-bg">
+                <Button className="purple-gradient-bg" disabled={limitReached}>
                   <Plus className="mr-2 h-4 w-4" />
                   Nova Tarefa
                 </Button>

@@ -55,8 +55,8 @@ export function useAuthSignIn() {
       console.log('Sessão expira em:', new Date(data.session.expires_at! * 1000).toLocaleString());
       
       // Redirecionar para tarefas imediatamente, sem delay
-      console.log('Redirecionando para /app após login');
-      navigate('/app', { replace: true });
+      console.log('Redirecionando para /tasks após login');
+      navigate('/tasks', { replace: true });
     } catch (error: unknown) {
       console.error('Erro capturado durante login:', error);
       setLastError(error instanceof Error ? error : new Error('Erro desconhecido'));
