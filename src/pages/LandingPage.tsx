@@ -31,7 +31,7 @@ const LandingPage = () => {
       <nav className="py-5 px-6 md:px-12 flex justify-between items-center border-b border-white/10">
         <div className="flex items-center gap-2">
           <Mountain className="h-6 w-6 text-purple-300" />
-          <span className="text-xl font-bold purple-gradient-text">Trilha</span>
+          <span className="text-xl font-bold purple-gradient-text">Thrilha</span>
         </div>
         <Button 
           variant="outline" 
@@ -46,11 +46,11 @@ const LandingPage = () => {
       <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 px-6 md:px-12 py-16 max-w-7xl mx-auto">
         <div className="flex flex-col justify-center space-y-6">
           <h1 className="text-4xl md:text-6xl font-bold purple-gradient-text">
-            Organize suas tarefas com o Trilha
+            Organize suas tarefas com o Thrilha
           </h1>
           <p className="text-lg text-white/80">
             Gerencie seus projetos e tarefas diárias com uma interface moderna e intuitiva. 
-            Aumente sua produtividade com o Trilha.
+            Aumente sua produtividade com o Thrilha.
           </p>
           <div className="flex gap-4 pt-4">
             <Button 
@@ -87,7 +87,7 @@ const LandingPage = () => {
       <section id="features" className="py-16 px-6 md:px-12 bg-black/40 border-t border-white/10">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-center purple-gradient-text mb-12">
-            Por que escolher o Trilha?
+            Por que escolher o Thrilha?
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -114,9 +114,9 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
             <Mountain className="h-5 w-5 text-purple-300" />
-            <span className="text-lg font-semibold purple-gradient-text">Trilha</span>
+            <span className="text-lg font-semibold purple-gradient-text">Thrilha</span>
           </div>
-          <p className="text-sm text-white/60">© 2025 Trilha. Todos os direitos reservados.</p>
+          <p className="text-sm text-white/60">© 2025 Thrilha. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
