@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,7 +21,7 @@ import SubscriptionPage from "./pages/Subscription";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from './supabase/client';
-import { clearAuthData } from "./utils/auth-utils";
+import { clearAuthData } from "./utils/auth";
 
 // Componente para lidar com navegação e erros
 const NavigationHandler: React.FC<{ children: React.ReactNode }> = ({ children }) => {
