@@ -22,8 +22,6 @@ export function useAuthSignOut() {
       // Primeiro limpar o estado local e navegar para a página inicial 
       // Limpar qualquer dado em cache ou localStorage relacionado a tarefas
       localStorage.removeItem('vo-tasks');
-      localStorage.removeItem('lastBoard');
-      localStorage.removeItem('selectedBoard');
       
       // Fechar todas as conexões de tempo real do Supabase
       supabase.removeAllChannels();
@@ -58,8 +56,6 @@ export function useAuthSignOut() {
     
     clearAuthData();
     localStorage.removeItem('vo-tasks');
-    localStorage.removeItem('lastBoard');
-    localStorage.removeItem('selectedBoard');
     window.location.href = '/';
   };
 
