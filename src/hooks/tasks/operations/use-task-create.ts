@@ -37,10 +37,11 @@ export function useTaskCreate(
         updated_at: new Date().toISOString(),
         due_date: taskData.dueDate,
         user_id: user.id,
-        board_id: taskData.board_id || 'default' // Usar o board_id fornecido ou um valor padrão
+        board_id: taskData.board_id || 'default'
       };
 
-      // Aplicar atualização otimista SEMPRE antes da operação de banco de dados
+      // Aplicar atualização otimista SOMENTE se optimisticUpdate estiver definido
+      // Evitando duplicação de tarefa no estado local
       console.log('Aplicando atualização otimista com tempTask:', tempTask.title);
       if (optimisticUpdate) {
         optimisticUpdate.addTask(tempTask);
@@ -57,7 +58,7 @@ export function useTaskCreate(
         updated_at: new Date().toISOString(),
         due_date: taskData.dueDate,
         user_id: user.id,
-        board_id: taskData.board_id || 'default' // Usar o board_id fornecido ou um valor padrão
+        board_id: taskData.board_id || 'default'
       };
 
       // Enviar para o backend
@@ -85,7 +86,7 @@ export function useTaskCreate(
         updated_at: data.updated_at,
         due_date: data.due_date,
         user_id: data.user_id,
-        board_id: data.board_id || 'default' // Garantir que o board_id esteja presente
+        board_id: data.board_id || 'default'
       };
 
       console.log('Tarefa criada com sucesso no servidor:', createdTask.id);
