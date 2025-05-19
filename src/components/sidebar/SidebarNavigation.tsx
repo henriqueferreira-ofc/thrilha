@@ -10,9 +10,9 @@ import {
   PersonIcon,
   ExitIcon,
   EnvelopeClosedIcon,
-  HeartFilledIcon,
-  CakeIcon
+  HeartFilledIcon
 } from '@radix-ui/react-icons';
+import { Cake } from 'lucide-react';
 
 interface SidebarNavigationProps {
   onLogout: () => void;
@@ -34,7 +34,7 @@ export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
       path: '/calendar' 
     },
     { 
-      icon: <CakeIcon className="h-4 w-4 mr-2" />, 
+      icon: <Cake className="h-4 w-4 mr-2" />, 
       label: 'Aniversários', 
       path: '/birthdays' 
     },
