@@ -16,7 +16,7 @@ interface TaskSidebarProps {
 export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
   const { user, signOut } = useAuth();
   const { avatarUrl, username, loading } = useSidebarProfile(user);
-  const { selectedBoard } = useBoards();
+  const { currentBoard } = useBoards();
 
   const handleLogout = () => {
     try {
@@ -44,7 +44,7 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
       // Garantir que boardId está corretamente definido
       const taskData = {
         ...data,
-        board_id: selectedBoard?.id || 'default'
+        board_id: currentBoard?.id || 'default'
       };
       onCreateTask(taskData);
     }

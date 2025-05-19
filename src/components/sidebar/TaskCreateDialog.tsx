@@ -13,7 +13,7 @@ interface TaskCreateDialogProps {
 
 export function TaskCreateDialog({ onCreateTask }: TaskCreateDialogProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { selectedBoard } = useBoards();
+  const { currentBoard } = useBoards();
   
   const handleCreateTask = (data: TaskFormData) => {
     onCreateTask(data);
@@ -38,7 +38,7 @@ export function TaskCreateDialog({ onCreateTask }: TaskCreateDialogProps) {
         </p>
         <TaskForm 
           onSubmit={handleCreateTask} 
-          boardId={selectedBoard?.id || 'default'} 
+          boardId={currentBoard?.id || 'default'} 
         />
       </DialogContent>
     </Dialog>

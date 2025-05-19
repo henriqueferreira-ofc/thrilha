@@ -19,7 +19,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { tasks, loading, addTask, updateTask, deleteTask, changeTaskStatus } = useTasks();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { selectedBoard, loading: loadingBoards } = useBoards();
+  const { currentBoard, loading: loadingBoards } = useBoards();
 
   // Verificar se o usuário está autenticado
   useEffect(() => {
@@ -35,7 +35,7 @@ const Index = () => {
     // Garantir que o board_id esteja definido
     const taskData = {
       ...data,
-      board_id: selectedBoard?.id || 'default'
+      board_id: currentBoard?.id || 'default'
     };
     
     const task = await addTask(taskData);
@@ -56,7 +56,7 @@ const Index = () => {
         <div className="flex-1 flex flex-col">
           <header className="p-6 flex justify-between items-center border-b border-white/10 backdrop-blur-sm bg-black/20">
             <h1 className="text-xl font-bold text-white">
-              {selectedBoard ? selectedBoard.name : 'Tarefas'}
+              {currentBoard ? currentBoard.name : 'Tarefas'}
               {loadingBoards && <span className="ml-2 text-sm text-purple-400">(Carregando quadros...)</span>}
             </h1>
             
@@ -71,7 +71,7 @@ const Index = () => {
                 <DialogTitle>Criar Nova Tarefa</DialogTitle>
                 <TaskForm 
                   onSubmit={handleCreateTask} 
-                  boardId={selectedBoard?.id || ''} 
+                  boardId={currentBoard?.id || ''} 
                 />
               </DialogContent>
             </Dialog>
