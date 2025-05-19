@@ -4,28 +4,12 @@ import { toast } from 'sonner';
 import { 
   Table, 
   TableBody, 
-  TableCell, 
   TableHead, 
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Trash2, Edit } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
-} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -33,14 +17,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import BirthdayForm from './BirthdayForm';
-
-interface Birthday {
-  id: string;
-  name: string;
-  birthdate: string;
-  relationship: string;
-  notes?: string;
-}
+import { Birthday } from './types';
+import { BirthdayEmptyState } from './BirthdayEmptyState';
+import { BirthdayTableItem } from './BirthdayTableItem';
+import { calculateDaysUntilBirthday } from './utils';
 
 interface BirthdayListRef {
   fetchBirthdays: () => Promise<void>;
@@ -125,43 +105,6 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
     setIsEditDialogOpen(true);
   };
 
-  const formatBirthdate = (dateString: string) => {
-    try {
-      // Tenta fazer o parse da data (podendo estar em formato ISO ou apenas data)
-      const date = dateString.includes('T') 
-        ? parseISO(dateString) 
-        : new Date(dateString);
-      
-      return format(date, "dd 'de' MMMM", { locale: ptBR });
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return dateString;
-    }
-  };
-
-  const calculateDaysUntilBirthday = (birthdateStr: string) => {
-    const today = new Date();
-    
-    // Tenta fazer o parse da data (podendo estar em formato ISO ou apenas data)
-    const birthdate = birthdateStr.includes('T') 
-      ? parseISO(birthdateStr) 
-      : new Date(birthdateStr);
-    
-    const birthdateThisYear = new Date(
-      today.getFullYear(),
-      birthdate.getMonth(),
-      birthdate.getDate()
-    );
-    
-    if (birthdateThisYear < today) {
-      // Birthday already passed this year, calculate for next year
-      birthdateThisYear.setFullYear(today.getFullYear() + 1);
-    }
-    
-    const diffTime = birthdateThisYear.getTime() - today.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
   if (loading) {
     return (
       <div className="text-center py-8">
@@ -174,9 +117,7 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
   return (
     <div>
       {birthdays.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
-          <p>Nenhum aniversário cadastrado ainda.</p>
-        </div>
+        <BirthdayEmptyState />
       ) : (
         <Table>
           <TableHeader>
@@ -194,54 +135,13 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
               const daysUntil = calculateDaysUntilBirthday(birthday.birthdate);
               
               return (
-                <TableRow key={birthday.id}>
-                  <TableCell className="font-medium">{birthday.name}</TableCell>
-                  <TableCell>{formatBirthdate(birthday.birthdate)}</TableCell>
-                  <TableCell>{birthday.relationship}</TableCell>
-                  <TableCell>
-                    <span className={daysUntil <= 7 ? "text-red-400 font-bold" : ""}>
-                      {daysUntil} dias
-                    </span>
-                  </TableCell>
-                  <TableCell>{birthday.notes || "-"}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        onClick={() => handleEdit(birthday)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Excluir Aniversário</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja excluir o aniversário de {birthday.name}? 
-                              Esta ação não pode ser desfeita.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={() => deleteBirthday(birthday.id)}
-                              className="bg-red-500 hover:bg-red-600"
-                            >
-                              Excluir
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <BirthdayTableItem
+                  key={birthday.id}
+                  birthday={birthday}
+                  daysUntil={daysUntil}
+                  onEdit={handleEdit}
+                  onDelete={deleteBirthday}
+                />
               );
             })}
           </TableBody>
