@@ -1,3 +1,4 @@
+
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { TaskBoard } from '@/components/task-board';
@@ -16,15 +17,19 @@ import { TaskProgress } from '@/components/task-progress';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTaskCounter } from '@/hooks/tasks/use-task-counter';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Index = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { 
     boards, 
     currentBoard, 
     setCurrentBoard, 
     canCreateMoreBoards, 
-    createBoard 
+    createBoard,
+    createDefaultBoard
   } = useBoards();
   
   const { tasks, loading, setTasks, optimisticUpdate } = useTasksBoard(currentBoard);
@@ -32,13 +37,41 @@ const Index = () => {
   const { isPro } = useSubscription();
   const { limitReached, syncCompletedTasksCount } = useTaskCounter(currentBoard);
 
+  // Verificar se o usuário está autenticado
+  useEffect(() => {
+    if (!user) {
+      console.log('Usuário não autenticado, redirecionando para login');
+      navigate('/auth');
+    }
+  }, [user, navigate]);
+
+  // Garantir que sempre haja um quadro selecionado
+  useEffect(() => {
+    const ensureCurrentBoard = async () => {
+      if (user && !currentBoard) {
+        if (boards && boards.length > 0) {
+          console.log('Selecionando primeiro quadro disponível');
+          setCurrentBoard(boards[0]);
+        } else if (!loading) {
+          console.log('Nenhum quadro disponível, criando um padrão');
+          const defaultBoard = await createDefaultBoard();
+          if (defaultBoard) {
+            toast.success('Quadro padrão criado com sucesso!');
+          }
+        }
+      }
+    };
+    
+    ensureCurrentBoard();
+  }, [user, boards, currentBoard, loading, createDefaultBoard, setCurrentBoard]);
+
   // Sincronizar o contador de tarefas concluídas quando as tarefas são carregadas
   useEffect(() => {
-    if (tasks && tasks.length > 0) {
+    if (tasks && tasks.length > 0 && currentBoard) {
       console.log(`Index - Sincronizando contador com ${tasks.length} tarefas carregadas`);
       syncCompletedTasksCount();
     }
-  }, [tasks, syncCompletedTasksCount]);
+  }, [tasks, syncCompletedTasksCount, currentBoard]);
 
   // Importar as operações específicas do quadro
   const { addTask, updateTask, deleteTask, changeTaskStatus } = useTaskOperationsBoard(
@@ -50,6 +83,7 @@ const Index = () => {
 
   const handleCreateTask = async (data: TaskFormData) => {
     if (!currentBoard) {
+      toast.error('Selecione um quadro antes de criar uma tarefa');
       return;
     }
     
@@ -63,6 +97,9 @@ const Index = () => {
     
     if (task) {
       console.log(`Index - Tarefa criada com sucesso: ${task.id}`);
+      toast.success('Tarefa criada com sucesso!');
+      // Forçar sincronização do contador após criar tarefa
+      syncCompletedTasksCount();
     }
     
     setIsCreateDialogOpen(false);

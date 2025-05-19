@@ -1,3 +1,4 @@
+
 import { toast } from '@/hooks/toast';
 import { Task } from '@/types/task';
 import { supabase } from '@/supabase/client';
@@ -14,10 +15,10 @@ export function useTaskDelete(
   const { decrementCompletedTasks, syncCompletedTasksCount } = useTaskCounter(currentBoard);
 
   // Excluir uma tarefa
-  const deleteTask = async (id: string) => {
+  const deleteTask = async (id: string): Promise<boolean> => {
     if (!user) {
       toast.error('Você precisa estar logado para excluir tarefas');
-      return;
+      return false;
     }
 
     try {
@@ -25,7 +26,7 @@ export function useTaskDelete(
       const taskToDelete = tasks.find(task => task.id === id);
       if (!taskToDelete) {
         console.error('Tarefa não encontrada:', id);
-        return;
+        return false;
       }
       
       const isCompletedTask = taskToDelete && taskToDelete.status === 'done';
@@ -62,11 +63,29 @@ export function useTaskDelete(
         throw error;
       }
       
+      // Verificar se a tarefa ainda existe (pode falhar silenciosamente)
+      const { data: checkData } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('id', id)
+        .maybeSingle();
+        
+      if (checkData) {
+        console.error('Tarefa ainda existe após exclusão, tentando novamente...');
+        await supabase
+          .from('tasks')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', user.id);
+      }
+      
       // Sincronizar o contador após a exclusão bem-sucedida
       await syncCompletedTasksCount();
+      return true;
     } catch (error) {
       console.error('Erro ao excluir tarefa:', error);
       toast.error('Erro ao excluir tarefa');
+      return false;
     }
   };
 

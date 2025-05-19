@@ -22,6 +22,27 @@ export function useBoards() {
     setCurrentBoard
   );
 
+  // Função para criar um quadro padrão automaticamente
+  const createDefaultBoard = async () => {
+    if (!user) return null;
+    
+    console.log("Criando quadro padrão para novo usuário");
+    try {
+      const defaultBoard = await createBoard({ 
+        name: "Meu Primeiro Quadro",
+        description: "Quadro padrão criado automaticamente"
+      });
+      
+      if (defaultBoard) {
+        console.log("Quadro padrão criado com sucesso:", defaultBoard.id);
+        return defaultBoard;
+      }
+    } catch (error) {
+      console.error("Erro ao criar quadro padrão:", error);
+    }
+    return null;
+  };
+
   // Configurar assinatura de atualizações em tempo real
   useBoardSubscription(
     user,
@@ -71,8 +92,17 @@ export function useBoards() {
 
         setBoards(boardsData || []);
         
-        // Selecionar o primeiro quadro como padrão se houver e nenhum estiver selecionado
-        if (boardsData && boardsData.length > 0 && !currentBoard) {
+        // Se não houver quadros, criar um padrão automaticamente
+        if (boardsData.length === 0) {
+          console.log("Nenhum quadro encontrado, criando quadro padrão");
+          const defaultBoard = await createDefaultBoard();
+          if (defaultBoard) {
+            setCurrentBoard(defaultBoard);
+            setBoards([defaultBoard]);
+          }
+        } 
+        // Selecionar o primeiro quadro como padrão se nenhum estiver selecionado
+        else if (!currentBoard) {
           setCurrentBoard(boardsData[0]);
         }
       } catch (error) {
@@ -94,6 +124,7 @@ export function useBoards() {
     canCreateMoreBoards,
     createBoard,
     updateBoard,
-    archiveBoard
+    archiveBoard,
+    createDefaultBoard
   };
 }

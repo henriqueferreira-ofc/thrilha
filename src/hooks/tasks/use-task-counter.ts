@@ -21,12 +21,12 @@ export function useTaskCounter(currentBoard: Board | null = null) {
     if (!user || !currentBoard) return 0;
     
     try {
-      console.log("Sincronizando contador de tarefas...");
+      console.log("Sincronizando contador de tarefas com ID do quadro:", currentBoard.id);
       
       // Verificar número total de tarefas no banco de dados para o quadro atual
       const { data: allTasks, error } = await supabase
         .from('tasks')
-        .select('id')
+        .select('id, status')
         .eq('user_id', user.id)
         .eq('board_id', currentBoard.id);
 
@@ -35,25 +35,26 @@ export function useTaskCounter(currentBoard: Board | null = null) {
         throw error;
       }
       
-      const count = allTasks?.length || 0;
-      console.log(`Sincronizado: ${count} tarefas encontradas no quadro ${currentBoard.id}`);
+      // Contar tarefas concluídas
+      const completedTasksCount = allTasks?.filter(task => task.status === 'done').length || 0;
+      
+      console.log(`Sincronizado: ${completedTasksCount} tarefas concluídas de ${allTasks?.length || 0} no quadro ${currentBoard.id}`);
       
       // Atualizar o estado local imediatamente
-      setTotalTasks(count);
+      setTotalTasks(completedTasksCount);
       
       // Verificar se já atingiu o limite logo na carga
-      if (!isPro && count >= FREE_PLAN_LIMIT) {
-        console.log(`Limite atingido durante sincronização: ${count}/${FREE_PLAN_LIMIT}`);
+      if (!isPro && completedTasksCount >= FREE_PLAN_LIMIT) {
+        console.log(`Limite atingido durante sincronização: ${completedTasksCount}/${FREE_PLAN_LIMIT}`);
         setShowUpgradeModal(true);
-        navigate('/subscription');
       }
       
-      return count;
+      return completedTasksCount;
     } catch (err) {
       console.error('Erro ao sincronizar contador de tarefas:', err);
       return 0;
     }
-  }, [user, isPro, currentBoard, navigate]);
+  }, [user, isPro, currentBoard]);
 
   // Carregar contador de tarefas quando componente é montado ou quando muda o quadro
   useEffect(() => {
@@ -67,14 +68,16 @@ export function useTaskCounter(currentBoard: Board | null = null) {
           event: '*', 
           schema: 'public',
           table: 'tasks',
-          filter: `user_id=eq.${user.id}`
-        }, () => {
+          filter: `user_id=eq.${user.id} AND board_id=eq.${currentBoard.id}`
+        }, (payload) => {
+          console.log('Mudança detectada em tarefas, atualizando contador', payload);
           // Atualizar o contador imediatamente quando houver mudanças
           syncCompletedTasksCount();
         })
         .subscribe();
 
       return () => {
+        console.log('Removendo inscrição do contador de tarefas');
         supabase.removeChannel(tasksSubscription);
       };
     }

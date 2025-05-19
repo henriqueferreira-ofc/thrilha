@@ -37,7 +37,8 @@ export function useAuthService() {
       
       if (data.user) {
         console.log('Usuário cadastrado com ID:', data.user.id);
-        toast.success('Cadastro realizado! Verifique seu email para confirmar sua conta.');
+        // Após cadastro bem-sucedido, vamos autenticar o usuário
+        await signIn(email, password);
       } else {
         console.warn('Usuário criado, mas sem dados retornados do Supabase');
         toast.success('Cadastro realizado! Verifique seu email para confirmar sua conta.');
@@ -105,12 +106,9 @@ export function useAuthService() {
       console.log('Usuário autenticado:', data.user?.id);
       console.log('Sessão expira em:', new Date(data.session.expires_at! * 1000).toLocaleString());
       
-      // Redirecionar para tarefas com um pequeno delay para garantir que 
-      // eventos de autenticação sejam processados
-      setTimeout(() => {
-        console.log('Redirecionando para /tasks após login');
-        navigate('/tasks', { replace: true });
-      }, 1500);
+      // Redirecionar para tarefas imediatamente, sem delay
+      console.log('Redirecionando para /tasks após login');
+      navigate('/tasks', { replace: true });
     } catch (error: unknown) {
       console.error('Erro capturado durante login:', error);
       setLastError(error instanceof Error ? error : new Error('Erro desconhecido'));
