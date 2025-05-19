@@ -13,6 +13,7 @@ import {
   HeartFilledIcon
 } from '@radix-ui/react-icons';
 import { Cake } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 interface SidebarNavigationProps {
   onLogout: () => void;
@@ -20,9 +21,11 @@ interface SidebarNavigationProps {
 
 export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
   const location = useLocation();
+  const { user } = useAuth();
   const isActive = (path: string) => location.pathname === path;
 
-  const navItems = [
+  // Items comuns para todos os usuários
+  const commonItems = [
     { 
       icon: <HomeIcon className="h-4 w-4 mr-2" />, 
       label: 'Tarefas', 
@@ -32,11 +35,6 @@ export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
       icon: <CalendarIcon className="h-4 w-4 mr-2" />, 
       label: 'Calendário', 
       path: '/calendar' 
-    },
-    { 
-      icon: <Cake className="h-4 w-4 mr-2" />, 
-      label: 'Aniversários', 
-      path: '/birthdays' 
     },
     { 
       icon: <HeartFilledIcon className="h-4 w-4 mr-2" />, 
@@ -54,6 +52,16 @@ export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
       path: '/about' 
     }
   ];
+
+  // Adiciona itens específicos apenas para usuários autenticados
+  const navItems = user ? [
+    ...commonItems,
+    { 
+      icon: <Cake className="h-4 w-4 mr-2" />, 
+      label: 'Aniversários', 
+      path: '/birthdays' 
+    }
+  ] : commonItems;
 
   return (
     <ScrollArea className="flex-1 pt-2">
