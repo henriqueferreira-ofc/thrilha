@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,10 +14,7 @@ export default function ZapierIntegration() {
     e.preventDefault();
     
     if (!webhookUrl) {
-      toast("Erro", {
-        description: "Por favor, insira a URL do webhook do Zapier",
-        variant: "destructive",
-      });
+      toast.error("Por favor, insira a URL do webhook do Zapier");
       return;
     }
 
@@ -52,10 +48,7 @@ export default function ZapierIntegration() {
       
     } catch (error) {
       console.error("Erro ao conectar:", error);
-      toast("Erro na conexão", {
-        description: "Não foi possível conectar ao Zapier. Verifique a URL e tente novamente.",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível conectar ao Zapier. Verifique a URL e tente novamente.");
     } finally {
       setIsLoading(false);
     }
