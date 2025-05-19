@@ -18,47 +18,45 @@ export function useTaskCounter(currentBoard: Board | null = null) {
 
   // Função para sincronizar o contador com o estado real das tarefas
   const syncCompletedTasksCount = useCallback(async () => {
-    if (!user || !currentBoard) return 0;
+    if (!user) return 0;
     
     try {
-      console.log("Sincronizando contador de tarefas com ID do quadro:", currentBoard.id);
+      console.log("Sincronizando contador de tarefas para o usuário:", user.id);
       
-      // Verificar número total de tarefas no banco de dados para o quadro atual
+      // Consulta para contar todas as tarefas do usuário, independente do quadro
       const { data: allTasks, error } = await supabase
         .from('tasks')
         .select('id, status')
-        .eq('user_id', user.id)
-        .eq('board_id', currentBoard.id);
+        .eq('user_id', user.id);
 
       if (error) {
         console.error("Erro ao buscar tarefas:", error);
         throw error;
       }
       
-      // Contar tarefas concluídas
-      const completedTasksCount = allTasks?.filter(task => task.status === 'done').length || 0;
+      const tasksCount = allTasks?.length || 0;
       
-      console.log(`Sincronizado: ${completedTasksCount} tarefas concluídas de ${allTasks?.length || 0} no quadro ${currentBoard.id}`);
+      console.log(`Sincronizado: ${tasksCount} tarefas no total para o usuário ${user.id}`);
       
       // Atualizar o estado local imediatamente
-      setTotalTasks(completedTasksCount);
+      setTotalTasks(tasksCount);
       
       // Verificar se já atingiu o limite logo na carga
-      if (!isPro && completedTasksCount >= FREE_PLAN_LIMIT) {
-        console.log(`Limite atingido durante sincronização: ${completedTasksCount}/${FREE_PLAN_LIMIT}`);
+      if (!isPro && tasksCount >= FREE_PLAN_LIMIT) {
+        console.log(`Limite atingido durante sincronização: ${tasksCount}/${FREE_PLAN_LIMIT}`);
         setShowUpgradeModal(true);
       }
       
-      return completedTasksCount;
+      return tasksCount;
     } catch (err) {
       console.error('Erro ao sincronizar contador de tarefas:', err);
       return 0;
     }
-  }, [user, isPro, currentBoard]);
+  }, [user, isPro]);
 
-  // Carregar contador de tarefas quando componente é montado ou quando muda o quadro
+  // Carregar contador de tarefas quando componente é montado ou quando muda o usuário
   useEffect(() => {
-    if (user && currentBoard) {
+    if (user) {
       syncCompletedTasksCount();
 
       // Inscrever para atualizações em tempo real
@@ -68,7 +66,7 @@ export function useTaskCounter(currentBoard: Board | null = null) {
           event: '*', 
           schema: 'public',
           table: 'tasks',
-          filter: `user_id=eq.${user.id} AND board_id=eq.${currentBoard.id}`
+          filter: `user_id=eq.${user.id}`
         }, (payload) => {
           console.log('Mudança detectada em tarefas, atualizando contador', payload);
           // Atualizar o contador imediatamente quando houver mudanças
@@ -81,7 +79,7 @@ export function useTaskCounter(currentBoard: Board | null = null) {
         supabase.removeChannel(tasksSubscription);
       };
     }
-  }, [user, currentBoard, syncCompletedTasksCount]);
+  }, [user, syncCompletedTasksCount]);
 
   // Incrementar contador de tarefas
   const incrementCompletedTasks = async () => {
@@ -126,13 +124,10 @@ export function useTaskCounter(currentBoard: Board | null = null) {
     syncCompletedTasksCount();
   };
   
-  // Adicionar a função resetCounter que está faltando
-  const resetCounter = (board: Board | null = null) => {
-    if (board) {
-      syncCompletedTasksCount();
-    } else {
-      setTotalTasks(0);
-    }
+  // Função para resetar o contador
+  const resetCounter = () => {
+    setTotalTasks(0);
+    syncCompletedTasksCount();
   };
 
   return {

@@ -40,14 +40,7 @@ export function useTaskCreate(
         board_id: taskData.board_id || 'default'
       };
 
-      // Aplicar atualização otimista SOMENTE se optimisticUpdate estiver definido
-      // Evitando duplicação de tarefa no estado local
-      console.log('Aplicando atualização otimista com tempTask:', tempTask.title);
-      if (optimisticUpdate) {
-        optimisticUpdate.addTask(tempTask);
-      } else {
-        setTasks(prev => [tempTask, ...prev]);
-      }
+      console.log('Preparando para enviar tarefa para o backend:', tempTask.title);
 
       // Preparar dados para enviar ao servidor (sem o ID temporário)
       const newTask: Omit<Task, 'id'> = {
@@ -70,9 +63,7 @@ export function useTaskCreate(
         .single();
 
       if (error) {
-        // Reverter a atualização otimista em caso de erro
         console.error('Erro na criação, revertendo alterações locais:', error);
-        setTasks(prev => prev.filter(task => task.id !== tempId));
         throw error;
       }
 
@@ -91,22 +82,18 @@ export function useTaskCreate(
 
       console.log('Tarefa criada com sucesso no servidor:', createdTask.id);
 
-      // Atualizar o estado com o ID real (substituir a tarefa temporária)
-      setTasks(prev => {
-        const filteredTasks = prev.filter(task => task.id !== tempId);
-        return [createdTask, ...filteredTasks];
-      });
+      // SOMENTE APÓS a tarefa ser criada no servidor, aplicamos no estado local
+      // Evitando assim a duplicação
+      if (optimisticUpdate) {
+        optimisticUpdate.addTask(createdTask);
+      } else {
+        setTasks(prev => [createdTask, ...prev]);
+      }
       
       return createdTask;
     } catch (error: unknown) {
       console.error('Erro ao criar tarefa:', error);
       toast.error('Erro ao criar tarefa');
-      
-      // Remover a tarefa temporária em caso de erro
-      if (tempId) {
-        setTasks(prev => prev.filter(task => task.id !== tempId));
-      }
-      
       return null;
     }
   };
