@@ -16,7 +16,13 @@ export function TaskCreateDialog({ onCreateTask }: TaskCreateDialogProps) {
   const { currentBoard } = useBoards();
   
   const handleCreateTask = (data: TaskFormData) => {
-    onCreateTask(data);
+    // Use 'default' as boardId if there's no current board
+    const taskData = {
+      ...data,
+      board_id: currentBoard?.id || 'default'
+    };
+    
+    onCreateTask(taskData);
     setIsDialogOpen(false);
   };
   
@@ -34,11 +40,11 @@ export function TaskCreateDialog({ onCreateTask }: TaskCreateDialogProps) {
       <DialogContent aria-describedby="create-task-description">
         <DialogTitle>Criar Nova Tarefa</DialogTitle>
         <DialogDescription id="create-task-description">
-          Preencha os dados abaixo para criar uma nova tarefa. O quadro será definido automaticamente.
+          Preencha os dados abaixo para criar uma nova tarefa.
         </DialogDescription>
         <TaskForm 
           onSubmit={handleCreateTask} 
-          boardId={currentBoard?.id || 'default'} 
+          boardId="default" 
         />
       </DialogContent>
     </Dialog>

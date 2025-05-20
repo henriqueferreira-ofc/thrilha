@@ -18,19 +18,18 @@ export function useTaskAdd(tasks: Task[], setTasks: React.Dispatch<React.SetStat
       console.log('Criando nova tarefa:', taskData);
 
       // Usar 'default' como valor quando não houver um quadro específico
-      const boardId = taskData.board_id && taskData.board_id !== 'default' 
-        ? taskData.board_id 
-        : 'default';
+      const boardId = taskData.board_id || 'default';
 
       // Preparar dados para inserção
       const taskToInsert = {
         title: taskData.title,
         description: taskData.description || '',
-        status: 'todo',
+        status: 'todo' as TaskStatus,
         user_id: user.id,
         due_date: taskData.dueDate,
         board_id: boardId,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
 
       console.log('Dados para inserção:', taskToInsert);
@@ -56,7 +55,7 @@ export function useTaskAdd(tasks: Task[], setTasks: React.Dispatch<React.SetStat
         description: data.description || '',
         status: data.status as TaskStatus,
         created_at: data.created_at,
-        updated_at: data.created_at,
+        updated_at: data.updated_at || data.created_at,
         due_date: data.due_date,
         user_id: data.user_id,
         board_id: data.board_id

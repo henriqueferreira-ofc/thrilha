@@ -44,8 +44,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
       return;
     }
 
-    // Remover a validação de quadro, permitindo criar tarefas sem quadro
-    // Usaremos 'default' como valor padrão quando não houver um quadro
+    // Sempre usar 'default' como valor padrão quando não houver um quadro
     const effectiveBoardId = boardId || 'default';
     
     setIsSubmitting(true);
