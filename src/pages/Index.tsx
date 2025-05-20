@@ -42,16 +42,12 @@ const Index = () => {
 
   const handleCreateTask = async (data: TaskFormData) => {
     try {
-      console.log('Iniciando criação de nova tarefa:', data);
-      
-      // Garantir que o board_id está definido
-      const boardId = data.board_id || 'default';
-      
+      if (!data.board_id || data.board_id === 'default') {
+        toast.error('Selecione um quadro antes de criar a tarefa.');
+        return;
+      }
       // Criar a tarefa
-      const newTask = await addTask({
-        ...data,
-        board_id: boardId
-      });
+      const newTask = await addTask(data);
 
       if (newTask) {
         console.log('Tarefa criada com sucesso:', newTask.id);

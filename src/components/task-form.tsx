@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +40,11 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
     
     if (!title.trim()) {
       toast.error('O título da tarefa é obrigatório');
+      return;
+    }
+
+    if (!boardId) {
+      toast.error('É necessário selecionar um quadro para criar a tarefa');
       return;
     }
     

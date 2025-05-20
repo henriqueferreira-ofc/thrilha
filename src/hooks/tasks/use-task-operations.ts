@@ -15,76 +15,63 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
     }
 
     try {
-      // Preparar dados para enviar ao servidor
-      const newTask = {
+      console.log('Criando nova tarefa:', taskData);
+
+      // Verificar se o board_id está presente
+      if (!taskData.board_id) {
+        toast.error('É necessário selecionar um quadro para criar a tarefa');
+        return null;
+      }
+
+      // Preparar dados para inserção
+      const taskToInsert = {
         title: taskData.title,
         description: taskData.description || '',
         status: 'todo',
         user_id: user.id,
         due_date: taskData.dueDate,
-        created_at: new Date().toISOString(),
-        board_id: taskData.board_id || 'default'
+        board_id: taskData.board_id,
+        created_at: new Date().toISOString()
       };
 
-      // Enviar para o backend
+      console.log('Dados para inserção:', taskToInsert);
+
       const { data, error } = await supabase
         .from('tasks')
-        .insert(newTask)
+        .insert(taskToInsert)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro do Supabase:', error);
+        throw error;
+      }
 
-      const formattedTask: Task = {
+      if (!data) {
+        throw new Error('Nenhum dado retornado após a inserção');
+      }
+
+      const newTask: Task = {
         id: data.id,
         title: data.title,
         description: data.description || '',
-        status: normalizeTaskStatus(data.status),
+        status: data.status as TaskStatus,
         created_at: data.created_at,
-        updated_at: data.updated_at || data.created_at,
+        updated_at: data.created_at,
         due_date: data.due_date,
         user_id: data.user_id,
         board_id: data.board_id
       };
 
-      // Atualizar o estado local de forma mais rigorosa
-      setTasks(prev => {
-        // Criar um Set com os IDs existentes para verificação rápida
-        const existingIds = new Set(prev.map(task => task.id));
-        
-        // Se a tarefa já existe, retornar o estado atual sem modificações
-        if (existingIds.has(formattedTask.id)) {
-          console.log('Tarefa já existe no estado, ignorando:', formattedTask.id);
-          return prev;
-        }
-        
-        // Criar um novo array com a nova tarefa no início, removendo qualquer duplicata
-        const updatedTasks = [formattedTask, ...prev.filter(task => task.id !== formattedTask.id)];
-        console.log('Nova tarefa adicionada ao estado:', formattedTask.id);
+      // Atualizar o estado local
+      setTasks(prevTasks => {
+        const updatedTasks = [newTask, ...prevTasks];
+        console.log('Tarefas após adição:', updatedTasks);
         return updatedTasks;
       });
 
-      // Desabilitar temporariamente a sincronização em tempo real para esta tarefa
-      const channel = supabase.channel('task-creation');
-      channel
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'tasks',
-          filter: `id=eq.${formattedTask.id}`
-        }, () => {
-          // Ignorar eventos de inserção para esta tarefa específica
-          console.log('Ignorando evento de inserção para tarefa:', formattedTask.id);
-        })
-        .subscribe();
-
-      // Remover o canal após 2 segundos
-      setTimeout(() => {
-        supabase.removeChannel(channel);
-      }, 2000);
-
       toast.success('Tarefa criada com sucesso!');
-      return formattedTask;
+      return newTask;
     } catch (error) {
       console.error('Erro ao criar tarefa:', error);
       toast.error('Erro ao criar tarefa');
@@ -93,40 +80,53 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
   };
 
   // Update a task
-  const updateTask = async (id: string, updatedData: Partial<Task>): Promise<void> => {
+  const updateTask = async (id: string, updatedData: Partial<Task>) => {
     if (!user) {
       toast.error('Você precisa estar logado para atualizar tarefas');
       return;
     }
 
     try {
-      // Se status está sendo atualizado, garantir que está no formato correto para o banco
-      const dataForDb = { ...updatedData };
-      
-      const { error } = await supabase
+      console.log('Atualizando tarefa:', { id, updatedData });
+
+      // Atualizar no banco de dados
+      const { data, error } = await supabase
         .from('tasks')
-        .update(dataForDb)
+        .update({
+          title: updatedData.title,
+          description: updatedData.description,
+          due_date: updatedData.due_date,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
-        .eq('user_id', user.id);
+        .select()
+        .single();
 
       if (error) throw error;
 
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === id
-            ? {
-                ...task,
-                ...updatedData,
-                status: updatedData.status ? normalizeTaskStatus(updatedData.status) : task.status
-              }
-            : task
-        )
-      );
+      // Atualizar o estado local
+      setTasks(prevTasks => {
+        const updatedTasks = prevTasks.map(task => {
+          if (task.id === id) {
+            return {
+              ...task,
+              ...updatedData,
+              updated_at: new Date().toISOString()
+            };
+          }
+          return task;
+        });
+
+        console.log('Tarefas após atualização:', updatedTasks);
+        return updatedTasks;
+      });
 
       toast.success('Tarefa atualizada com sucesso!');
+      return data;
     } catch (error) {
       console.error('Erro ao atualizar tarefa:', error);
       toast.error('Erro ao atualizar tarefa');
+      return null;
     }
   };
 
@@ -138,49 +138,19 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
     }
 
     try {
-      // Remover a tarefa do estado local imediatamente para feedback instantâneo
-      setTasks((prev) => {
-        const updatedTasks = prev.filter((task) => task.id !== id);
-        console.log('Tarefa removida do estado local:', id);
-        return updatedTasks;
-      });
-      
-      // Enviar a exclusão para o backend
       const { error } = await supabase
         .from('tasks')
         .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('id', id);
 
-      if (error) {
-        console.error('Erro ao excluir tarefa no servidor:', error);
-        // Se houver erro, buscar a lista atualizada de tarefas
-        const { data: tasks, error: fetchError } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+      if (error) throw error;
 
-        if (fetchError) {
-          console.error('Erro ao buscar tarefas após falha na exclusão:', fetchError);
-          throw fetchError;
-        }
-
-        // Atualizar o estado com a lista correta do servidor
-        setTasks(tasks.map(task => ({
-          id: task.id,
-          title: task.title,
-          description: task.description || '',
-          status: normalizeTaskStatus(task.status),
-          created_at: task.created_at,
-          updated_at: task.updated_at || task.created_at,
-          due_date: task.due_date,
-          user_id: task.user_id,
-          board_id: task.board_id
-        })));
-
-        throw error;
-      }
+      // Atualizar o estado local
+      setTasks(prevTasks => {
+        const updatedTasks = prevTasks.filter(task => task.id !== id);
+        console.log('Tarefas após exclusão:', updatedTasks);
+        return updatedTasks;
+      });
 
       toast.success('Tarefa excluída com sucesso!');
     } catch (error) {
@@ -190,43 +160,44 @@ export function useTaskOperations(tasks: Task[], setTasks: React.Dispatch<React.
   };
 
   // Change task status
-  const changeTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
+  const changeTaskStatus = async (id: string, newStatus: TaskStatus) => {
     if (!user) {
-      toast.error('Você precisa estar logado para alterar o status da tarefa');
+      toast.error('Você precisa estar logado para alterar o status das tarefas');
       return;
     }
 
     try {
-      const normalizedStatus = normalizeTaskStatus(newStatus);
-      
-      // Atualizar o estado local imediatamente para melhor experiência do usuário
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === taskId ? { ...task, status: normalizedStatus } : task
-        )
-      );
-      
-      // Enviar atualização para o backend
       const { error } = await supabase
         .from('tasks')
-        .update({ 
-          status: normalizedStatus
+        .update({
+          status: newStatus,
+          updated_at: new Date().toISOString()
         })
-        .eq('id', taskId)
-        .eq('user_id', user.id);
+        .eq('id', id);
 
-      if (error) {
-        // Se houver erro, reverter a alteração no estado local
-        setTasks((prev) =>
-          prev.map((task) =>
-            task.id === taskId ? { ...task, status: task.status } : task
-          )
-        );
-        throw error;
-      }
+      if (error) throw error;
+
+      // Atualizar o estado local
+      setTasks(prevTasks => {
+        const updatedTasks = prevTasks.map(task => {
+          if (task.id === id) {
+            return {
+              ...task,
+              status: newStatus,
+              updated_at: new Date().toISOString()
+            };
+          }
+          return task;
+        });
+
+        console.log('Tarefas após mudança de status:', updatedTasks);
+        return updatedTasks;
+      });
+
+      toast.success('Status da tarefa atualizado com sucesso!');
     } catch (error) {
-      console.error('Erro ao atualizar status da tarefa:', error);
-      toast.error('Erro ao atualizar status da tarefa');
+      console.error('Erro ao alterar status da tarefa:', error);
+      toast.error('Erro ao alterar status da tarefa');
     }
   };
 

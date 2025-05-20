@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
@@ -16,12 +15,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useTaskCore } from '@/hooks/tasks/use-task-core';
+import { useTaskOperations } from '@/hooks/tasks/use-task-operations';
+import { toast } from 'sonner';
 
 const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-  // Use the centralized task hook to ensure data consistency
+  
+  // Use o hook centralizado de tarefas
   const { tasks, loading } = useTaskCore();
+  const { updateTask, deleteTask, changeTaskStatus } = useTaskOperations(tasks, () => {});
 
   useEffect(() => {
     console.log('Calendar: Tasks carregadas:', tasks.length);
@@ -64,6 +67,16 @@ const Calendar = () => {
     setCurrentMonth(month);
   };
 
+  // Função para lidar com a mudança de status
+  const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
+    try {
+      await changeTaskStatus(taskId, newStatus);
+    } catch (error) {
+      console.error('Erro ao alterar status:', error);
+      toast.error('Erro ao alterar status da tarefa');
+    }
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -76,8 +89,8 @@ const Calendar = () => {
           </header>
           
           <main className="flex-1 p-6 overflow-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="bg-black p-4 rounded-lg border border-white/10 lg:col-span-1">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-black p-4 rounded-lg border border-white/10">
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
@@ -95,7 +108,7 @@ const Calendar = () => {
                 />
               </div>
 
-              <div className="bg-black p-4 rounded-lg border border-white/10 lg:col-span-2">
+              <div className="bg-black p-4 rounded-lg border border-white/10">
                 <div className="mb-4">
                   <h2 className="text-lg font-semibold flex items-center gap-2">
                     <CalendarIcon className="h-5 w-5" />
@@ -110,14 +123,30 @@ const Calendar = () => {
                           <TableHead>Status</TableHead>
                           <TableHead>Título</TableHead>
                           <TableHead>Descrição</TableHead>
+                          <TableHead>Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {tasksForSelectedDate.map((task) => (
                           <TableRow key={task.id}>
-                            <TableCell>{renderStatusIndicator(task.status)}</TableCell>
+                            <TableCell>
+                              <button
+                                onClick={() => handleStatusChange(task.id, task.status === 'done' ? 'todo' : 'done')}
+                                className="hover:opacity-80 transition-opacity"
+                              >
+                                {renderStatusIndicator(task.status)}
+                              </button>
+                            </TableCell>
                             <TableCell className="font-medium">{task.title}</TableCell>
                             <TableCell className="text-muted-foreground">{task.description || '-'}</TableCell>
+                            <TableCell>
+                              <button
+                                onClick={() => deleteTask(task.id)}
+                                className="text-red-500 hover:text-red-400 transition-colors"
+                              >
+                                Excluir
+                              </button>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
