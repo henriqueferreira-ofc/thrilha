@@ -5,7 +5,8 @@ import { Task } from '@/types/task';
 import { TaskDueDate } from './task-due-date';
 import { TaskActionsMenu } from './task-actions-menu';
 import { TaskCollaboratorsButton } from './task-collaborators-button';
-import { Check } from 'lucide-react';
+import { Check, Circle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface TaskCardProps {
   task: Task;
@@ -47,15 +48,24 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
       <div className="flex justify-between items-start gap-2">
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-medium">{task.title}</h3>
-            {task.status === 'done' && (
-              <span className="inline-flex items-center justify-center bg-green-500/20 p-1 rounded-full">
-                <Check className="h-3.5 w-3.5 text-green-500" />
-              </span>
-            )}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="p-1 h-6 w-6 rounded-full hover:bg-purple-500/20"
+              onClick={onToggleComplete}
+            >
+              {task.status === 'done' ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Circle className="h-4 w-4 text-gray-400" />
+              )}
+            </Button>
+            <h3 className={`text-base font-medium ${task.status === 'done' ? 'line-through text-gray-400' : ''}`}>
+              {task.title}
+            </h3>
           </div>
           {task.description && (
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+            <p className="text-sm text-muted-foreground mt-1 ml-7 line-clamp-2">
               {task.description}
             </p>
           )}
@@ -70,7 +80,7 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
         )}
         
         <div className="flex items-center space-x-2">
-          <TaskCollaboratorsButton taskId={task.id} onClick={onToggleComplete} />
+          <TaskCollaboratorsButton taskId={task.id} />
         </div>
       </div>
     </Card>
