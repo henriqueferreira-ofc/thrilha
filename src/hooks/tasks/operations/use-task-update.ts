@@ -1,63 +1,60 @@
 
-import { toast } from '@/hooks/toast';
+import { toast } from 'sonner';
 import { Task } from '@/types/task';
 import { supabase } from '@/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
-export function useTaskUpdate(
-  tasks: Task[], 
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>, 
-  user: any | null
-) {
-  // Atualizar uma tarefa
-  const updateTask = async (id: string, updatedData: Partial<Task>): Promise<void> => {
+export function useTaskUpdate(tasks: Task[], setTasks: React.Dispatch<React.SetStateAction<Task[]>>) {
+  const { user } = useAuth();
+
+  // Update a task
+  const updateTask = async (id: string, updatedData: Partial<Task>) => {
     if (!user) {
       toast.error('Você precisa estar logado para atualizar tarefas');
       return;
     }
 
     try {
-      console.log(`Atualizando tarefa ${id} com dados:`, updatedData);
-      
-      // Atualização otimista - aplicar mudança ao estado local imediatamente
-      setTasks(prev => prev.map(task => 
-        task.id === id ? { ...task, ...updatedData } : task
-      ));
+      console.log('Atualizando tarefa:', { id, updatedData });
 
-      // Converter de volta para o formato do banco de dados
-      const dbData = {
-        title: updatedData.title,
-        description: updatedData.description,
-        status: updatedData.status,
-        due_date: updatedData.due_date,
-        updated_at: new Date().toISOString() // Garantir que o updated_at seja atualizado
-      };
-
-      // Enviar para o servidor
-      console.log('Enviando atualização para o servidor...');
-      const { error } = await supabase
+      // Atualizar no banco de dados
+      const { data, error } = await supabase
         .from('tasks')
-        .update(dbData)
-        .eq('id', id);
+        .update({
+          title: updatedData.title,
+          description: updatedData.description,
+          due_date: updatedData.due_date,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
 
-      if (error) {
-        console.error('Erro ao atualizar no servidor:', error);
-        
-        // Reverter alterações em caso de erro (precisaríamos do estado anterior)
-        const originalTask = tasks.find(t => t.id === id);
-        if (originalTask) {
-          setTasks(prev => prev.map(task => 
-            task.id === id ? originalTask : task
-          ));
-        }
-        
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log(`Tarefa ${id} atualizada com sucesso`);
+      // Atualizar o estado local
+      setTasks(prevTasks => {
+        const updatedTasks = prevTasks.map(task => {
+          if (task.id === id) {
+            return {
+              ...task,
+              ...updatedData,
+              updated_at: new Date().toISOString()
+            };
+          }
+          return task;
+        });
+
+        console.log('Tarefas após atualização:', updatedTasks);
+        return updatedTasks;
+      });
+
       toast.success('Tarefa atualizada com sucesso!');
-    } catch (error: unknown) {
+      return data;
+    } catch (error) {
       console.error('Erro ao atualizar tarefa:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar tarefa');
+      toast.error('Erro ao atualizar tarefa');
+      return null;
     }
   };
 

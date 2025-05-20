@@ -1,68 +1,51 @@
 
-import { toast } from '@/hooks/toast';
+import { toast } from 'sonner';
 import { Task, TaskStatus } from '@/types/task';
 import { supabase } from '@/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { useAuth } from '@/context/AuthContext';
 
-export function useTaskStatus(
-  tasks: Task[],
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>,
-  user: User | null
-) {
-  // Alterar o status de uma tarefa
-  const changeTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
+export function useTaskStatus(tasks: Task[], setTasks: React.Dispatch<React.SetStateAction<Task[]>>) {
+  const { user } = useAuth();
+
+  // Change task status
+  const changeTaskStatus = async (id: string, newStatus: TaskStatus) => {
     if (!user) {
-      toast.error('Você precisa estar logado para alterar o status da tarefa');
-      return;
-    }
-
-    // Encontrar a tarefa atual
-    const task = tasks.find(t => t.id === taskId);
-    
-    if (!task) {
-      console.error('Tarefa não encontrada:', taskId);
+      toast.error('Você precisa estar logado para alterar o status das tarefas');
       return;
     }
 
     try {
-      console.log(`Alterando status da tarefa ${taskId} de "${task.status}" para "${newStatus}"`);
-      
-      // Atualizar o estado local imediatamente para melhor experiência do usuário
-      setTasks(prev => {
-        return prev.map(t => 
-          t.id === taskId
-            ? { ...t, status: newStatus }
-            : t
-        );
-      });
-
-      // Enviar atualização para o backend
-      console.log('Enviando atualização de status para o servidor...');
       const { error } = await supabase
         .from('tasks')
-        .update({ 
+        .update({
           status: newStatus,
-          updated_at: new Date().toISOString() 
+          updated_at: new Date().toISOString()
         })
-        .eq('id', taskId);
+        .eq('id', id);
 
-      if (error) {
-        console.error('Erro ao atualizar status no servidor:', error);
-        
-        // Reverter alteração em caso de erro
-        setTasks(prev =>
-          prev.map(t =>
-            t.id === taskId ? { ...t, status: task.status } : t
-          )
-        );
-        
-        throw error;
-      }
-      
-      console.log(`Status da tarefa ${taskId} atualizado com sucesso para "${newStatus}"`);
+      if (error) throw error;
+
+      // Atualizar o estado local
+      setTasks(prevTasks => {
+        const updatedTasks = prevTasks.map(task => {
+          if (task.id === id) {
+            return {
+              ...task,
+              status: newStatus,
+              updated_at: new Date().toISOString()
+            };
+          }
+          return task;
+        });
+
+        console.log('Tarefas após mudança de status:', updatedTasks);
+        return updatedTasks;
+      });
+
+      toast.success('Status da tarefa atualizado com sucesso!');
     } catch (error) {
-      console.error('Erro ao atualizar status da tarefa:', error);
-      toast.error('Erro ao atualizar status da tarefa');
+      console.error('Erro ao alterar status da tarefa:', error);
+      toast.error('Erro ao alterar status da tarefa');
     }
   };
 
