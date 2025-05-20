@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/task-form';
 import { PlusCircle } from 'lucide-react';
 import { TaskFormData } from '@/types/task';
@@ -33,9 +33,9 @@ export function TaskCreateDialog({ onCreateTask }: TaskCreateDialogProps) {
       </DialogTrigger>
       <DialogContent aria-describedby="create-task-description">
         <DialogTitle>Criar Nova Tarefa</DialogTitle>
-        <p id="create-task-description" className="sr-only">
-          Formulário para criar uma nova tarefa
-        </p>
+        <DialogDescription id="create-task-description">
+          Preencha os dados abaixo para criar uma nova tarefa. O quadro será definido automaticamente.
+        </DialogDescription>
         <TaskForm 
           onSubmit={handleCreateTask} 
           boardId={currentBoard?.id || 'default'} 

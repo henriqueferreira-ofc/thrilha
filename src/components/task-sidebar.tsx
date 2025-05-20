@@ -41,7 +41,7 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
 
   const handleCreateTask = (data: TaskFormData) => {
     if (onCreateTask) {
-      // Garantir que boardId está corretamente definido
+      // Usar 'default' como valor padrão se não houver um quadro selecionado
       const taskData = {
         ...data,
         board_id: currentBoard?.id || 'default'

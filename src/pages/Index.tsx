@@ -1,8 +1,9 @@
+
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { TaskBoard } from '@/components/task-board';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/task-form';
 import { Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -43,12 +44,16 @@ const Index = () => {
 
   const handleCreateTask = async (data: TaskFormData) => {
     try {
-      if (!data.board_id || data.board_id === 'default') {
-        toast.error('Selecione um quadro antes de criar a tarefa.');
-        return;
-      }
-      // Criar a tarefa
-      const newTask = await addTask(data);
+      // Usar 'default' se não houver um quadro selecionado
+      const boardId = currentBoard?.id || 'default';
+      
+      // Criar a tarefa com um quadro definido (mesmo que seja 'default')
+      const taskData = {
+        ...data,
+        board_id: boardId
+      };
+      
+      const newTask = await addTask(taskData);
 
       if (newTask) {
         console.log('Tarefa criada com sucesso:', newTask.id);
@@ -136,9 +141,12 @@ const Index = () => {
               </DialogTrigger>
               <DialogContent className="glass-panel sm:max-w-[425px]">
                 <DialogTitle>Criar Nova Tarefa</DialogTitle>
+                <DialogDescription id="create-task-description">
+                  Preencha os dados para criar uma nova tarefa.
+                </DialogDescription>
                 <TaskForm 
                   onSubmit={handleCreateTask} 
-                  boardId={currentBoard?.id || ''} 
+                  boardId={currentBoard?.id || 'default'} 
                 />
               </DialogContent>
             </Dialog>

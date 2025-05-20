@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,10 +44,9 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
       return;
     }
 
-    if (!boardId) {
-      toast.error('É necessário selecionar um quadro para criar a tarefa');
-      return;
-    }
+    // Remover a validação de quadro, permitindo criar tarefas sem quadro
+    // Usaremos 'default' como valor padrão quando não houver um quadro
+    const effectiveBoardId = boardId || 'default';
     
     setIsSubmitting(true);
     
@@ -55,7 +55,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
         title: title.trim(),
         description: description.trim() || undefined,
         dueDate: date ? date.toISOString() : undefined,
-        board_id: boardId
+        board_id: effectiveBoardId
       });
 
       // Reset form if it's a new task (no initialData)
@@ -76,16 +76,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
   const handleMonthChange = (month: Date) => {
     setCurrentMonth(month);
   };
-
-  // Verificar se há um quadro selecionado
-  const isBoardMissing = !boardId || boardId === 'undefined' || boardId === '';
   
-  useEffect(() => {
-    if (isBoardMissing) {
-      console.log('Aviso: boardId não definido no TaskForm');
-    }
-  }, [isBoardMissing]);
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -145,16 +136,10 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
       <Button 
         type="submit" 
         className="w-full" 
-        disabled={isBoardMissing || isSubmitting}
+        disabled={isSubmitting}
       >
         {isSubmitting ? 'Criando...' : (initialData.title ? 'Salvar Alterações' : 'Criar Tarefa')}
       </Button>
-      
-      {isBoardMissing && (
-        <p className="text-sm text-orange-500 text-center">
-          Selecione um quadro primeiro
-        </p>
-      )}
     </form>
   );
 }
