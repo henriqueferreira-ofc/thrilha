@@ -1,11 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Card } from '@/components/ui/card';
 import { CalendarIcon, Check, Circle } from 'lucide-react';
 import { Task } from '@/types/task';
 import {
@@ -16,11 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useEffect } from 'react';
 import { useTaskCore } from '@/hooks/tasks/use-task-core';
 
 const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   // Use the centralized task hook to ensure data consistency
   const { tasks, loading } = useTaskCore();
 
@@ -60,6 +59,11 @@ const Calendar = () => {
     ? format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
     : 'Selecione uma data';
 
+  // Função para lidar com a mudança de mês
+  const handleMonthChange = (month: Date) => {
+    setCurrentMonth(month);
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -79,6 +83,8 @@ const Calendar = () => {
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   className="p-3 pointer-events-auto"
+                  month={currentMonth}
+                  onMonthChange={handleMonthChange}
                   modifiers={{
                     highlighted: getDaysWithTasks,
                   }}

@@ -34,6 +34,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
     initialData.dueDate ? new Date(initialData.dueDate) : undefined
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +66,11 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Função para lidar com a mudança de mês
+  const handleMonthChange = (month: Date) => {
+    setCurrentMonth(month);
   };
 
   // Verificar se há um quadro selecionado
@@ -124,6 +130,8 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
               onSelect={setDate}
               initialFocus
               locale={ptBR}
+              month={currentMonth}
+              onMonthChange={handleMonthChange}
               className="pointer-events-auto"
             />
           </PopoverContent>

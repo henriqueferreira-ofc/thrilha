@@ -53,8 +53,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        // Instead of specifying custom icon components directly,
-        // let's rely on the default navigation buttons and style them with classes
+        IconLeft: (props) => <ChevronLeft className="h-4 w-4" {...props} />,
+        IconRight: (props) => <ChevronRight className="h-4 w-4" {...props} />
       }}
       {...props}
     />
