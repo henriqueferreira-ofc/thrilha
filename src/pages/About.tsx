@@ -18,7 +18,7 @@ export const About = () => {
               <h2 className="text-lg font-medium mb-4 purple-gradient-text">Sobre o Trilha</h2>
               <div className="space-y-4">
                 <p className="text-white/80">
-                  O Trilha é um aplicativo de gerenciamento de tarefas desenvolvido para ajudar você a organizar suas atividades de forma eficiente e intuitiva.
+                  O Thrilha é um aplicativo de gerenciamento de tarefas desenvolvido para ajudar você a organizar suas atividades de forma eficiente e intuitiva.
                 </p>
                 <div className="space-y-2">
                   <h3 className="font-semibold text-purple-300">Principais características:</h3>
