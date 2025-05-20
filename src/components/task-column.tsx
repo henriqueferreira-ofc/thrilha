@@ -23,14 +23,6 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
     accept: 'task',
     drop: (item: { id: string }) => {
       console.log(`TaskColumn: Tarefa ${item.id} solta na coluna ${column.id}`);
-      
-      // Verificar se a coluna é "done" e se o limite foi atingido
-      if (column.id === 'done' && limitReached && !isPro) {
-        console.log(`TaskColumn: Limite atingido, não é possível mover para "done"`);
-        // Não chamamos onDrop, pois esse bloqueio deve ser tratado em useTaskStatus
-      }
-      
-      // Sempre permitir o drop, o bloqueio ocorre no useTaskStatus
       onDrop(item.id, column.id);
       return { status: column.id };
     },
@@ -61,7 +53,8 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
     // Se estiver tentando marcar como concluído e o limite foi atingido
     if (newStatus === 'done' && limitReached && !isPro) {
       console.log(`TaskColumn: Limite atingido, não é possível marcar como concluída`);
-      // O bloqueio será tratado na função useTaskStatus
+      // Bloqueia a operação
+      return;
     }
     
     onDrop(task.id, newStatus);
