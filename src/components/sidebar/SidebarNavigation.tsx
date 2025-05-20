@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,6 +13,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Cake } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useBoards } from '@/hooks/use-boards';
 
 interface SidebarNavigationProps {
   onLogout: () => void;
@@ -22,14 +22,21 @@ interface SidebarNavigationProps {
 export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
   const location = useLocation();
   const { user } = useAuth();
+  const { setCurrentBoard } = useBoards();
   const isActive = (path: string) => location.pathname === path;
+
+  const handleNavigation = (path: string) => {
+    if (path === '/app') {
+      setCurrentBoard(null);
+    }
+  };
 
   // Items comuns para todos os usuários
   let navItems = [
     { 
       icon: <HomeIcon className="h-4 w-4 mr-2" />, 
       label: 'Tarefas', 
-      path: '/app' 
+      path: '/app'
     }
   ];
 
@@ -69,7 +76,11 @@ export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
     <ScrollArea className="flex-1 pt-2">
       <div className="flex flex-col gap-1 p-2">
         {navItems.map((item) => (
-          <Link to={item.path} key={item.path}>
+          <Link 
+            to={item.path} 
+            key={item.path} 
+            onClick={() => handleNavigation(item.path)}
+          >
             <Button
               variant={isActive(item.path) ? 'secondary' : 'ghost'}
               className="w-full justify-start"

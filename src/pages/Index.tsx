@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTasks } from '@/hooks/use-tasks';
 import { TaskFormData, Task } from '@/types/task';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useBoards } from '@/hooks/use-boards';
 import { useTaskCounter } from '@/hooks/tasks/use-task-counter';
@@ -19,6 +19,7 @@ import { useSubscription } from '@/hooks/use-subscription';
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { tasks, loading, addTask, updateTask, deleteTask, changeTaskStatus } = useTasks();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { currentBoard, loading: loadingBoards } = useBoards();
@@ -78,6 +79,14 @@ const Index = () => {
     }
   };
 
+  // Determinar o título com base na rota atual
+  const getTitle = () => {
+    if (location.pathname === '/app') {
+      return 'Tarefas';
+    }
+    return currentBoard ? currentBoard.name : 'Tarefas';
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full mountain-pattern">
@@ -87,7 +96,7 @@ const Index = () => {
           <header className="p-6 flex justify-between items-center border-b border-white/10 backdrop-blur-sm bg-black/20">
             <div>
               <h1 className="text-xl font-bold text-white">
-                {currentBoard ? currentBoard.name : 'Tarefas'}
+                {getTitle()}
                 {loadingBoards && <span className="ml-2 text-sm text-purple-400">(Carregando quadros...)</span>}
               </h1>
               

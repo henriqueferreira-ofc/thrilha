@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Board } from '@/types/board';
@@ -100,10 +99,6 @@ export function useBoards() {
             setCurrentBoard(defaultBoard);
             setBoards([defaultBoard]);
           }
-        } 
-        // Selecionar o primeiro quadro como padrão se nenhum estiver selecionado
-        else if (!currentBoard) {
-          setCurrentBoard(boardsData[0]);
         }
       } catch (error) {
         console.error('Erro ao buscar quadros:', error);
@@ -114,7 +109,7 @@ export function useBoards() {
     };
 
     fetchBoards();
-  }, [user, currentBoard]);
+  }, [user]);
 
   return {
     boards,
