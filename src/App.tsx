@@ -159,7 +159,8 @@ const App = () => {
           <NavigationHandler>
             <AuthProvider>
               <Routes>
-                <Route path="/" element={<Navigate to="/tasks" replace />} />
+                {/* Landing page agora é a rota principal diretamente */}
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/auth" element={<Auth />} />
                 
                 {/* Rotas protegidas com verificação de autenticação */}
