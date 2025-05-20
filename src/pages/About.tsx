@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 
@@ -15,7 +14,7 @@ export const About = () => {
           
           <main className="flex-1 p-6">
             <div className="bg-black p-6 rounded-lg border border-white/10">
-              <h2 className="text-lg font-medium mb-4 purple-gradient-text">Sobre o Trilha</h2>
+              <h2 className="text-lg font-medium mb-4 purple-gradient-text">Sobre o Thrilha</h2>
               <div className="space-y-4">
                 <p className="text-white/80">
                   O Thrilha é um aplicativo de gerenciamento de tarefas desenvolvido para ajudar você a organizar suas atividades de forma eficiente e intuitiva.
@@ -26,11 +25,11 @@ export const About = () => {
                     <li>Organização por status (A Fazer, Em Progresso, Concluídas)</li>
                     <li>Interface moderna e intuitiva</li>
                     <li>Calendário integrado</li>
-                    <li>Totalmente gratuito</li>
+                    <li>Totalmente gratuito até 3 tarefas</li>
                   </ul>
                 </div>
                 <p className="text-white/60 text-sm">
-                  Versão 1.0.0
+                  Versão 1.1.0
                 </p>
               </div>
             </div>

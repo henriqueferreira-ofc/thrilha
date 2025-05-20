@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { AvatarDisplay } from "@/components/avatar/AvatarDisplay";
@@ -23,7 +22,7 @@ export function SidebarProfile({ user, loading: authLoading }: SidebarProfilePro
       <div className="flex items-center gap-2">
         <Mountain className="h-6 w-6 text-purple-300" />
         <h1 className="text-xl font-bold bg-gradient-to-r from-purple-300 via-purple-400 to-purple-300 bg-clip-text text-transparent">
-          Trilha
+          Thrilha
         </h1>
       </div>
       {user && (

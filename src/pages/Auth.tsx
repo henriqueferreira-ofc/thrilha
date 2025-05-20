@@ -92,7 +92,7 @@ const Auth = () => {
                 <Card className="bg-black/60 border border-white/10 shadow-lg shadow-purple-500/10">
                   <CardHeader>
                     <CardTitle className="text-gradient">Criar conta</CardTitle>
-                    <CardDescription>Crie uma nova conta para começar a usar o Trilha.</CardDescription>
+                    <CardDescription>Crie uma nova conta para começar a usar o Thrilha.</CardDescription>
                   </CardHeader>
                   <CardContent className="pb-0">
                     <RegisterForm
