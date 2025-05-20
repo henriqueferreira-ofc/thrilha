@@ -53,29 +53,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        // Correctly specify the named exports with proper types
-        Navbar: (props) => (
-          <div className={props.classNames?.nav}>
-            <button
-              className={cn(props.classNames?.nav_button, props.classNames?.nav_button_previous)}
-              onClick={props.onPreviousClick}
-              disabled={props.isDisabled}
-              aria-label="Go to previous month"
-              type="button"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              className={cn(props.classNames?.nav_button, props.classNames?.nav_button_next)}
-              onClick={props.onNextClick}
-              disabled={props.isDisabled}
-              aria-label="Go to next month"
-              type="button"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        )
+        IconLeft: () => <ChevronLeft className="h-4 w-4" />,
+        IconRight: () => <ChevronRight className="h-4 w-4" />
       }}
       {...props}
     />
