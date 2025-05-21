@@ -45,8 +45,8 @@ export const CalendarContainer = ({
   };
 
   return (
-    <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-6`}>
-      <div className="bg-[#1a1c23] p-4 rounded-lg border border-white/10">
+    <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-6 animate-fade-in`}>
+      <div className="glass-panel p-4 rounded-lg border border-white/10 shadow-lg shadow-purple-500/5">
         <CalendarNavigation 
           currentMonth={currentMonth} 
           onNavigate={navigateMonth} 
@@ -60,7 +60,7 @@ export const CalendarContainer = ({
         />
       </div>
 
-      <div className="bg-[#1a1c23] p-4 rounded-lg border border-white/10">
+      <div className="glass-panel p-4 rounded-lg border border-white/10 shadow-lg shadow-purple-500/5">
         <CalendarHeader selectedDate={selectedDate} />
         <div className="mt-4">
           {loading ? (

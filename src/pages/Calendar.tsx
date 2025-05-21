@@ -44,7 +44,7 @@ const Calendar = () => {
         
         <div className="flex-1 flex flex-col">
           <header className="p-6 flex justify-between items-center border-b border-white/10">
-            <h1 className="text-xl font-bold">Calendário</h1>
+            <h1 className="text-xl font-bold purple-gradient-text">Calendário</h1>
             {loading && <span className="text-sm text-muted-foreground">Carregando tarefas...</span>}
           </header>
           
