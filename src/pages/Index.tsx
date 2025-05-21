@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { TaskBoard } from '@/components/task-board';
@@ -23,7 +22,7 @@ const Index = () => {
   const location = useLocation();
   const { tasks, loading, addTask, updateTask, deleteTask, changeTaskStatus } = useTasks();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { currentBoard, loading: loadingBoards } = useBoards();
+  const { currentBoard, loading: loadingBoards, getOrCreateDefaultBoard } = useBoards();
   const { totalTasks, remainingTasks, totalLimit, limitReached, syncCompletedTasksCount } = useTaskCounter(currentBoard);
   const { isPro } = useSubscription();
 
@@ -44,13 +43,18 @@ const Index = () => {
 
   const handleCreateTask = async (data: TaskFormData) => {
     try {
-      // Usar 'default' se não houver um quadro selecionado
-      const boardId = currentBoard?.id || 'default';
+      // Obter o quadro atual ou criar um padrão se necessário
+      const board = currentBoard || await getOrCreateDefaultBoard();
       
-      // Criar a tarefa com um quadro definido (mesmo que seja 'default')
+      if (!board) {
+        toast.error('Não foi possível criar a tarefa. Tente novamente.');
+        return;
+      }
+
+      // Criar a tarefa com o quadro obtido
       const taskData = {
         ...data,
-        board_id: boardId
+        board_id: board.id
       };
       
       const newTask = await addTask(taskData);

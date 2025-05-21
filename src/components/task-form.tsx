@@ -1,11 +1,10 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { TaskFormData } from '@/types/task';
-import { format } from 'date-fns';
+import { format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -31,7 +30,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
   const [title, setTitle] = useState(initialData.title || '');
   const [description, setDescription] = useState(initialData.description || '');
   const [date, setDate] = useState<Date | undefined>(
-    initialData.dueDate ? new Date(initialData.dueDate) : undefined
+    initialData.dueDate ? startOfDay(parseISO(initialData.dueDate)) : undefined
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
@@ -43,18 +42,15 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
       toast.error('O título da tarefa é obrigatório');
       return;
     }
-
-    // Sempre usar 'default' como valor padrão quando não houver um quadro
-    const effectiveBoardId = boardId || 'default';
     
     setIsSubmitting(true);
     
     try {
       onSubmit({
         title: title.trim(),
-        description: description.trim() || undefined,
-        dueDate: date ? date.toISOString() : undefined,
-        board_id: effectiveBoardId
+        description: description.trim() || '',
+        dueDate: date ? startOfDay(date).toISOString() : null,
+        board_id: boardId
       });
 
       // Reset form if it's a new task (no initialData)
@@ -75,7 +71,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
   const handleMonthChange = (month: Date) => {
     setCurrentMonth(month);
   };
-  
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -121,12 +117,13 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
             <Calendar
               mode="single"
               selected={date}
-              onSelect={setDate}
+              onSelect={(newDate) => newDate && setDate(startOfDay(newDate))}
               initialFocus
               locale={ptBR}
               month={currentMonth}
               onMonthChange={handleMonthChange}
               className="pointer-events-auto"
+              disabled={(date) => date < startOfDay(new Date())}
             />
           </PopoverContent>
         </Popover>
@@ -134,10 +131,10 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
 
       <Button 
         type="submit" 
-        className="w-full" 
+        className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
         disabled={isSubmitting}
       >
-        {isSubmitting ? 'Criando...' : (initialData.title ? 'Salvar Alterações' : 'Criar Tarefa')}
+        {isSubmitting ? 'Criando...' : 'Criar Tarefa'}
       </Button>
     </form>
   );

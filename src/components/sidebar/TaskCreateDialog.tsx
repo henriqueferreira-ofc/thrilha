@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
@@ -6,6 +5,7 @@ import { TaskForm } from '@/components/task-form';
 import { PlusCircle } from 'lucide-react';
 import { TaskFormData } from '@/types/task';
 import { useBoards } from '@/hooks/use-boards';
+import { toast } from 'sonner';
 
 interface TaskCreateDialogProps {
   onCreateTask: (data: TaskFormData) => void;
@@ -13,17 +13,30 @@ interface TaskCreateDialogProps {
 
 export function TaskCreateDialog({ onCreateTask }: TaskCreateDialogProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { currentBoard } = useBoards();
+  const { currentBoard, getOrCreateDefaultBoard } = useBoards();
   
-  const handleCreateTask = (data: TaskFormData) => {
-    // Use 'default' como boardId se não houver um quadro atual
-    const taskData = {
-      ...data,
-      board_id: currentBoard?.id || 'default'
-    };
-    
-    onCreateTask(taskData);
-    setIsDialogOpen(false);
+  const handleCreateTask = async (data: TaskFormData) => {
+    try {
+      // Obter o quadro atual ou criar um padrão se necessário
+      const board = currentBoard || await getOrCreateDefaultBoard();
+      
+      if (!board) {
+        toast.error('Não foi possível criar a tarefa. Tente novamente.');
+        return;
+      }
+
+      // Criar a tarefa com o quadro obtido
+      const taskData = {
+        ...data,
+        board_id: board.id
+      };
+      
+      onCreateTask(taskData);
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Erro ao criar tarefa:', error);
+      toast.error('Erro ao criar tarefa. Tente novamente.');
+    }
   };
   
   return (
@@ -44,7 +57,7 @@ export function TaskCreateDialog({ onCreateTask }: TaskCreateDialogProps) {
         </DialogDescription>
         <TaskForm 
           onSubmit={handleCreateTask} 
-          boardId={currentBoard?.id || "default"} 
+          boardId={currentBoard?.id} 
         />
       </DialogContent>
     </Dialog>
