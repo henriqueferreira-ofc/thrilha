@@ -16,7 +16,7 @@ export function TaskCreateDialog({ onCreateTask }: TaskCreateDialogProps) {
   const { currentBoard } = useBoards();
   
   const handleCreateTask = (data: TaskFormData) => {
-    // Use 'default' as boardId if there's no current board
+    // Use 'default' como boardId se não houver um quadro atual
     const taskData = {
       ...data,
       board_id: currentBoard?.id || 'default'

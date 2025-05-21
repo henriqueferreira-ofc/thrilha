@@ -17,8 +17,10 @@ export function useTaskAdd(tasks: Task[], setTasks: React.Dispatch<React.SetStat
     try {
       console.log('Criando nova tarefa:', taskData);
 
-      // Convert board_id to UUID if it's not "default"
-      const boardId = taskData.board_id === 'default' ? null : taskData.board_id;
+      // Verificar se precisa gerar um UUID
+      // Se board_id for 'default', vamos usar um UUID fixo que representa o quadro padrão
+      const defaultBoardId = '00000000-0000-0000-0000-000000000000';  // UUID padrão
+      const boardId = taskData.board_id === 'default' ? defaultBoardId : taskData.board_id;
 
       // Preparar dados para inserção
       const taskToInsert = {
@@ -58,7 +60,7 @@ export function useTaskAdd(tasks: Task[], setTasks: React.Dispatch<React.SetStat
         updated_at: data.updated_at || data.created_at,
         due_date: data.due_date,
         user_id: data.user_id,
-        board_id: data.board_id || 'default'
+        board_id: data.board_id || defaultBoardId
       };
 
       // Atualizar o estado local
