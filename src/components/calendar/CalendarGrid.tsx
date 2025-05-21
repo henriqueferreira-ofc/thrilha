@@ -36,9 +36,10 @@ export const CalendarGrid = ({
         highlighted: getDaysWithTasks,
       }}
       modifiersClassNames={{
-        highlighted: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-blue-500",
+        highlighted: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:bg-blue-500",
       }}
       locale={ptBR}
+      weekStartsOn={0} // 0 = domingo, garantindo que domingo fica na esquerda
     />
   );
 };

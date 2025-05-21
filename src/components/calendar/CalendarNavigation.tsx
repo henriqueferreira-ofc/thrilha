@@ -17,6 +17,7 @@ export const CalendarNavigation = ({
       <button 
         onClick={() => onNavigate('prev')}
         className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+        aria-label="Mês anterior"
       >
         <ChevronLeft className="h-5 w-5 text-white" />
       </button>
@@ -26,6 +27,7 @@ export const CalendarNavigation = ({
       <button 
         onClick={() => onNavigate('next')}
         className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+        aria-label="Próximo mês"
       >
         <ChevronRight className="h-5 w-5 text-white" />
       </button>
