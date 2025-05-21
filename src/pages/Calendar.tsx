@@ -1,5 +1,4 @@
-
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { useTaskCore } from '@/hooks/tasks/use-task-core';
@@ -7,11 +6,13 @@ import { useTaskOperations } from '@/hooks/tasks/use-task-operations';
 import { toast } from 'sonner';
 import { CalendarContainer } from '@/components/calendar/CalendarContainer';
 import { TaskStatus } from '@/types/task';
+import { CalendarCustom } from "@/components/calendar/CalendarCustom";
 
 const Calendar = () => {
   // Use o hook centralizado de tarefas
   const { tasks, loading } = useTaskCore();
   const { updateTask, deleteTask, changeTaskStatus } = useTaskOperations(tasks, () => {});
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   useEffect(() => {
     console.log('Calendar: Tasks carregadas:', tasks.length);
@@ -39,24 +40,17 @@ const Calendar = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <TaskSidebar />
-        
-        <div className="flex-1 flex flex-col">
-          <header className="p-6 flex justify-between items-center border-b border-white/10">
-            <h1 className="text-xl font-bold">Calendário</h1>
-            {loading && <span className="text-sm text-muted-foreground">Carregando tarefas...</span>}
-          </header>
-          
-          <main className="flex-1 p-6 overflow-auto">
-            <CalendarContainer 
-              tasks={tasks}
-              loading={loading}
-              onStatusChange={handleStatusChange}
-              onDeleteTask={handleDeleteTask}
-            />
-          </main>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#181926]">
+        <h1 className="text-xl font-bold mb-6 text-white">Calendário</h1>
+        <CalendarCustom value={selectedDate} onChange={setSelectedDate} />
+        <main className="flex-1 p-6 overflow-auto">
+          <CalendarContainer 
+            tasks={tasks}
+            loading={loading}
+            onStatusChange={handleStatusChange}
+            onDeleteTask={handleDeleteTask}
+          />
+        </main>
       </div>
     </SidebarProvider>
   );
