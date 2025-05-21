@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -55,8 +56,10 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        iconLeft: (props) => <ChevronLeft className="h-4 w-4" {...props} />,
-        iconRight: (props) => <ChevronRight className="h-4 w-4" {...props} />
+        // Using the correct property names for the icons
+        // According to react-day-picker, the correct names are iconPrevious and iconNext
+        iconPrevious: (props) => <ChevronLeft className="h-4 w-4" {...props} />,
+        iconNext: (props) => <ChevronRight className="h-4 w-4" {...props} />
       }}
       {...props}
     />
@@ -65,4 +68,3 @@ function Calendar({
 Calendar.displayName = "Calendar"
 
 export { Calendar }
-
