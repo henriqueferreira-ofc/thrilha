@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
@@ -95,7 +96,7 @@ const Calendar = () => {
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  className="p-3 pointer-events-auto"
+                  className="p-3"
                   month={currentMonth}
                   onMonthChange={handleMonthChange}
                   modifiers={{
