@@ -56,7 +56,6 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        // Corrigindo para os nomes de componentes aceitos pelo DayPicker
         IconLeft: () => <ChevronLeft className="h-4 w-4" />,
         IconRight: () => <ChevronRight className="h-4 w-4" />
       }}
