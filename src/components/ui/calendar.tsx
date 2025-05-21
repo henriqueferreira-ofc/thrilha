@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -53,16 +52,13 @@ function Calendar({
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
-        ...classNames,
-      }}
-      components={{
-        iconLeft: (props) => <ChevronLeft className="h-4 w-4" {...props} />,
-        iconRight: (props) => <ChevronRight className="h-4 w-4" {...props} />
+        ...(classNames ?? {}),
       }}
       {...props}
     />
   )
 }
+
 Calendar.displayName = "Calendar"
 
 export { Calendar }
