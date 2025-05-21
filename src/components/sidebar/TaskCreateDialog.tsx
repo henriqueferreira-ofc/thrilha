@@ -44,7 +44,7 @@ export function TaskCreateDialog({ onCreateTask }: TaskCreateDialogProps) {
         </DialogDescription>
         <TaskForm 
           onSubmit={handleCreateTask} 
-          boardId="default" 
+          boardId={currentBoard?.id || "default"} 
         />
       </DialogContent>
     </Dialog>
