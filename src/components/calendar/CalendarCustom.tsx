@@ -16,7 +16,11 @@ import clsx from "clsx";
 
 const weekDays = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
-export function CalendarCustom({ value, onChange }: { value?: Date; onChange?: (date: Date) => void }) {
+export function CalendarCustom({ value, onChange, markedDates = [] }: {
+  value?: Date;
+  onChange?: (date: Date) => void;
+  markedDates?: Date[];
+}) {
   const [currentMonth, setCurrentMonth] = useState(value || new Date());
   const today = new Date();
 
@@ -35,13 +39,14 @@ export function CalendarCustom({ value, onChange }: { value?: Date; onChange?: (
       const isCurrentMonth = isSameMonth(day, currentMonth);
       const isSelected = value && isSameDay(day, value);
       const isToday = isSameDay(day, today);
+      const isMarked = markedDates.some((d) => isSameDay(d, day));
 
       days.push(
         <button
           key={day.toString()}
           onClick={() => isCurrentMonth && onChange?.(day)}
           className={clsx(
-            "w-10 h-10 flex items-center justify-center rounded-full transition",
+            "w-10 h-10 flex items-center justify-center rounded-full transition relative",
             isCurrentMonth ? "text-white" : "text-zinc-600",
             isToday && "border border-zinc-400",
             isSelected && "bg-blue-700 text-white font-bold",
@@ -52,6 +57,11 @@ export function CalendarCustom({ value, onChange }: { value?: Date; onChange?: (
           disabled={!isCurrentMonth}
         >
           {format(day, "d")}
+          {isMarked && (
+            <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <span className="w-7 h-7 rounded-full bg-purple-600/70 animate-pulse opacity-70"></span>
+            </span>
+          )}
         </button>
       );
       day = addDays(day, 1);
