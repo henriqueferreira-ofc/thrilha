@@ -5,7 +5,7 @@ import { TaskSidebar } from '@/components/task-sidebar';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Check, Circle } from 'lucide-react';
+import { CalendarIcon, Check, Circle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Task } from '@/types/task';
 import {
   Table,
@@ -68,6 +68,17 @@ const Calendar = () => {
     setCurrentMonth(month);
   };
 
+  // Função para navegação manual entre meses
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const newMonth = new Date(currentMonth);
+    if (direction === 'prev') {
+      newMonth.setMonth(newMonth.getMonth() - 1);
+    } else {
+      newMonth.setMonth(newMonth.getMonth() + 1);
+    }
+    setCurrentMonth(newMonth);
+  };
+
   // Função para lidar com a mudança de status
   const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
     try {
@@ -92,18 +103,37 @@ const Calendar = () => {
           <main className="flex-1 p-6 overflow-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-black p-4 rounded-lg border border-white/10">
+                {/* Navegação customizada do calendário */}
+                <div className="flex justify-between items-center mb-2">
+                  <button 
+                    onClick={() => navigateMonth('prev')}
+                    className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <h2 className="text-xl font-bold uppercase tracking-wider">
+                    {format(currentMonth, "MMMM 'DE' yyyy", { locale: ptBR })}
+                  </h2>
+                  <button 
+                    onClick={() => navigateMonth('next')}
+                    className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  className="p-3 pointer-events-auto"
+                  className="bg-[#1a1c23] rounded-lg"
                   month={currentMonth}
                   onMonthChange={handleMonthChange}
                   modifiers={{
                     highlighted: getDaysWithTasks,
                   }}
                   modifiersClassNames={{
-                    highlighted: "bg-purple-900/50 text-white font-bold animate-pulse border-2 border-purple-500 rounded-full",
+                    highlighted: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-blue-500",
                   }}
                   locale={ptBR}
                 />
@@ -112,7 +142,7 @@ const Calendar = () => {
               <div className="bg-black p-4 rounded-lg border border-white/10">
                 <div className="mb-4">
                   <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <CalendarIcon className="h-5 w-5" />
+                    <CalendarIcon className="h-5 w-5 text-blue-500" />
                     {formattedDate}
                   </h2>
                 </div>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,6 +83,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Título da tarefa"
           required
+          className="bg-black/50 border-white/20"
         />
       </div>
 
@@ -93,6 +95,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Detalhes da tarefa..."
           rows={3}
+          className="bg-black/50 border-white/20"
         />
       </div>
 
@@ -103,17 +106,17 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
             <Button
               variant="outline"
               className={cn(
-                "w-full justify-start text-left font-normal",
+                "w-full justify-start text-left font-normal bg-black/50 border-white/20",
                 !date && "text-muted-foreground"
               )}
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
+              <CalendarIcon className="mr-2 h-4 w-4 text-blue-500" />
               {date ? format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : (
                 <span>Selecionar data</span>
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 bg-[#1a1c23] border-white/10" align="start">
             <Calendar
               mode="single"
               selected={date}
@@ -122,7 +125,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
               locale={ptBR}
               month={currentMonth}
               onMonthChange={handleMonthChange}
-              className="pointer-events-auto"
+              className="pointer-events-auto bg-[#1a1c23]"
               disabled={(date) => date < startOfDay(new Date())}
             />
           </PopoverContent>
@@ -131,7 +134,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
 
       <Button 
         type="submit" 
-        className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+        className="w-full bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500"
         disabled={isSubmitting}
       >
         {isSubmitting ? 'Criando...' : 'Criar Tarefa'}
