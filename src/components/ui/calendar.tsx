@@ -54,30 +54,6 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
-      components={{
-        Navigation: (props) => (
-          <div className="space-x-1 flex items-center">
-            <button
-              {...props.previousMonthButtonProps}
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1"
-              )}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              {...props.nextMonthButtonProps}
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1"
-              )}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        ),
-      }}
       {...props}
     />
   )
