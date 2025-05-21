@@ -18,10 +18,12 @@ import {
 import { useTaskCore } from '@/hooks/tasks/use-task-core';
 import { useTaskOperations } from '@/hooks/tasks/use-task-operations';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const isMobile = useIsMobile();
   
   // Use o hook centralizado de tarefas
   const { tasks, loading } = useTaskCore();
@@ -101,7 +103,7 @@ const Calendar = () => {
           </header>
           
           <main className="flex-1 p-6 overflow-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-6`}>
               <div className="bg-black p-4 rounded-lg border border-white/10">
                 {/* Navegação customizada do calendário */}
                 <div className="flex justify-between items-center mb-2">
@@ -109,16 +111,16 @@ const Calendar = () => {
                     onClick={() => navigateMonth('prev')}
                     className="p-2 hover:bg-gray-800 rounded-full transition-colors"
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-5 w-5 text-white" />
                   </button>
-                  <h2 className="text-xl font-bold uppercase tracking-wider">
+                  <h2 className="text-xl font-bold uppercase tracking-wider text-white">
                     {format(currentMonth, "MMMM 'DE' yyyy", { locale: ptBR })}
                   </h2>
                   <button 
                     onClick={() => navigateMonth('next')}
                     className="p-2 hover:bg-gray-800 rounded-full transition-colors"
                   >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-5 w-5 text-white" />
                   </button>
                 </div>
 
