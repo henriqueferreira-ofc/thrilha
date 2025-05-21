@@ -25,6 +25,8 @@ export const About = () => {
                     <li>Organização por status (A Fazer, Em Progresso, Concluídas)</li>
                     <li>Interface moderna e intuitiva</li>
                     <li>Calendário integrado</li>
+                    <li>Gerenciamento de tarefas por data</li>
+                    <li>Organizaçõa de datas de aniversários</li>
                     <li>Totalmente gratuito até 3 tarefas</li>
                   </ul>
                 </div>
