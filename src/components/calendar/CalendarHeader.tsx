@@ -15,8 +15,8 @@ export const CalendarHeader = ({ selectedDate }: CalendarHeaderProps) => {
 
   return (
     <div className="mb-4">
-      <h2 className="text-lg font-semibold flex items-center gap-2 purple-gradient-text">
-        <CalendarIcon className="h-5 w-5 text-purple-400" />
+      <h2 className="text-lg font-semibold flex items-center gap-2">
+        <CalendarIcon className="h-5 w-5 text-blue-500" />
         {formattedDate}
       </h2>
     </div>

@@ -36,16 +36,16 @@ export const TaskList = ({
   return (
     <Table>
       <TableHeader>
-        <TableRow className="border-b border-white/10">
-          <TableHead className="text-purple-300">Status</TableHead>
-          <TableHead className="text-purple-300">Título</TableHead>
-          <TableHead className="text-purple-300">Descrição</TableHead>
-          <TableHead className="text-purple-300">Ações</TableHead>
+        <TableRow>
+          <TableHead>Status</TableHead>
+          <TableHead>Título</TableHead>
+          <TableHead>Descrição</TableHead>
+          <TableHead>Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {tasks.map((task) => (
-          <TableRow key={task.id} className="border-b border-white/5 hover:bg-white/5">
+          <TableRow key={task.id}>
             <TableCell>
               <button
                 onClick={() => onStatusChange(task.id, task.status === 'done' ? 'todo' : 'done')}
