@@ -96,7 +96,7 @@ const Calendar = () => {
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  className="p-3"
+                  className="p-3 pointer-events-auto"
                   month={currentMonth}
                   onMonthChange={handleMonthChange}
                   modifiers={{
