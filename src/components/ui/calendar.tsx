@@ -53,9 +53,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        // In react-day-picker v9.7.0, the keys should be 'iconLeft' and 'iconRight' (lowercase 'i')
-        iconLeft: (props) => <ChevronLeft {...props} />,
-        iconRight: (props) => <ChevronRight {...props} />
+        IconLeft: ChevronLeft,
+        IconRight: ChevronRight
       }}
       {...props}
     />
