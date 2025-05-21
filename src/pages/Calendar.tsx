@@ -6,6 +6,7 @@ import { useTaskCore } from '@/hooks/tasks/use-task-core';
 import { useTaskOperations } from '@/hooks/tasks/use-task-operations';
 import { toast } from 'sonner';
 import { CalendarContainer } from '@/components/calendar/CalendarContainer';
+import { TaskStatus } from '@/types/task';
 
 const Calendar = () => {
   // Use o hook centralizado de tarefas
@@ -17,7 +18,7 @@ const Calendar = () => {
   }, [tasks]);
 
   // Função para lidar com a mudança de status
-  const handleStatusChange = async (taskId: string, newStatus: string) => {
+  const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     try {
       await changeTaskStatus(taskId, newStatus);
     } catch (error) {

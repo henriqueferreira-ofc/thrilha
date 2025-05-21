@@ -1,5 +1,5 @@
 
-import { Task } from '@/types/task';
+import { Task, TaskStatus } from '@/types/task';
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import { StatusIndicator } from './StatusIndicator';
 
 interface TaskListProps {
   tasks: Task[];
-  onStatusChange: (taskId: string, newStatus: Task['status']) => Promise<void>;
+  onStatusChange: (taskId: string, newStatus: TaskStatus) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
   selectedDate: Date | undefined;
 }
