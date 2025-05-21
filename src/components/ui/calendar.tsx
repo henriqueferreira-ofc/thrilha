@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -55,8 +56,9 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: (props) => <ChevronLeft className="h-5 w-5 text-white" {...props} />,
-        IconRight: (props) => <ChevronRight className="h-5 w-5 text-white" {...props} />
+        // Remove explicit custom components and rely on the styled nav_button classes
+        // The DayPicker will automatically use the built-in navigation buttons
+        // with the styles we defined above
       }}
       {...props}
     />
