@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -45,8 +46,8 @@ function Calendar({
           "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
         ),
         day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
+          "bg-purple-500 text-white hover:bg-purple-600 hover:text-white focus:bg-purple-600 focus:text-white",
+        day_today: "bg-blue-500 text-white border-2 border-blue-300",
         day_outside: "text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle:
@@ -55,8 +56,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        iconLeft: (props) => <ChevronLeft className="h-4 w-4" {...props} />,
-        iconRight: (props) => <ChevronRight className="h-4 w-4" {...props} />
+        IconLeft: (props) => <ChevronLeft className="h-4 w-4" />,
+        IconRight: (props) => <ChevronRight className="h-4 w-4" />
       }}
       {...props}
     />
