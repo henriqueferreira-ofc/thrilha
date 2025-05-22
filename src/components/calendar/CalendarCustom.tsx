@@ -37,17 +37,6 @@ export function CalendarCustom({
   const [currentMonth, setCurrentMonth] = useState(value || new Date());
   const today = new Date();
 
-  // Navegar automaticamente para o mês da primeira tarefa, mas sem selecionar a data
-  useEffect(() => {
-    if (tasks.length > 0) {
-      const firstTask = tasks.find(t => t.due_date);
-      if (firstTask?.due_date) {
-        const taskDate = new Date(firstTask.due_date);
-        setCurrentMonth(taskDate);
-      }
-    }
-  }, [tasks]);
-
   // Dias com pelo menos uma tarefa
   const taskDates = tasks
     .filter((t) => t.due_date)
