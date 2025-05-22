@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   addMonths,
   subMonths,
@@ -16,13 +16,24 @@ import clsx from "clsx";
 
 const weekDays = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
-export function CalendarCustom({ value, onChange, markedDates = [] }: {
+export function CalendarCustom({
+  value,
+  onChange,
+  tasks = [],
+  primaryColor = "bg-purple-600"
+}: {
   value?: Date;
   onChange?: (date: Date) => void;
-  markedDates?: Date[];
+  tasks?: { date: Date; status: string }[];
+  primaryColor?: string;
 }) {
   const [currentMonth, setCurrentMonth] = useState(value || new Date());
   const today = new Date();
+
+  // Dias com pelo menos uma tarefa done
+  const doneDates = tasks
+    .filter((t) => t.status === "done")
+    .map((t) => t.date);
 
   // Gera os dias do mês atual, incluindo os dias do início/fim da semana para alinhar corretamente
   const monthStart = startOfMonth(currentMonth);
@@ -39,7 +50,7 @@ export function CalendarCustom({ value, onChange, markedDates = [] }: {
       const isCurrentMonth = isSameMonth(day, currentMonth);
       const isSelected = value && isSameDay(day, value);
       const isToday = isSameDay(day, today);
-      const isMarked = markedDates.some((d) => isSameDay(d, day));
+      const isDone = doneDates.some((d) => isSameDay(d, day));
 
       days.push(
         <button
@@ -48,8 +59,8 @@ export function CalendarCustom({ value, onChange, markedDates = [] }: {
           className={clsx(
             "w-10 h-10 flex items-center justify-center rounded-full transition relative",
             isCurrentMonth ? "text-white" : "text-zinc-600",
-            isToday && "border border-zinc-400",
-            isSelected && "bg-blue-700 text-white font-bold",
+            isToday && `${primaryColor} border-2 border-white`,
+            isSelected && "ring-2 ring-purple-400",
             isCurrentMonth && "hover:bg-zinc-800",
             !isCurrentMonth && "opacity-50 cursor-default"
           )}
@@ -57,9 +68,9 @@ export function CalendarCustom({ value, onChange, markedDates = [] }: {
           disabled={!isCurrentMonth}
         >
           {format(day, "d")}
-          {isMarked && (
+          {isDone && (
             <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span className="w-7 h-7 rounded-full bg-purple-600/70 animate-pulse opacity-70"></span>
+              <span className={`w-7 h-7 rounded-full ${primaryColor} animate-pulse opacity-70`}></span>
             </span>
           )}
         </button>
