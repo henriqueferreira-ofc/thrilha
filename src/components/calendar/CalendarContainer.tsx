@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { isSameDay } from 'date-fns';
 import { Task } from '@/types/task';
-import { CalendarNavigation } from './CalendarNavigation';
+// import { CalendarNavigation } from './CalendarNavigation';
 import { CalendarHeader } from './CalendarHeader';
 import { TaskList } from './TaskList';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -41,7 +40,6 @@ export const CalendarContainer = ({
   // Filtrar tarefas pela data selecionada
   const tasksForSelectedDate = tasks.filter((task) => {
     if (!selectedDate || !task.due_date) return false;
-    
     const taskDate = new Date(task.due_date);
     return isSameDay(taskDate, selectedDate);
   });
@@ -59,17 +57,13 @@ export const CalendarContainer = ({
 
   // Função para lidar com a seleção de uma data
   const handleDateChange = (date: Date) => {
-    console.log("Data selecionada:", date);
     setSelectedDate(date);
   };
 
   return (
     <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-6`}>
       <div className="bg-black p-4 rounded-lg border border-white/5 shadow-md">
-        <CalendarNavigation 
-          currentMonth={currentMonth} 
-          onNavigate={navigateMonth} 
-        />
+        {/* <CalendarNavigation currentMonth={currentMonth} onNavigate={navigateMonth} /> */}
         <CalendarCustom
           value={selectedDate}
           onChange={handleDateChange}
