@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   addMonths,
   subMonths,
@@ -15,6 +14,10 @@ import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import clsx from "clsx";
 import { Task } from '@/types/task';
+
+function capitalizeFirst(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 const weekDays = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
@@ -34,15 +37,41 @@ export function CalendarCustom({
   const [currentMonth, setCurrentMonth] = useState(value || new Date());
   const today = new Date();
 
+  // Navegar automaticamente para o mês da primeira tarefa, mas sem selecionar a data
+  useEffect(() => {
+    if (tasks.length > 0) {
+      const firstTask = tasks.find(t => t.due_date);
+      if (firstTask?.due_date) {
+        const taskDate = new Date(firstTask.due_date);
+        setCurrentMonth(taskDate);
+      }
+    }
+  }, [tasks]);
+
   // Dias com pelo menos uma tarefa
   const taskDates = tasks
     .filter((t) => t.due_date)
-    .map((t) => new Date(t.due_date!));
+    .map((t) => {
+      const date = new Date(t.due_date!);
+      console.log('Tarefa encontrada:', {
+        title: t.title,
+        date: format(date, 'dd/MM/yyyy'),
+        status: t.status
+      });
+      return date;
+    });
 
   // Dias com tarefas concluídas
   const doneDates = tasks
     .filter((t) => t.status === "done" && t.due_date)
-    .map((t) => new Date(t.due_date!));
+    .map((t) => {
+      const date = new Date(t.due_date!);
+      console.log('Tarefa concluída:', {
+        title: t.title,
+        date: format(date, 'dd/MM/yyyy')
+      });
+      return date;
+    });
 
   // Dias com feriados
   const holidayDates = holidays.map(h => h.date);
@@ -73,7 +102,7 @@ export function CalendarCustom({
           key={day.toString()}
           onClick={() => {
             if (isCurrentMonth) {
-              onChange?.(new Date(day));
+              onChange?.(new Date(day.getFullYear(), day.getMonth(), day.getDate()));
               console.log("Clicou na data:", format(day, "dd/MM/yyyy"));
               console.log("Tem tarefa:", hasTask);
             }
@@ -128,8 +157,8 @@ export function CalendarCustom({
         >
           <ChevronLeft />
         </button>
-        <span className="font-bold text-lg uppercase tracking-wide purple-gradient-text">
-          {format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR })}
+        <span className="font-bold text-lg tracking-wide purple-gradient-text">
+          {capitalizeFirst(format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR }))}
         </span>
         <button
           onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}

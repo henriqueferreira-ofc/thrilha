@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { isSameDay } from 'date-fns';
+import { isSameDay, format } from 'date-fns';
 import { Task } from '@/types/task';
 // import { CalendarNavigation } from './CalendarNavigation';
 import { CalendarHeader } from './CalendarHeader';
@@ -21,7 +21,8 @@ export const CalendarContainer = ({
   onStatusChange,
   onDeleteTask
 }: CalendarContainerProps) => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  // Começar com undefined para não ter data pré-selecionada
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [holidays, setHolidays] = useState<{date: Date, name: string}[]>([]);
   const isMobile = useIsMobile();
@@ -37,12 +38,32 @@ export const CalendarContainer = ({
     }
   }, [currentMonth]);
 
+  // Função para lidar com a seleção de uma data
+  const handleDateChange = (date: Date) => {
+    console.log('Data selecionada:', format(date, 'dd/MM/yyyy'));
+    // Garantir que a data seja criada como meia-noite no fuso local
+    const newDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    setSelectedDate(newDate);
+  };
+
   // Filtrar tarefas pela data selecionada
   const tasksForSelectedDate = tasks.filter((task) => {
     if (!selectedDate || !task.due_date) return false;
+    
     const taskDate = new Date(task.due_date);
-    return isSameDay(taskDate, selectedDate);
+    const taskDateStr = format(taskDate, 'yyyy-MM-dd');
+    const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+    
+    console.log('Comparando datas:', {
+      taskDate: taskDateStr,
+      selectedDate: selectedDateStr,
+      match: taskDateStr === selectedDateStr
+    });
+    
+    return taskDateStr === selectedDateStr;
   });
+
+  console.log('Tarefas filtradas:', tasksForSelectedDate);
 
   // Função para navegação manual entre meses
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -53,11 +74,6 @@ export const CalendarContainer = ({
       newMonth.setMonth(newMonth.getMonth() + 1);
     }
     setCurrentMonth(newMonth);
-  };
-
-  // Função para lidar com a seleção de uma data
-  const handleDateChange = (date: Date) => {
-    setSelectedDate(date);
   };
 
   return (
