@@ -86,9 +86,9 @@ export function CalendarCustom({
         >
           {format(day, "d")}
           
-          {/* Indicador de tarefas */}
+          {/* Indicador de tarefas - agora piscando para chamar a atenção */}
           {hasTask && !isDone && (
-            <span className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+            <span className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse"></span>
           )}
           
           {/* Indicador de tarefas concluídas */}
@@ -113,27 +113,27 @@ export function CalendarCustom({
   }
 
   return (
-    <div className="bg-zinc-900 rounded-lg shadow-lg border border-white/10 p-4 w-full max-w-md mx-auto">
+    <div className="bg-[#181926] rounded-lg shadow-lg border border-white/5 p-4 w-full max-w-md mx-auto">
       <div className="flex items-center justify-between mb-2">
         <button
           onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-          className="p-2 rounded hover:bg-zinc-800 text-zinc-300"
+          className="p-2 rounded hover:bg-zinc-800 text-purple-300"
           aria-label="Mês anterior"
         >
           <ChevronLeft />
         </button>
-        <span className="font-bold text-lg uppercase tracking-wide text-zinc-100">
+        <span className="font-bold text-lg uppercase tracking-wide purple-gradient-text">
           {format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR })}
         </span>
         <button
           onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-          className="p-2 rounded hover:bg-zinc-800 text-zinc-300"
+          className="p-2 rounded hover:bg-zinc-800 text-purple-300"
           aria-label="Próximo mês"
         >
           <ChevronRight />
         </button>
       </div>
-      <div className="grid grid-cols-7 gap-1 text-center font-semibold text-zinc-500 mb-2 text-sm">
+      <div className="grid grid-cols-7 gap-1 text-center font-semibold text-purple-500 mb-2 text-sm">
         {weekDays.map((d) => (
           <div key={d}>{d}</div>
         ))}

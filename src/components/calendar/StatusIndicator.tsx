@@ -16,7 +16,7 @@ export function StatusIndicator({ status }: StatusIndicatorProps) {
   }
 
   return (
-    <div className="w-6 h-6 flex items-center justify-center rounded-full border border-zinc-400 text-zinc-400">
+    <div className="w-6 h-6 flex items-center justify-center rounded-full border border-purple-400 text-purple-400">
       <CircleDashed className="h-4 w-4" />
     </div>
   );

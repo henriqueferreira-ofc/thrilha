@@ -21,7 +21,7 @@ export const CalendarNavigation = ({
       >
         <ChevronLeft className="h-5 w-5 text-purple-400" />
       </button>
-      <h2 className="text-xl font-bold uppercase tracking-wider text-white">
+      <h2 className="text-xl font-bold uppercase tracking-wider purple-gradient-text">
         {format(currentMonth, "MMMM 'DE' yyyy", { locale: ptBR })}
       </h2>
       <button 

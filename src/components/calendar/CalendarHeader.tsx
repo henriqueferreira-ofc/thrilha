@@ -22,7 +22,7 @@ export const CalendarHeader = ({ selectedDate, holidayName }: CalendarHeaderProp
       </h2>
       
       {holidayName && (
-        <div className="flex items-center gap-2 mt-2 text-red-400">
+        <div className="flex items-center gap-2 mt-2 text-purple-400">
           <FlagIcon className="h-4 w-4" />
           <span>{holidayName}</span>
         </div>

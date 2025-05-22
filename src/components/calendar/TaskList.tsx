@@ -57,7 +57,7 @@ export const TaskList = ({
       </TableHeader>
       <TableBody>
         {tasks.map((task) => (
-          <TableRow key={task.id} className="hover:bg-zinc-800/50 border-white/5">
+          <TableRow key={task.id} className="hover:bg-purple-900/20 border-white/5">
             <TableCell>
               <button
                 onClick={() => toggleTaskStatus(task)}
@@ -68,7 +68,7 @@ export const TaskList = ({
               </button>
             </TableCell>
             <TableCell className="font-medium">
-              <span className={task.status === 'done' ? 'line-through text-zinc-500' : ''}>
+              <span className={task.status === 'done' ? 'line-through text-zinc-500' : 'text-white'}>
                 {task.title}
               </span>
             </TableCell>

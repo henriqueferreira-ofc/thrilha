@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { isSameDay } from 'date-fns';
 import { Task } from '@/types/task';
 import { CalendarNavigation } from './CalendarNavigation';
-import { CalendarGrid } from './CalendarGrid';
 import { CalendarHeader } from './CalendarHeader';
 import { TaskList } from './TaskList';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -60,7 +59,7 @@ export const CalendarContainer = ({
 
   return (
     <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-6`}>
-      <div className="bg-zinc-900 p-4 rounded-lg border border-white/10 shadow-md">
+      <div className="bg-[#181926] p-4 rounded-lg border border-white/5 shadow-md">
         <CalendarNavigation 
           currentMonth={currentMonth} 
           onNavigate={navigateMonth} 
@@ -74,7 +73,7 @@ export const CalendarContainer = ({
         />
       </div>
 
-      <div className="bg-zinc-900 p-4 rounded-lg border border-white/10 shadow-md">
+      <div className="bg-[#181926] p-4 rounded-lg border border-white/5 shadow-md">
         <CalendarHeader 
           selectedDate={selectedDate} 
           holidayName={holidays.find(h => selectedDate && isSameDay(h.date, selectedDate))?.name}
