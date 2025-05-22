@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { isSameDay } from 'date-fns';
 import { Task } from '@/types/task';
 import { CalendarNavigation } from './CalendarNavigation';
@@ -7,6 +7,8 @@ import { CalendarGrid } from './CalendarGrid';
 import { CalendarHeader } from './CalendarHeader';
 import { TaskList } from './TaskList';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CalendarCustom } from './CalendarCustom';
+import { getHolidaysForMonth } from '@/lib/holidays';
 
 interface CalendarContainerProps {
   tasks: Task[];
@@ -23,7 +25,19 @@ export const CalendarContainer = ({
 }: CalendarContainerProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [holidays, setHolidays] = useState<{date: Date, name: string}[]>([]);
   const isMobile = useIsMobile();
+
+  // Carregar feriados para o mês atual
+  useEffect(() => {
+    if (currentMonth) {
+      const monthHolidays = getHolidaysForMonth(
+        currentMonth.getFullYear(), 
+        currentMonth.getMonth() + 1
+      );
+      setHolidays(monthHolidays);
+    }
+  }, [currentMonth]);
 
   // Filtrar tarefas pela data selecionada
   const tasksForSelectedDate = tasks.filter((task) => {
@@ -46,25 +60,28 @@ export const CalendarContainer = ({
 
   return (
     <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-6`}>
-      <div className="bg-[#1a1c23] p-4 rounded-lg border border-white/10">
+      <div className="bg-zinc-900 p-4 rounded-lg border border-white/10 shadow-md">
         <CalendarNavigation 
           currentMonth={currentMonth} 
           onNavigate={navigateMonth} 
         />
-        <CalendarGrid
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          currentMonth={currentMonth}
-          onMonthChange={setCurrentMonth}
+        <CalendarCustom
+          value={selectedDate}
+          onChange={setSelectedDate}
           tasks={tasks}
+          primaryColor="bg-purple-600"
+          holidays={holidays}
         />
       </div>
 
-      <div className="bg-[#1a1c23] p-4 rounded-lg border border-white/10">
-        <CalendarHeader selectedDate={selectedDate} />
+      <div className="bg-zinc-900 p-4 rounded-lg border border-white/10 shadow-md">
+        <CalendarHeader 
+          selectedDate={selectedDate} 
+          holidayName={holidays.find(h => selectedDate && isSameDay(h.date, selectedDate))?.name}
+        />
         <div className="mt-4">
           {loading ? (
-            <div className="text-center py-6 text-muted-foreground">
+            <div className="text-center py-6 text-zinc-400">
               Carregando tarefas...
             </div>
           ) : (

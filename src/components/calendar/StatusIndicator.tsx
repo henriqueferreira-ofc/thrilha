@@ -1,20 +1,23 @@
 
-import { Circle, Check } from 'lucide-react';
-import { Task } from '@/types/task';
+import { TaskStatus } from '@/types/task';
+import { CheckIcon, CircleDashed } from 'lucide-react';
 
 interface StatusIndicatorProps {
-  status: Task['status'];
+  status: TaskStatus;
 }
 
-export const StatusIndicator = ({ status }: StatusIndicatorProps) => {
-  switch (status) {
-    case 'todo':
-      return <Circle className="h-4 w-4 text-muted-foreground" />;
-    case 'in-progress':
-      return <Circle className="h-4 w-4 text-blue-500 fill-blue-500/30" />;
-    case 'done':
-      return <Check className="h-4 w-4 text-green-500" />;
-    default:
-      return null;
+export function StatusIndicator({ status }: StatusIndicatorProps) {
+  if (status === 'done') {
+    return (
+      <div className="w-6 h-6 flex items-center justify-center rounded-full bg-purple-600 text-white">
+        <CheckIcon className="h-4 w-4" />
+      </div>
+    );
   }
-};
+
+  return (
+    <div className="w-6 h-6 flex items-center justify-center rounded-full border border-zinc-400 text-zinc-400">
+      <CircleDashed className="h-4 w-4" />
+    </div>
+  );
+}

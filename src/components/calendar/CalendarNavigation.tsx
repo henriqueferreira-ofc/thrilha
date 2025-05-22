@@ -13,23 +13,23 @@ export const CalendarNavigation = ({
   onNavigate 
 }: CalendarNavigationProps) => {
   return (
-    <div className="flex justify-between items-center mb-2">
+    <div className="flex justify-between items-center mb-4">
       <button 
         onClick={() => onNavigate('prev')}
-        className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+        className="p-2 hover:bg-zinc-800 rounded-full transition-colors"
         aria-label="Mês anterior"
       >
-        <ChevronLeft className="h-5 w-5 text-white" />
+        <ChevronLeft className="h-5 w-5 text-purple-400" />
       </button>
       <h2 className="text-xl font-bold uppercase tracking-wider text-white">
         {format(currentMonth, "MMMM 'DE' yyyy", { locale: ptBR })}
       </h2>
       <button 
         onClick={() => onNavigate('next')}
-        className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+        className="p-2 hover:bg-zinc-800 rounded-full transition-colors"
         aria-label="Próximo mês"
       >
-        <ChevronRight className="h-5 w-5 text-white" />
+        <ChevronRight className="h-5 w-5 text-purple-400" />
       </button>
     </div>
   );

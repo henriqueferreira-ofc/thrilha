@@ -9,6 +9,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { StatusIndicator } from './StatusIndicator';
+import { getStatusName } from '@/lib/task-utils';
+import { TrashIcon } from 'lucide-react';
 
 interface TaskListProps {
   tasks: Task[];
@@ -25,43 +27,61 @@ export const TaskList = ({
 }: TaskListProps) => {
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-6 text-muted-foreground">
-        {selectedDate 
-          ? 'Nenhuma tarefa para esta data' 
-          : 'Selecione uma data para ver as tarefas'}
+      <div className="text-center py-10 text-zinc-400 flex flex-col items-center">
+        {selectedDate ? (
+          <>
+            <span className="text-lg mb-2">Nenhuma tarefa para esta data</span>
+            <span className="text-sm">Você pode criar tarefas para este dia através do menu lateral</span>
+          </>
+        ) : (
+          <span>Selecione uma data para ver as tarefas</span>
+        )}
       </div>
     );
   }
 
+  const toggleTaskStatus = (task: Task) => {
+    const newStatus = task.status === 'done' ? 'todo' : 'done';
+    onStatusChange(task.id, newStatus);
+  };
+
   return (
     <Table>
       <TableHeader>
-        <TableRow>
-          <TableHead>Status</TableHead>
+        <TableRow className="hover:bg-transparent border-white/10">
+          <TableHead className="w-20">Status</TableHead>
           <TableHead>Título</TableHead>
           <TableHead>Descrição</TableHead>
-          <TableHead>Ações</TableHead>
+          <TableHead className="w-20">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {tasks.map((task) => (
-          <TableRow key={task.id}>
+          <TableRow key={task.id} className="hover:bg-zinc-800/50 border-white/5">
             <TableCell>
               <button
-                onClick={() => onStatusChange(task.id, task.status === 'done' ? 'todo' : 'done')}
+                onClick={() => toggleTaskStatus(task)}
                 className="hover:opacity-80 transition-opacity"
+                title={`Marcar como ${task.status === 'done' ? 'pendente' : 'concluída'}`}
               >
                 <StatusIndicator status={task.status} />
               </button>
             </TableCell>
-            <TableCell className="font-medium">{task.title}</TableCell>
-            <TableCell className="text-muted-foreground">{task.description || '-'}</TableCell>
+            <TableCell className="font-medium">
+              <span className={task.status === 'done' ? 'line-through text-zinc-500' : ''}>
+                {task.title}
+              </span>
+            </TableCell>
+            <TableCell className="text-zinc-400">
+              {task.description || '-'}
+            </TableCell>
             <TableCell>
               <button
                 onClick={() => onDeleteTask(task.id)}
-                className="text-red-500 hover:text-red-400 transition-colors"
+                className="p-2 rounded-full hover:bg-red-900/30 text-red-400 transition-colors"
+                title="Excluir tarefa"
               >
-                Excluir
+                <TrashIcon className="h-4 w-4" />
               </button>
             </TableCell>
           </TableRow>
