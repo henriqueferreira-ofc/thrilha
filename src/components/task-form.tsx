@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -134,7 +133,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
 
       <Button 
         type="submit" 
-        className="w-full bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500"
+        className="w-full bg-gradient-to-r from-purple-700 to-purple-600 hover:from-purple-600 hover:to-purple-500"
         disabled={isSubmitting}
       >
         {isSubmitting ? 'Criando...' : 'Criar Tarefa'}
