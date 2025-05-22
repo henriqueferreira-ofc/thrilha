@@ -46,47 +46,49 @@ export const TaskList = ({
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="hover:bg-transparent border-white/10">
-          <TableHead className="w-20">Status</TableHead>
-          <TableHead>Título</TableHead>
-          <TableHead>Descrição</TableHead>
-          <TableHead className="w-20">Ações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {tasks.map((task) => (
-          <TableRow key={task.id} className="hover:bg-purple-900/20 border-white/5">
-            <TableCell>
-              <button
-                onClick={() => toggleTaskStatus(task)}
-                className="hover:opacity-80 transition-opacity"
-                title={`Marcar como ${task.status === 'done' ? 'pendente' : 'concluída'}`}
-              >
-                <StatusIndicator status={task.status} />
-              </button>
-            </TableCell>
-            <TableCell className="font-medium">
-              <span className={task.status === 'done' ? 'line-through text-zinc-500' : 'text-white'}>
-                {task.title}
-              </span>
-            </TableCell>
-            <TableCell className="text-zinc-400">
-              {task.description || '-'}
-            </TableCell>
-            <TableCell>
-              <button
-                onClick={() => onDeleteTask(task.id)}
-                className="p-2 rounded-full hover:bg-red-900/30 text-red-400 transition-colors"
-                title="Excluir tarefa"
-              >
-                <TrashIcon className="h-4 w-4" />
-              </button>
-            </TableCell>
+    <div className="animate-fade-in">
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent border-white/10">
+            <TableHead className="w-20">Status</TableHead>
+            <TableHead>Título</TableHead>
+            <TableHead>Descrição</TableHead>
+            <TableHead className="w-20">Ações</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {tasks.map((task) => (
+            <TableRow key={task.id} className="hover:bg-purple-900/20 border-white/5">
+              <TableCell>
+                <button
+                  onClick={() => toggleTaskStatus(task)}
+                  className="hover:opacity-80 transition-opacity"
+                  title={`Marcar como ${task.status === 'done' ? 'pendente' : 'concluída'}`}
+                >
+                  <StatusIndicator status={task.status} />
+                </button>
+              </TableCell>
+              <TableCell className="font-medium">
+                <span className={task.status === 'done' ? 'line-through text-zinc-500' : 'text-white'}>
+                  {task.title}
+                </span>
+              </TableCell>
+              <TableCell className="text-zinc-400">
+                {task.description || '-'}
+              </TableCell>
+              <TableCell>
+                <button
+                  onClick={() => onDeleteTask(task.id)}
+                  className="p-2 rounded-full hover:bg-red-900/30 text-red-400 transition-colors"
+                  title="Excluir tarefa"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
-};
+}

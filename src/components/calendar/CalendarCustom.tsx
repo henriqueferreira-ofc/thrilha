@@ -71,7 +71,13 @@ export function CalendarCustom({
       days.push(
         <button
           key={day.toString()}
-          onClick={() => isCurrentMonth && onChange?.(new Date(day))}
+          onClick={() => {
+            if (isCurrentMonth) {
+              onChange?.(new Date(day));
+              console.log("Clicou na data:", format(day, "dd/MM/yyyy"));
+              console.log("Tem tarefa:", hasTask);
+            }
+          }}
           className={clsx(
             "w-10 h-10 flex items-center justify-center rounded-full transition relative",
             isCurrentMonth ? "text-white" : "text-zinc-600",
@@ -86,14 +92,14 @@ export function CalendarCustom({
         >
           {format(day, "d")}
           
-          {/* Indicador de tarefas - agora piscando para chamar a atenção */}
+          {/* Indicador de tarefas - agora piscando mais intensamente para chamar a atenção */}
           {hasTask && !isDone && (
-            <span className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse"></span>
+            <span className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-purple-500 rounded-full animate-[pulse_1.5s_cubic-bezier(0.4,0,0.6,1)_infinite]"></span>
           )}
           
           {/* Indicador de tarefas concluídas */}
           {isDone && (
-            <span className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+            <span className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-green-500 rounded-full"></span>
           )}
           
           {/* Indicador de feriado */}
@@ -113,7 +119,7 @@ export function CalendarCustom({
   }
 
   return (
-    <div className="bg-[#181926] rounded-lg shadow-lg border border-white/5 p-4 w-full max-w-md mx-auto">
+    <div className="bg-black rounded-lg shadow-lg border border-white/5 p-4 w-full max-w-md mx-auto">
       <div className="flex items-center justify-between mb-2">
         <button
           onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -147,4 +153,4 @@ function addDays(date: Date, days: number) {
   const result = new Date(date);
   result.setDate(result.getDate() + days);
   return result;
-} 
+}

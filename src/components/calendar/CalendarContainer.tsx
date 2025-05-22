@@ -57,23 +57,29 @@ export const CalendarContainer = ({
     setCurrentMonth(newMonth);
   };
 
+  // Função para lidar com a seleção de uma data
+  const handleDateChange = (date: Date) => {
+    console.log("Data selecionada:", date);
+    setSelectedDate(date);
+  };
+
   return (
     <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-6`}>
-      <div className="bg-[#181926] p-4 rounded-lg border border-white/5 shadow-md">
+      <div className="bg-black p-4 rounded-lg border border-white/5 shadow-md">
         <CalendarNavigation 
           currentMonth={currentMonth} 
           onNavigate={navigateMonth} 
         />
         <CalendarCustom
           value={selectedDate}
-          onChange={setSelectedDate}
+          onChange={handleDateChange}
           tasks={tasks}
           primaryColor="bg-purple-600"
           holidays={holidays}
         />
       </div>
 
-      <div className="bg-[#181926] p-4 rounded-lg border border-white/5 shadow-md">
+      <div className="bg-black p-4 rounded-lg border border-white/5 shadow-md">
         <CalendarHeader 
           selectedDate={selectedDate} 
           holidayName={holidays.find(h => selectedDate && isSameDay(h.date, selectedDate))?.name}

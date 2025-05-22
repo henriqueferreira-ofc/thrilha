@@ -21,10 +21,10 @@ export default function CalendarPage() {
       <div className="min-h-screen flex w-full">
         <TaskSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="p-6 flex justify-between items-center border-b border-white/10 bg-[#181926]">
+          <header className="p-6 flex justify-between items-center border-b border-white/10 bg-black">
             <h1 className="text-xl font-bold purple-gradient-text">Calendário</h1>
           </header>
-          <main className="flex-1 p-6 bg-[#181926] flex flex-col">
+          <main className="flex-1 p-6 bg-black flex flex-col">
             <CalendarContainer 
               tasks={tasks} 
               loading={loading || !isInitialized}
