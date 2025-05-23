@@ -17,7 +17,7 @@ import { ReactNode } from 'react';
 interface DeleteConfirmationDialogProps {
   itemName: string;
   itemLabel?: string;
-  onDelete: () => Promise<void>;
+  onDelete: () => Promise<void> | void;
   children?: ReactNode;
   trigger?: ReactNode;
 }
@@ -30,7 +30,7 @@ export function DeleteConfirmationDialog({
   trigger
 }: DeleteConfirmationDialogProps) {
   return (
-    <AlertDialog>
+    <AlertDialog open={trigger ? undefined : false}>
       <AlertDialogTrigger asChild>
         {trigger || (
           <Button variant="destructive" size="icon">

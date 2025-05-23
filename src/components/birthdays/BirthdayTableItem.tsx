@@ -63,6 +63,12 @@ export function BirthdayTableItem({ birthday, daysUntil, onEdit, onDelete }: Bir
     }
   };
 
+  // Handle delete confirmation
+  const handleDeleteConfirm = async () => {
+    onDelete(birthday.id);
+    setShowDeleteDialog(false);
+  };
+
   return (
     <TableRow key={birthday.id} className="hover:bg-purple-900/20 border-white/5">
       <TableCell className="font-medium">{birthday.name}</TableCell>
@@ -90,14 +96,16 @@ export function BirthdayTableItem({ birthday, daysUntil, onEdit, onDelete }: Bir
           </Button>
         </div>
         <DeleteConfirmationDialog 
-          isOpen={showDeleteDialog} 
-          onClose={() => setShowDeleteDialog(false)} 
-          onConfirm={() => {
-            onDelete(birthday.id);
-            setShowDeleteDialog(false);
-          }} 
-          name={birthday.name}
-        />
+          itemName={birthday.name}
+          itemLabel="aniversário"
+          onDelete={handleDeleteConfirm}
+          trigger={
+            <span style={{ display: 'none' }}></span>
+          }
+        >
+          Tem certeza que deseja excluir o aniversário de {birthday.name}? 
+          Esta ação não pode ser desfeita.
+        </DeleteConfirmationDialog>
       </TableCell>
     </TableRow>
   );
