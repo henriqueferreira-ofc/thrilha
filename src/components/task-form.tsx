@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { TaskFormData } from '@/types/task';
 import { format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar } from '@/components/ui/calendar';
+import { CalendarCustom } from '@/components/calendar/CalendarCustom';
 import {
   Popover,
   PopoverContent,
@@ -33,7 +33,6 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
     initialData.dueDate ? startOfDay(parseISO(initialData.dueDate)) : undefined
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,11 +64,6 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Função para lidar com a mudança de mês
-  const handleMonthChange = (month: Date) => {
-    setCurrentMonth(month);
   };
 
   return (
@@ -116,16 +110,10 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 bg-[#1a1c23] border-white/10" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(newDate) => newDate && setDate(startOfDay(newDate))}
-              initialFocus
-              locale={ptBR}
-              month={currentMonth}
-              onMonthChange={handleMonthChange}
-              className="pointer-events-auto bg-[#1a1c23]"
-              disabled={(date) => date < startOfDay(new Date())}
+            <CalendarCustom
+              value={date}
+              onChange={(newDate) => newDate && setDate(newDate)}
+              primaryColor="bg-purple-600"
             />
           </PopoverContent>
         </Popover>
