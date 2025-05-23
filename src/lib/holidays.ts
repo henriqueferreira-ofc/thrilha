@@ -1,6 +1,14 @@
 
 // Lista de alguns feriados nacionais brasileiros e datas comemorativas
 export function getHolidaysForMonth(year: number, month: number): {date: Date, name: string}[] {
+  const allHolidays = getAllHolidays(year);
+  return allHolidays.filter(holiday => 
+    holiday.date.getMonth() + 1 === month
+  );
+}
+
+// Função para obter todos os feriados do ano
+export function getAllHolidays(year: number): {date: Date, name: string}[] {
   // Lista de feriados fixos (mês, dia, nome)
   const fixedHolidays = [
     { month: 1, day: 1, name: 'Confraternização Universal' },
@@ -73,35 +81,28 @@ export function getHolidaysForMonth(year: number, month: number): {date: Date, n
     ];
   }
   
-  // Filtrar apenas os feriados do mês solicitado
   const result: {date: Date, name: string}[] = [];
   
-  // Adicionar feriados fixos do mês solicitado
+  // Adicionar feriados fixos
   fixedHolidays.forEach(holiday => {
-    if (holiday.month === month) {
-      result.push({ 
-        date: new Date(year, month - 1, holiday.day), 
-        name: holiday.name 
-      });
-    }
+    result.push({ 
+      date: new Date(year, holiday.month - 1, holiday.day), 
+      name: holiday.name 
+    });
   });
   
-  // Adicionar datas comemorativas do mês solicitado
+  // Adicionar datas comemorativas
   commemorativeDates.forEach(date => {
-    if (date.month === month) {
-      result.push({ 
-        date: new Date(year, month - 1, date.day), 
-        name: date.name 
-      });
-    }
+    result.push({ 
+      date: new Date(year, date.month - 1, date.day), 
+      name: date.name 
+    });
   });
   
   // Adicionar feriados móveis
   const movableHolidays = calculateMovableHolidays(year);
   movableHolidays.forEach(holiday => {
-    if (holiday.date.getMonth() + 1 === month) {
-      result.push(holiday);
-    }
+    result.push(holiday);
   });
   
   return result;

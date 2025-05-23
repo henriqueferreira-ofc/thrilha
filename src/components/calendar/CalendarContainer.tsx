@@ -6,7 +6,7 @@ import { CalendarHeader } from './CalendarHeader';
 import { TaskList } from './TaskList';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CalendarCustom } from './CalendarCustom';
-import { getHolidaysForMonth } from '@/lib/holidays';
+import { getHolidaysForMonth, getAllHolidays } from '@/lib/holidays';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { CalendarPlus } from 'lucide-react';
@@ -35,16 +35,12 @@ export const CalendarContainer = ({
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const isMobile = useIsMobile();
 
-  // Carregar feriados para o mês atual
+  // Carregar todos os feriados do ano para o calendário
   useEffect(() => {
-    if (currentMonth) {
-      const monthHolidays = getHolidaysForMonth(
-        currentMonth.getFullYear(), 
-        currentMonth.getMonth() + 1
-      );
-      setHolidays(monthHolidays);
-    }
-  }, [currentMonth]);
+    const currentYear = new Date().getFullYear();
+    const allYearHolidays = getAllHolidays(currentYear);
+    setHolidays(allYearHolidays);
+  }, []);
 
   // Função para lidar com a seleção de uma data
   const handleDateChange = (date: Date) => {
@@ -63,16 +59,13 @@ export const CalendarContainer = ({
     const selectedDay = startOfDay(selectedDate);
     
     // Comparando as datas com startOfDay para normalizar a comparação
-    const isMatch = isSameDay(taskDay, selectedDay);
-    
-    console.log('Comparando', {
-      taskDateStr: format(taskDate, 'yyyy-MM-dd'),
-      selectedDateStr: format(selectedDate, 'yyyy-MM-dd'),
-      isMatch
-    });
-    
-    return isMatch;
+    return isSameDay(taskDay, selectedDay);
   });
+
+  // Encontrar o feriado para a data selecionada
+  const holidayForSelectedDate = selectedDate 
+    ? holidays.find(h => isSameDay(h.date, selectedDate))
+    : undefined;
 
   // Função para criar uma nova tarefa
   const handleCreateTask = async (data: TaskFormData) => {
@@ -122,7 +115,7 @@ export const CalendarContainer = ({
       <div className="bg-black p-4 rounded-lg border border-white/5 shadow-md">
         <CalendarHeader 
           selectedDate={selectedDate} 
-          holidayName={holidays.find(h => selectedDate && isSameDay(h.date, selectedDate))?.name}
+          holidayName={holidayForSelectedDate?.name}
         />
         <div className="mt-4">
           {loading ? (
@@ -135,6 +128,7 @@ export const CalendarContainer = ({
               onStatusChange={onStatusChange}
               onDeleteTask={onDeleteTask}
               selectedDate={selectedDate}
+              holiday={holidayForSelectedDate}
             />
           )}
         </div>

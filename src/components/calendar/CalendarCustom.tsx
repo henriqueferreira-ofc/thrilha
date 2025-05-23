@@ -65,57 +65,77 @@ export function CalendarCustom({
            taskDate.getDate() === date.getDate();
   };
 
-  // Dias com pelo menos uma tarefa - com normalização para evitar duplicidade
-  const taskDatesMap = new Map();
-  tasks
-    .filter((t) => t.due_date)
-    .forEach((t) => {
-      const dueDate = new Date(t.due_date!);
-      const dateKey = `${dueDate.getFullYear()}-${dueDate.getMonth()}-${dueDate.getDate()}`;
-      if (!taskDatesMap.has(dateKey)) {
-        taskDatesMap.set(dateKey, dueDate);
-      }
-    });
-  const taskDates = Array.from(taskDatesMap.values());
+  // Função para filtrar feriados por mês corrente
+  const currentMonthHolidays = holidays.filter(holiday => 
+    holiday.date.getMonth() === currentMonth.getMonth() && 
+    holiday.date.getFullYear() === currentMonth.getFullYear()
+  );
 
-  // Dias com tarefas concluídas - com normalização
-  const doneDatesMap = new Map();
-  tasks
-    .filter((t) => t.status === "done" && t.due_date)
-    .forEach((t) => {
-      const dueDate = new Date(t.due_date!);
-      const dateKey = `${dueDate.getFullYear()}-${dueDate.getMonth()}-${dueDate.getDate()}`;
-      if (!doneDatesMap.has(dateKey)) {
-        doneDatesMap.set(dateKey, dueDate);
-      }
+  // Dias com tarefas - sem os pontos duplicados
+  const taskDatesNormalized = tasks
+    .filter(t => t.due_date)
+    .map(t => {
+      const date = new Date(t.due_date!);
+      // Normalizar para meia-noite para evitar problemas de horário
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
     });
-  const doneDates = Array.from(doneDatesMap.values());
-
-  // Dias com tarefas pendentes - com normalização
-  const pendingDatesMap = new Map();
-  tasks
-    .filter((t) => t.status !== "done" && t.due_date)
-    .forEach((t) => {
-      const dueDate = new Date(t.due_date!);
-      const dateKey = `${dueDate.getFullYear()}-${dueDate.getMonth()}-${dueDate.getDate()}`;
-      if (!pendingDatesMap.has(dateKey)) {
-        pendingDatesMap.set(dateKey, dueDate);
-      }
-    });
-  const pendingDates = Array.from(pendingDatesMap.values());
-
-  // Dias com feriados - com normalização para evitar duplicação
-  const holidayDatesMap = new Map();
-  holidays.forEach(h => {
-    const holiday = h.date;
-    const dateKey = `${holiday.getFullYear()}-${holiday.getMonth()}-${holiday.getDate()}`;
-    if (!holidayDatesMap.has(dateKey)) {
-      holidayDatesMap.set(dateKey, holiday);
-    }
+  
+  // Remover duplicados usando Set
+  const taskDatesSet = new Set(
+    taskDatesNormalized.map(date => 
+      `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
+    )
+  );
+  
+  const taskDates = Array.from(taskDatesSet).map(dateStr => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month, day);
   });
-  const holidayDates = Array.from(holidayDatesMap.values());
 
-  // Gera os dias do mês atual, incluindo os dias do início/fim da semana para alinhar corretamente
+  // Dias com tarefas concluídas - sem duplicados
+  const doneDatesSet = new Set(
+    tasks
+      .filter(t => t.status === "done" && t.due_date)
+      .map(t => {
+        const date = new Date(t.due_date!);
+        return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      })
+  );
+  
+  const doneDates = Array.from(doneDatesSet).map(dateStr => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month, day);
+  });
+
+  // Dias com tarefas pendentes - sem duplicados
+  const pendingDatesSet = new Set(
+    tasks
+      .filter(t => t.status !== "done" && t.due_date)
+      .map(t => {
+        const date = new Date(t.due_date!);
+        return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      })
+  );
+  
+  const pendingDates = Array.from(pendingDatesSet).map(dateStr => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month, day);
+  });
+
+  // Dias com feriados - sem duplicados
+  const holidayDatesSet = new Set(
+    holidays.map(h => {
+      const date = h.date;
+      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    })
+  );
+  
+  const holidayDates = Array.from(holidayDatesSet).map(dateStr => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month, day);
+  });
+
+  // Gera os dias do mês atual
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -132,10 +152,10 @@ export function CalendarCustom({
       const isSelected = value && isSameDay(currentDay, value);
       const isToday = isSameDay(currentDay, today);
       
-      const tasksForDay = tasks.filter((task) => isTaskOnDate(task, currentDay));
-      const hasPendingTask = pendingDates.some((d) => isSameDay(d, currentDay));
-      const hasDoneTask = doneDates.some((d) => isSameDay(d, currentDay));
-      const isHoliday = holidayDates.some((d) => isSameDay(d, currentDay));
+      const tasksForDay = tasks.filter(task => isTaskOnDate(task, currentDay));
+      const hasPendingTask = pendingDates.some(d => isSameDay(d, currentDay));
+      const hasDoneTask = doneDates.some(d => isSameDay(d, currentDay));
+      const isHoliday = holidayDates.some(d => isSameDay(d, currentDay));
       
       const holidayInfo = holidays.find(h => isSameDay(h.date, currentDay));
 
@@ -167,7 +187,7 @@ export function CalendarCustom({
         >
           {format(currentDay, "d")}
           
-          {/* Indicador de tarefas pendentes - pulsando mais intensamente */}
+          {/* Indicador de tarefas pendentes */}
           {hasPendingTask && (
             <span className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-purple-500 rounded-full animate-[pulse_1s_cubic-bezier(0.4,0,0.6,1)_infinite]"></span>
           )}

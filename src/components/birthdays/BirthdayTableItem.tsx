@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -18,13 +18,23 @@ interface BirthdayTableItemProps {
 export function BirthdayTableItem({ birthday, daysUntil, onEdit, onDelete }: BirthdayTableItemProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Função para formatar a data do aniversário
+  // Função para formatar a data do aniversário corretamente
   const formatBirthdate = (dateStr: string): string => {
     try {
-      // Parse the date without timezone conversion
-      const dateOnly = dateStr.split('T')[0];
-      const formattedDate = format(new Date(dateOnly), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-      return formattedDate;
+      // Usar uma abordagem mais direta para evitar problemas com timezone
+      // Extrair partes da data diretamente
+      let dateOnly = dateStr;
+      if (dateStr.includes('T')) {
+        dateOnly = dateStr.split('T')[0];
+      }
+      
+      const [year, month, day] = dateOnly.split('-').map(Number);
+      
+      // Criar a data usando os componentes separados
+      const date = new Date(year, month - 1, day);
+      
+      // Formatar a data com date-fns
+      return format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
     } catch (error) {
       console.error('Erro ao formatar data:', error);
       return dateStr;
