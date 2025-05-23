@@ -65,29 +65,55 @@ export function CalendarCustom({
            taskDate.getDate() === date.getDate();
   };
 
-  // Dias com pelo menos uma tarefa
-  const taskDates = tasks
+  // Dias com pelo menos uma tarefa - com normalização para evitar duplicidade
+  const taskDatesMap = new Map();
+  tasks
     .filter((t) => t.due_date)
-    .map((t) => {
-      return new Date(t.due_date!);
+    .forEach((t) => {
+      const dueDate = new Date(t.due_date!);
+      const dateKey = `${dueDate.getFullYear()}-${dueDate.getMonth()}-${dueDate.getDate()}`;
+      if (!taskDatesMap.has(dateKey)) {
+        taskDatesMap.set(dateKey, dueDate);
+      }
     });
+  const taskDates = Array.from(taskDatesMap.values());
 
-  // Dias com tarefas concluídas
-  const doneDates = tasks
+  // Dias com tarefas concluídas - com normalização
+  const doneDatesMap = new Map();
+  tasks
     .filter((t) => t.status === "done" && t.due_date)
-    .map((t) => {
-      return new Date(t.due_date!);
+    .forEach((t) => {
+      const dueDate = new Date(t.due_date!);
+      const dateKey = `${dueDate.getFullYear()}-${dueDate.getMonth()}-${dueDate.getDate()}`;
+      if (!doneDatesMap.has(dateKey)) {
+        doneDatesMap.set(dateKey, dueDate);
+      }
     });
+  const doneDates = Array.from(doneDatesMap.values());
 
-  // Dias com tarefas pendentes
-  const pendingDates = tasks
+  // Dias com tarefas pendentes - com normalização
+  const pendingDatesMap = new Map();
+  tasks
     .filter((t) => t.status !== "done" && t.due_date)
-    .map((t) => {
-      return new Date(t.due_date!);
+    .forEach((t) => {
+      const dueDate = new Date(t.due_date!);
+      const dateKey = `${dueDate.getFullYear()}-${dueDate.getMonth()}-${dueDate.getDate()}`;
+      if (!pendingDatesMap.has(dateKey)) {
+        pendingDatesMap.set(dateKey, dueDate);
+      }
     });
+  const pendingDates = Array.from(pendingDatesMap.values());
 
-  // Dias com feriados
-  const holidayDates = holidays.map(h => h.date);
+  // Dias com feriados - com normalização para evitar duplicação
+  const holidayDatesMap = new Map();
+  holidays.forEach(h => {
+    const holiday = h.date;
+    const dateKey = `${holiday.getFullYear()}-${holiday.getMonth()}-${holiday.getDate()}`;
+    if (!holidayDatesMap.has(dateKey)) {
+      holidayDatesMap.set(dateKey, holiday);
+    }
+  });
+  const holidayDates = Array.from(holidayDatesMap.values());
 
   // Gera os dias do mês atual, incluindo os dias do início/fim da semana para alinhar corretamente
   const monthStart = startOfMonth(currentMonth);

@@ -95,7 +95,7 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
 
   // Função para iniciar a edição de um aniversário
   const handleEdit = (birthday: Birthday) => {
-    // Formatar a data para o formato esperado pelo input type="date" (YYYY-MM-DD)
+    // Garantir que estamos usando apenas a parte da data
     const formattedBirthday = {
       ...birthday,
       birthdate: birthday.birthdate.split('T')[0], // Remove a parte de tempo se existir

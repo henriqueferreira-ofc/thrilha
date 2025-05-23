@@ -22,7 +22,7 @@ interface BirthdayFormProps {
 
 export default function BirthdayForm({ onClose, onSuccess, initialData }: BirthdayFormProps) {
   const [name, setName] = useState(initialData?.name || '');
-  const [birthdate, setBirthdate] = useState(initialData?.birthdate || '');
+  const [birthdate, setBirthdate] = useState(initialData?.birthdate ? initialData.birthdate.split('T')[0] : '');
   const [relationship, setRelationship] = useState(initialData?.relationship || '');
   const [notes, setNotes] = useState(initialData?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +32,8 @@ export default function BirthdayForm({ onClose, onSuccess, initialData }: Birthd
   useEffect(() => {
     if (initialData) {
       setName(initialData.name || '');
-      setBirthdate(initialData.birthdate || '');
+      // Garantir que estamos usando apenas a data sem a parte do tempo
+      setBirthdate(initialData.birthdate ? initialData.birthdate.split('T')[0] : '');
       setRelationship(initialData.relationship || '');
       setNotes(initialData.notes || '');
     }
@@ -49,13 +50,16 @@ export default function BirthdayForm({ onClose, onSuccess, initialData }: Birthd
     setIsSubmitting(true);
     
     try {
+      // Garantimos que estamos enviando apenas a data sem timezone
+      const birthdateToSave = birthdate;
+      
       if (initialData?.id) {
         // Atualizar um registro existente
         const { error } = await supabase
           .from('birthdays')
           .update({
             name,
-            birthdate,
+            birthdate: birthdateToSave,
             relationship,
             notes: notes || null,
             updated_at: new Date().toISOString()
@@ -76,7 +80,7 @@ export default function BirthdayForm({ onClose, onSuccess, initialData }: Birthd
           .insert({
             user_id: user.id,
             name,
-            birthdate,
+            birthdate: birthdateToSave,
             relationship,
             notes: notes || null
           })
