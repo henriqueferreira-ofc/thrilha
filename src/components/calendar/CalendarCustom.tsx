@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import {
   addMonths,
@@ -8,7 +9,8 @@ import {
   endOfWeek,
   isSameMonth,
   isSameDay,
-  format
+  format,
+  isEqual
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -51,31 +53,37 @@ export function CalendarCustom({
       onChange?.(pendingDate);
       setPendingDate(null);
     }
-  }, [currentMonth]);
+  }, [currentMonth, onChange, pendingDate]);
+
+  // Função para verificar se uma tarefa está em uma data específica
+  const isTaskOnDate = (task: Task, date: Date): boolean => {
+    if (!task.due_date) return false;
+    
+    const taskDate = new Date(task.due_date);
+    return taskDate.getFullYear() === date.getFullYear() &&
+           taskDate.getMonth() === date.getMonth() &&
+           taskDate.getDate() === date.getDate();
+  };
 
   // Dias com pelo menos uma tarefa
   const taskDates = tasks
     .filter((t) => t.due_date)
     .map((t) => {
-      const date = new Date(t.due_date!);
-      console.log('Tarefa encontrada:', {
-        title: t.title,
-        date: format(date, 'dd/MM/yyyy'),
-        status: t.status
-      });
-      return date;
+      return new Date(t.due_date!);
     });
 
   // Dias com tarefas concluídas
   const doneDates = tasks
     .filter((t) => t.status === "done" && t.due_date)
     .map((t) => {
-      const date = new Date(t.due_date!);
-      console.log('Tarefa concluída:', {
-        title: t.title,
-        date: format(date, 'dd/MM/yyyy')
-      });
-      return date;
+      return new Date(t.due_date!);
+    });
+
+  // Dias com tarefas pendentes
+  const pendingDates = tasks
+    .filter((t) => t.status !== "done" && t.due_date)
+    .map((t) => {
+      return new Date(t.due_date!);
     });
 
   // Dias com feriados
@@ -93,22 +101,25 @@ export function CalendarCustom({
 
   while (day <= endDate) {
     for (let i = 0; i < 7; i++) {
-      const isCurrentMonth = isSameMonth(day, currentMonth);
-      const isSelected = value && isSameDay(day, value);
-      const isToday = isSameDay(day, today);
-      const hasTask = taskDates.some((d) => isSameDay(d, day));
-      const isDone = doneDates.some((d) => isSameDay(d, day));
-      const isHoliday = holidayDates.some((d) => isSameDay(d, day));
+      const currentDay = new Date(day);
+      const isCurrentMonth = isSameMonth(currentDay, currentMonth);
+      const isSelected = value && isSameDay(currentDay, value);
+      const isToday = isSameDay(currentDay, today);
       
-      const holidayInfo = holidays.find(h => isSameDay(h.date, day));
+      const tasksForDay = tasks.filter((task) => isTaskOnDate(task, currentDay));
+      const hasPendingTask = pendingDates.some((d) => isSameDay(d, currentDay));
+      const hasDoneTask = doneDates.some((d) => isSameDay(d, currentDay));
+      const isHoliday = holidayDates.some((d) => isSameDay(d, currentDay));
+      
+      const holidayInfo = holidays.find(h => isSameDay(h.date, currentDay));
 
       days.push(
         <button
-          key={day.toString()}
+          key={currentDay.toString()}
           onClick={() => {
-            const clickedDate = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-            if (!isSameMonth(day, currentMonth)) {
-              setCurrentMonth(new Date(day.getFullYear(), day.getMonth(), 1));
+            const clickedDate = new Date(currentDay);
+            if (!isSameMonth(currentDay, currentMonth)) {
+              setCurrentMonth(new Date(currentDay.getFullYear(), currentDay.getMonth(), 1));
               setPendingDate(clickedDate);
             } else {
               onChange?.(clickedDate);
@@ -122,18 +133,21 @@ export function CalendarCustom({
             isCurrentMonth && "hover:bg-zinc-800",
             !isCurrentMonth && "opacity-50 cursor-default"
           )}
-          title={holidayInfo?.name}
-          aria-label={format(day, "PPP", { locale: ptBR })}
+          title={tasksForDay.length > 0 ? 
+            `${tasksForDay.length} tarefa(s) para ${format(currentDay, "dd/MM", { locale: ptBR })}` : 
+            holidayInfo?.name || format(currentDay, "PPP", { locale: ptBR })
+          }
+          aria-label={format(currentDay, "PPP", { locale: ptBR })}
         >
-          {format(day, "d")}
+          {format(currentDay, "d")}
           
-          {/* Indicador de tarefas - agora piscando mais intensamente para chamar a atenção */}
-          {hasTask && !isDone && (
-            <span className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-purple-500 rounded-full animate-[pulse_1.5s_cubic-bezier(0.4,0,0.6,1)_infinite]"></span>
+          {/* Indicador de tarefas pendentes - pulsando mais intensamente */}
+          {hasPendingTask && (
+            <span className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-purple-500 rounded-full animate-[pulse_1s_cubic-bezier(0.4,0,0.6,1)_infinite]"></span>
           )}
           
           {/* Indicador de tarefas concluídas */}
-          {isDone && (
+          {hasDoneTask && !hasPendingTask && (
             <span className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-green-500 rounded-full"></span>
           )}
           

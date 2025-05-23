@@ -1,30 +1,38 @@
+
 import { useState, useEffect } from 'react';
-import { isSameDay, format } from 'date-fns';
+import { isSameDay, format, startOfDay } from 'date-fns';
 import { Task } from '@/types/task';
-// import { CalendarNavigation } from './CalendarNavigation';
 import { CalendarHeader } from './CalendarHeader';
 import { TaskList } from './TaskList';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CalendarCustom } from './CalendarCustom';
 import { getHolidaysForMonth } from '@/lib/holidays';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { CalendarPlus } from 'lucide-react';
+import { TaskForm } from '@/components/task-form';
+import { TaskFormData } from '@/types/task';
 
 interface CalendarContainerProps {
   tasks: Task[];
   loading: boolean;
   onStatusChange: (taskId: string, newStatus: Task['status']) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
+  onAddTask?: (data: TaskFormData) => Promise<void>;
 }
 
 export const CalendarContainer = ({
   tasks,
   loading,
   onStatusChange,
-  onDeleteTask
+  onDeleteTask,
+  onAddTask
 }: CalendarContainerProps) => {
-  // Começar com undefined para não ter data pré-selecionada
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  // Começar com a data de hoje pré-selecionada
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [holidays, setHolidays] = useState<{date: Date, name: string}[]>([]);
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const isMobile = useIsMobile();
 
   // Carregar feriados para o mês atual
@@ -40,10 +48,10 @@ export const CalendarContainer = ({
 
   // Função para lidar com a seleção de uma data
   const handleDateChange = (date: Date) => {
-    console.log('Data selecionada:', format(date, 'dd/MM/yyyy'));
     // Garantir que a data seja criada como meia-noite no fuso local
     const newDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     setSelectedDate(newDate);
+    console.log('Data selecionada:', format(newDate, 'dd/MM/yyyy'));
   };
 
   // Filtrar tarefas pela data selecionada
@@ -51,35 +59,57 @@ export const CalendarContainer = ({
     if (!selectedDate || !task.due_date) return false;
     
     const taskDate = new Date(task.due_date);
-    const taskDateStr = format(taskDate, 'yyyy-MM-dd');
-    const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+    const taskDay = startOfDay(taskDate);
+    const selectedDay = startOfDay(selectedDate);
     
-    console.log('Comparando datas:', {
-      taskDate: taskDateStr,
-      selectedDate: selectedDateStr,
-      match: taskDateStr === selectedDateStr
+    // Comparando as datas com startOfDay para normalizar a comparação
+    const isMatch = isSameDay(taskDay, selectedDay);
+    
+    console.log('Comparando', {
+      taskDateStr: format(taskDate, 'yyyy-MM-dd'),
+      selectedDateStr: format(selectedDate, 'yyyy-MM-dd'),
+      isMatch
     });
     
-    return taskDateStr === selectedDateStr;
+    return isMatch;
   });
 
-  console.log('Tarefas filtradas:', tasksForSelectedDate);
-
-  // Função para navegação manual entre meses
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    const newMonth = new Date(currentMonth);
-    if (direction === 'prev') {
-      newMonth.setMonth(newMonth.getMonth() - 1);
-    } else {
-      newMonth.setMonth(newMonth.getMonth() + 1);
+  // Função para criar uma nova tarefa
+  const handleCreateTask = async (data: TaskFormData) => {
+    if (onAddTask) {
+      // Se a data não foi especificada mas estamos em um dia específico,
+      // use a data selecionada
+      if (!data.dueDate && selectedDate) {
+        data.dueDate = selectedDate.toISOString();
+      }
+      await onAddTask(data);
+      setIsCreateSheetOpen(false);
     }
-    setCurrentMonth(newMonth);
   };
 
   return (
     <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-6`}>
       <div className="bg-black p-4 rounded-lg border border-white/5 shadow-md">
-        {/* <CalendarNavigation currentMonth={currentMonth} onNavigate={navigateMonth} /> */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-white">Calendário de Tarefas</h2>
+          <Sheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen}>
+            <SheetTrigger asChild>
+              <Button className="bg-purple-600 hover:bg-purple-700">
+                <CalendarPlus className="h-4 w-4 mr-2" />
+                Nova Tarefa
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="bg-[#1a1c23] border-white/10 text-white">
+              <h3 className="text-lg font-semibold mb-4">Criar Nova Tarefa</h3>
+              <TaskForm 
+                onSubmit={handleCreateTask}
+                initialData={
+                  selectedDate ? { dueDate: selectedDate.toISOString() } : {}
+                }
+              />
+            </SheetContent>
+          </Sheet>
+        </div>
         <CalendarCustom
           value={selectedDate}
           onChange={handleDateChange}

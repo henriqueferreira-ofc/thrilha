@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +31,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
   const [title, setTitle] = useState(initialData.title || '');
   const [description, setDescription] = useState(initialData.description || '');
   const [date, setDate] = useState<Date | undefined>(
-    initialData.dueDate ? startOfDay(parseISO(initialData.dueDate)) : undefined
+    initialData.dueDate ? new Date(initialData.dueDate) : undefined
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,7 +49,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
       onSubmit({
         title: title.trim(),
         description: description.trim() || '',
-        dueDate: date ? startOfDay(date).toISOString() : null,
+        dueDate: date ? date.toISOString() : null,
         board_id: boardId
       });
 
@@ -124,7 +125,7 @@ export function TaskForm({ initialData = {}, onSubmit, boardId }: TaskFormProps)
         className="w-full bg-gradient-to-r from-purple-700 to-purple-600 hover:from-purple-600 hover:to-purple-500"
         disabled={isSubmitting}
       >
-        {isSubmitting ? 'Criando...' : 'Criar Tarefa'}
+        {isSubmitting ? 'Criando...' : initialData.title ? 'Atualizar Tarefa' : 'Criar Tarefa'}
       </Button>
     </form>
   );

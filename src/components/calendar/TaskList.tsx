@@ -10,7 +10,10 @@ import {
 } from '@/components/ui/table';
 import { StatusIndicator } from './StatusIndicator';
 import { getStatusName } from '@/lib/task-utils';
-import { TrashIcon } from 'lucide-react';
+import { CalendarPlus, TrashIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
 
 interface TaskListProps {
   tasks: Task[];
@@ -25,13 +28,18 @@ export const TaskList = ({
   onDeleteTask,
   selectedDate
 }: TaskListProps) => {
+  // Formatar a data selecionada para exibição
+  const formattedDate = selectedDate 
+    ? format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+    : '';
+
   if (tasks.length === 0) {
     return (
       <div className="text-center py-10 text-zinc-400 flex flex-col items-center">
         {selectedDate ? (
           <>
-            <span className="text-lg mb-2">Nenhuma tarefa para esta data</span>
-            <span className="text-sm">Você pode criar tarefas para este dia através do menu lateral</span>
+            <span className="text-lg mb-2">Nenhuma tarefa para {formattedDate}</span>
+            <span className="text-sm">Você pode criar tarefas para este dia através do menu lateral ou botão acima</span>
           </>
         ) : (
           <span>Selecione uma data para ver as tarefas</span>
@@ -47,6 +55,11 @@ export const TaskList = ({
 
   return (
     <div className="animate-fade-in">
+      <div className="mb-4">
+        <h3 className="text-white text-lg">
+          {tasks.length} tarefa{tasks.length > 1 ? 's' : ''} para {formattedDate}
+        </h3>
+      </div>
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent border-white/10">

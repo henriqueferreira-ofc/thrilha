@@ -55,11 +55,6 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
-      components={{
-        // Remove explicit custom components and rely on the styled nav_button classes
-        // The DayPicker will automatically use the built-in navigation buttons
-        // with the styles we defined above
-      }}
       {...props}
     />
   )

@@ -1,11 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TaskSidebar } from "@/components/task-sidebar";
 import { useTasks } from "@/hooks/use-tasks";
 import { CalendarContainer } from "@/components/calendar/CalendarContainer";
+import { TaskFormData } from "@/types/task";
 
 export default function CalendarPage() {
-  const { tasks, loading, changeTaskStatus, deleteTask } = useTasks();
+  const { tasks, loading, changeTaskStatus, deleteTask, addTask } = useTasks();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -14,6 +16,15 @@ export default function CalendarPage() {
       setIsInitialized(true);
     }
   }, [loading, isInitialized]);
+
+  // Função para criar tarefa diretamente da página de calendário
+  const handleAddTask = async (data: TaskFormData) => {
+    try {
+      await addTask(data);
+    } catch (error) {
+      console.error("Erro ao adicionar tarefa:", error);
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -29,6 +40,7 @@ export default function CalendarPage() {
               loading={loading || !isInitialized}
               onStatusChange={changeTaskStatus}
               onDeleteTask={deleteTask}
+              onAddTask={handleAddTask}
             />
           </main>
         </div>
