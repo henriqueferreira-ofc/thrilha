@@ -35,23 +35,7 @@ export function CalendarCustom({
   holidays?: {date: Date; name: string}[];
 }) {
   const [currentMonth, setCurrentMonth] = useState(value || new Date());
-  const [pendingDate, setPendingDate] = useState<Date | null>(null);
   const today = new Date();
-
-  // Sincronizar mês exibido com a data selecionada
-  useEffect(() => {
-    if (value) {
-      setCurrentMonth(new Date(value.getFullYear(), value.getMonth(), 1));
-    }
-  }, [value]);
-
-  // Selecionar data pendente após mudar o mês
-  useEffect(() => {
-    if (pendingDate) {
-      onChange?.(pendingDate);
-      setPendingDate(null);
-    }
-  }, [currentMonth]);
 
   // Dias com pelo menos uma tarefa
   const taskDates = tasks
@@ -106,12 +90,10 @@ export function CalendarCustom({
         <button
           key={day.toString()}
           onClick={() => {
-            const clickedDate = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-            if (!isSameMonth(day, currentMonth)) {
-              setCurrentMonth(new Date(day.getFullYear(), day.getMonth(), 1));
-              setPendingDate(clickedDate);
-            } else {
-              onChange?.(clickedDate);
+            if (isCurrentMonth) {
+              onChange?.(new Date(day.getFullYear(), day.getMonth(), day.getDate()));
+              console.log("Clicou na data:", format(day, "dd/MM/yyyy"));
+              console.log("Tem tarefa:", hasTask);
             }
           }}
           className={clsx(
@@ -124,6 +106,7 @@ export function CalendarCustom({
           )}
           title={holidayInfo?.name}
           aria-label={format(day, "PPP", { locale: ptBR })}
+          disabled={!isCurrentMonth}
         >
           {format(day, "d")}
           
