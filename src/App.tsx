@@ -149,12 +149,16 @@ const queryClient = new QueryClient();
 
 // Determinar o basename baseado no ambiente
 const getBasename = () => {
-  // Em desenvolvimento, não usar basename
-  if (import.meta.env.DEV) {
+  // Em desenvolvimento local, não usar basename
+  if (import.meta.env.DEV || window.location.hostname === 'localhost') {
     return undefined;
   }
-  // Em produção, usar o basename do GitHub Pages
-  return "/thrilha";
+  // Em produção no GitHub Pages, usar o basename
+  if (window.location.hostname.includes('github.io') || window.location.pathname.startsWith('/thrilha')) {
+    return "/thrilha";
+  }
+  // Para outros ambientes de produção, não usar basename
+  return undefined;
 };
 
 // Componente App
@@ -162,6 +166,8 @@ const App = () => {
   const basename = getBasename();
   
   console.log('App iniciando com basename:', basename);
+  console.log('Current location:', window.location.href);
+  console.log('Hostname:', window.location.hostname);
   
   return (
     <BrowserRouter basename={basename}>
