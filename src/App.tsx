@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -149,22 +148,19 @@ const queryClient = new QueryClient();
 
 // Determinar o basename baseado no ambiente
 const getBasename = () => {
-  // Em desenvolvimento local, não usar basename
-  if (import.meta.env.DEV || window.location.hostname === 'localhost') {
+  // Para desenvolvimento e ambientes Lovable, não usar basename
+  if (import.meta.env.DEV || 
+      window.location.hostname === 'localhost' ||
+      window.location.hostname.includes('lovable.app') || 
+      window.location.hostname.includes('lovableproject.com')) {
     return undefined;
   }
   
-  // Se estiver no ambiente do Lovable (preview), não usar basename
-  if (window.location.hostname.includes('lovable.app') || window.location.hostname.includes('lovableproject.com')) {
-    return undefined;
-  }
-  
-  // Em produção no GitHub Pages, usar o basename
-  if (window.location.hostname.includes('github.io') || window.location.pathname.startsWith('/thrilha')) {
+  // Apenas para GitHub Pages usar basename
+  if (window.location.hostname.includes('github.io')) {
     return "/thrilha";
   }
   
-  // Para outros ambientes de produção, não usar basename
   return undefined;
 };
 
