@@ -5,8 +5,6 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/thrilha/',  // ✅ ESSA LINHA resolve o problema do deploy!
-
   server: {
     port: 8080
   },
