@@ -153,10 +153,17 @@ const getBasename = () => {
   if (import.meta.env.DEV || window.location.hostname === 'localhost') {
     return undefined;
   }
+  
+  // Se estiver no ambiente do Lovable (preview), não usar basename
+  if (window.location.hostname.includes('lovable.app') || window.location.hostname.includes('lovableproject.com')) {
+    return undefined;
+  }
+  
   // Em produção no GitHub Pages, usar o basename
   if (window.location.hostname.includes('github.io') || window.location.pathname.startsWith('/thrilha')) {
     return "/thrilha";
   }
+  
   // Para outros ambientes de produção, não usar basename
   return undefined;
 };
