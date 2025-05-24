@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -146,10 +147,24 @@ const ProtectedRoute = ({ element }: { element: React.ReactElement }) => {
 // Criar uma instância do QueryClient fora do componente
 const queryClient = new QueryClient();
 
+// Determinar o basename baseado no ambiente
+const getBasename = () => {
+  // Em desenvolvimento, não usar basename
+  if (import.meta.env.DEV) {
+    return undefined;
+  }
+  // Em produção, usar o basename do GitHub Pages
+  return "/thrilha";
+};
+
 // Componente App
 const App = () => {
+  const basename = getBasename();
+  
+  console.log('App iniciando com basename:', basename);
+  
   return (
-    <BrowserRouter basename="/thrilha">
+    <BrowserRouter basename={basename}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <ConnectionManager />
