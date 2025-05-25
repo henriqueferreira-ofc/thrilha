@@ -45,6 +45,16 @@
       }
     </script>
     
-    <script type="module" src="./src/main.tsx"></script>
+    <!-- Script principal com caminho dinâmico baseado no ambiente -->
+    <script type="text/javascript">
+      // Detectar se estamos no GitHub Pages e ajustar o caminho do script
+      var isGitHubPages = window.location.hostname.includes('github.io');
+      var scriptPath = isGitHubPages ? '/thrilha/src/main.tsx' : './src/main.tsx';
+      
+      var mainScript = document.createElement('script');
+      mainScript.type = 'module';
+      mainScript.src = scriptPath;
+      document.head.appendChild(mainScript);
+    </script>
   </body>
 </html>
