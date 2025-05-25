@@ -148,19 +148,12 @@ const queryClient = new QueryClient();
 
 // Determinar o basename baseado no ambiente
 const getBasename = () => {
-  // Para desenvolvimento e ambientes Lovable, não usar basename
-  if (import.meta.env.DEV || 
-      window.location.hostname === 'localhost' ||
-      window.location.hostname.includes('lovable.app') || 
-      window.location.hostname.includes('lovableproject.com')) {
-    return undefined;
-  }
-  
-  // Apenas para GitHub Pages usar basename
+  // Para GitHub Pages, usar '/thrilha'
   if (window.location.hostname.includes('github.io')) {
     return "/thrilha";
   }
   
+  // Para desenvolvimento e Lovable, não usar basename
   return undefined;
 };
 
