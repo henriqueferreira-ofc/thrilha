@@ -11,10 +11,16 @@ export default defineConfig(({ command, mode }) => {
   return {
     base,
     server: {
-      port: 8080
+      port: 8080,
+      headers: {
+        'Content-Type': 'application/javascript'
+      }
     },
     preview: {
-      port: 8080
+      port: 8080,
+      headers: {
+        'Content-Type': 'application/javascript'
+      }
     },
     plugins: [
       react(),
@@ -33,13 +39,14 @@ export default defineConfig(({ command, mode }) => {
       // Garantir que os assets sejam gerados com caminhos corretos
       rollupOptions: {
         output: {
-          manualChunks: undefined,
           format: 'es',
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash].[ext]'
         }
-      }
+      },
+      manifest: true,
+      ssrManifest: true
     }
   };
 });
