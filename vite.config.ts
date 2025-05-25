@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -18,7 +19,8 @@ export default defineConfig(({ command, mode }) => {
     },
     plugins: [
       react(),
-      componentTagger()
+      // Configurar o componentTagger apenas para desenvolvimento e preview do Lovable
+      ...(command === 'build' && mode === 'production' ? [] : [componentTagger()])
     ],
     resolve: {
       alias: {
@@ -28,7 +30,13 @@ export default defineConfig(({ command, mode }) => {
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
-      emptyOutDir: true
+      emptyOutDir: true,
+      // Garantir que os assets sejam gerados com caminhos corretos
+      rollupOptions: {
+        output: {
+          manualChunks: undefined,
+        }
+      }
     }
   };
 });
