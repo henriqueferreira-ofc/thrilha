@@ -11,16 +11,15 @@ export default defineConfig(({ command, mode }) => {
   return {
     base,
     server: {
-      port: 8080,
-      headers: {
-        'Content-Type': 'application/javascript'
-      }
+      host: true,
+      port: 3000,
+      strictPort: true,
+      open: true
     },
     preview: {
-      port: 8080,
-      headers: {
-        'Content-Type': 'application/javascript'
-      }
+      port: 3000,
+      strictPort: true,
+      open: true
     },
     plugins: [
       react(),
