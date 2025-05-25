@@ -34,7 +34,26 @@
     <!-- Script essencial do Lovable para funcionalidades Pick and Edit -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     
-    <!-- Script principal -->
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- Script principal com caminho correto baseado no ambiente -->
+    <script type="text/javascript">
+      // Detectar ambiente e usar o caminho correto
+      var isGitHubPages = window.location.hostname.includes('github.io');
+      var isLovable = window.location.hostname.includes('lovable.app');
+      var scriptPath;
+      
+      if (isGitHubPages) {
+        scriptPath = '/thrilha/src/main.tsx';
+      } else if (isLovable) {
+        scriptPath = '/src/main.tsx';
+      } else {
+        // Para Vercel e outros ambientes de produção
+        scriptPath = './src/main.tsx';
+      }
+      
+      var mainScript = document.createElement('script');
+      mainScript.type = 'module';
+      mainScript.src = scriptPath;
+      document.head.appendChild(mainScript);
+    </script>
   </body>
 </html>
