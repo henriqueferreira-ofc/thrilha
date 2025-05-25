@@ -3,7 +3,7 @@
 <html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="./iconfavi.png" />
+    <link rel="icon" type="image/png" href="/iconfavi.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Thrilha</title>
     <meta name="description" content="Gerencie suas tarefas com Thrilha" />
@@ -34,16 +34,7 @@
     <!-- Script essencial do Lovable para funcionalidades Pick and Edit -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     
-    <!-- Script principal com caminho dinâmico baseado no ambiente -->
-    <script type="text/javascript">
-      // Detectar se estamos no GitHub Pages e ajustar o caminho do script
-      var isGitHubPages = window.location.hostname.includes('github.io');
-      var scriptPath = isGitHubPages ? '/thrilha/src/main.tsx' : './src/main.tsx';
-      
-      var mainScript = document.createElement('script');
-      mainScript.type = 'module';
-      mainScript.src = scriptPath;
-      document.head.appendChild(mainScript);
-    </script>
+    <!-- Script principal -->
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

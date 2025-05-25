@@ -7,7 +7,7 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
   // Usar base '/thrilha/' apenas para build de produção destinado ao GitHub Pages
-  const base = command === 'build' && mode === 'production' ? '/thrilha/' : './';
+  const base = command === 'build' && mode === 'production' ? '/thrilha/' : '/';
   
   return {
     base,
