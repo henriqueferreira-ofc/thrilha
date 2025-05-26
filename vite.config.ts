@@ -10,9 +10,8 @@ export default defineConfig(({ command, mode }) => {
   let base = '/';
   
   if (command === 'build' && mode === 'production') {
-    // Para GitHub Pages em produção
-    const isGitHubPages = process.env.GITHUB_PAGES === 'true';
-    base = isGitHubPages ? '/thrilha/' : '/';
+    // Para GitHub Pages em produção - sempre usar /thrilha/
+    base = '/thrilha/';
   }
   
   console.log(`Vite config - Command: ${command}, Mode: ${mode}, Base: ${base}`);

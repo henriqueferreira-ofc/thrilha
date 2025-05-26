@@ -28,8 +28,8 @@ const queryClient = new QueryClient();
 
 // Componente App
 const App = () => {
-  // Usar import.meta.env.BASE_URL para o basename
-  const basename = import.meta.env.BASE_URL !== '/' ? import.meta.env.BASE_URL : undefined;
+  // Usar o BASE_URL do Vite para garantir compatibilidade
+  const basename = import.meta.env.BASE_URL === '/' ? undefined : import.meta.env.BASE_URL;
   
   console.log('App iniciando com basename:', basename);
   console.log('BASE_URL env:', import.meta.env.BASE_URL);
