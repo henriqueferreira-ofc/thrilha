@@ -5,20 +5,19 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-  // Determina a base URL baseado no ambiente
-  const isGitHubPages = process.env.GITHUB_PAGES === 'true';
-  const base = isGitHubPages ? '/thrilha/' : '/';
+  // Usar base '/thrilha/' apenas para build de produção destinado ao GitHub Pages
+  const base = command === 'build' && mode === 'production' ? '/thrilha/' : '/';
   
   return {
     base,
     server: {
       host: true,
-      port: 8080,
+      port: 3000,
       strictPort: true,
       open: true
     },
     preview: {
-      port: 8080,
+      port: 3000,
       strictPort: true,
       open: true
     },
