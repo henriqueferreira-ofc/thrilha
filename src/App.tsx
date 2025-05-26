@@ -22,7 +22,6 @@ import Birthdays from "./pages/Birthdays";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from './supabase/client';
-import { clearAuthData } from "./utils/auth";
 
 // Componente para lidar com navegação e erros
 const NavigationHandler = ({ children }: { children: React.ReactNode }) => {
@@ -146,22 +145,13 @@ const ProtectedRoute = ({ element }: { element: React.ReactElement }) => {
 // Criar uma instância do QueryClient fora do componente
 const queryClient = new QueryClient();
 
-// Determinar o basename baseado no ambiente
-const getBasename = () => {
-  // Para GitHub Pages, usar '/thrilha'
-  if (window.location.hostname.includes('github.io')) {
-    return "/thrilha";
-  }
-  
-  // Para desenvolvimento e Lovable, não usar basename
-  return undefined;
-};
-
 // Componente App
 const App = () => {
-  const basename = getBasename();
+  // Usar import.meta.env.BASE_URL para o basename
+  const basename = import.meta.env.BASE_URL !== '/' ? import.meta.env.BASE_URL : undefined;
   
   console.log('App iniciando com basename:', basename);
+  console.log('BASE_URL env:', import.meta.env.BASE_URL);
   console.log('Current location:', window.location.href);
   console.log('Hostname:', window.location.hostname);
   

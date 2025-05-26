@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -5,9 +6,16 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-  // Determina a base URL baseado no ambiente
-  const isGitHubPages = process.env.GITHUB_PAGES === 'true';
-  const base = isGitHubPages ? '/thrilha/' : '/';
+  // Determinar a base URL baseado no ambiente e modo
+  let base = '/';
+  
+  if (command === 'build' && mode === 'production') {
+    // Para GitHub Pages em produção
+    const isGitHubPages = process.env.GITHUB_PAGES === 'true';
+    base = isGitHubPages ? '/thrilha/' : '/';
+  }
+  
+  console.log(`Vite config - Command: ${command}, Mode: ${mode}, Base: ${base}`);
   
   return {
     base,
@@ -25,6 +33,7 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       react(),
       // Configurar o componentTagger apenas para desenvolvimento e preview do Lovable
+      // Não incluir no build de produção para evitar interferências
       ...(command === 'build' && mode === 'production' ? [] : [componentTagger()])
     ],
     resolve: {
@@ -44,9 +53,7 @@ export default defineConfig(({ command, mode }) => {
           chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash].[ext]'
         }
-      },
-      manifest: true,
-      ssrManifest: true
+      }
     }
   };
 });
