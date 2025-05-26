@@ -1,12 +1,9 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import cname from 'vite-plugin-cname';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
 
-// Configuração para domínio personalizado: thrilha.com
+// Configuração do Vite
 export default defineConfig(({ command, mode }) => {
   const base = mode === 'production' ? '/' : '/';
 
@@ -21,23 +18,6 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       react(),
       componentTagger(),
-      cname({ domain: 'thrilha.com' }),
-      viteStaticCopy({
-        targets: [
-          { 
-            src: 'index.html', 
-            dest: '.', 
-            rename: '404.html',
-            transform: (contents) => {
-              // Garantir que os scripts sejam injetados corretamente no 404.html
-              return contents.toString().replace(
-                '<!-- Durante o build, este arquivo será copiado e os scripts serão injetados -->',
-                ''
-              );
-            }
-          }
-        ]
-      })
     ],
     resolve: {
       alias: {
@@ -50,6 +30,7 @@ export default defineConfig(({ command, mode }) => {
       emptyOutDir: true,
       rollupOptions: {
         output: {
+          format: 'es',
           entryFileNames: `assets/[name].[hash].js`,
           chunkFileNames: `assets/[name].[hash].js`,
           assetFileNames: `assets/[name].[hash].[ext]`,
