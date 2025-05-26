@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -7,7 +8,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 // Configuração para domínio personalizado: thrilha.com
 export default defineConfig(({ command, mode }) => {
-  const base = '/'; // Base raiz para domínios personalizados
+  const base = mode === 'production' ? '/' : '/';
 
   return {
     base,
@@ -23,7 +24,18 @@ export default defineConfig(({ command, mode }) => {
       cname({ domain: 'thrilha.com' }),
       viteStaticCopy({
         targets: [
-          { src: 'index.html', dest: '.', rename: '404.html' }
+          { 
+            src: 'index.html', 
+            dest: '.', 
+            rename: '404.html',
+            transform: (contents) => {
+              // Garantir que os scripts sejam injetados corretamente no 404.html
+              return contents.toString().replace(
+                '<!-- Durante o build, este arquivo será copiado e os scripts serão injetados -->',
+                ''
+              );
+            }
+          }
         ]
       })
     ],
@@ -40,7 +52,8 @@ export default defineConfig(({ command, mode }) => {
         output: {
           entryFileNames: `assets/[name].[hash].js`,
           chunkFileNames: `assets/[name].[hash].js`,
-          assetFileNames: `assets/[name].[hash].[ext]`
+          assetFileNames: `assets/[name].[hash].[ext]`,
+          manualChunks: undefined
         }
       }
     },

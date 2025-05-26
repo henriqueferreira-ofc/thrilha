@@ -1,3 +1,4 @@
+
 {
   "version": 2,
   "builds": [
@@ -18,9 +19,24 @@
       "continue": true
     },
     {
-      "src": "/(.*)\\.(js|mjs)",
+      "src": "/(.*)\\.(js|mjs)$",
       "headers": {
-        "content-type": "application/javascript",
+        "content-type": "application/javascript; charset=utf-8",
+        "cache-control": "public, max-age=31536000, immutable"
+      },
+      "continue": true
+    },
+    {
+      "src": "/(.*)\\.(ts|tsx)$",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8"
+      },
+      "continue": true
+    },
+    {
+      "src": "/(.*)\\.(css)$",
+      "headers": {
+        "content-type": "text/css; charset=utf-8",
         "cache-control": "public, max-age=31536000, immutable"
       },
       "continue": true
@@ -30,4 +46,4 @@
       "dest": "/index.html"
     }
   ]
-} 
+}
