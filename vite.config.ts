@@ -1,8 +1,9 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import cname from 'vite-plugin-cname';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 // Configuração para domínio personalizado: thrilha.com
 export default defineConfig(({ command, mode }) => {
@@ -19,6 +20,12 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       react(),
       componentTagger(),
+      cname({ domain: 'thrilha.com' }),
+      viteStaticCopy({
+        targets: [
+          { src: 'index.html', dest: '.', rename: '404.html' }
+        ]
+      })
     ],
     resolve: {
       alias: {
@@ -29,6 +36,13 @@ export default defineConfig(({ command, mode }) => {
       outDir: 'dist',
       assetsDir: 'assets',
       emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          entryFileNames: `assets/[name].[hash].js`,
+          chunkFileNames: `assets/[name].[hash].js`,
+          assetFileNames: `assets/[name].[hash].[ext]`
+        }
+      }
     },
   };
 });
