@@ -28,6 +28,8 @@ export default defineConfig(({ command, mode }) => {
       outDir: 'dist',
       assetsDir: 'assets',
       emptyOutDir: true,
+      sourcemap: true,
+      minify: 'terser',
       rollupOptions: {
         output: {
           format: 'es',
