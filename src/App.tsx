@@ -39,9 +39,9 @@ const App = () => {
   console.log('Hostname:', window.location.hostname);
   
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
           <ConnectionManager />
           <Toaster />
           <Sonner />
@@ -64,9 +64,9 @@ const App = () => {
               </Routes>
             </AuthProvider>
           </NavigationHandler>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 
