@@ -6,7 +6,7 @@ import { componentTagger } from "lovable-tagger";
 
 // Configuração do Vite para GitHub Pages
 export default defineConfig(({ command, mode }) => {
-  const base = mode === 'production' ? '/thrilha/' : '/';
+  const base = mode === 'production' ? '/' : '/';
 
   return {
     base,
