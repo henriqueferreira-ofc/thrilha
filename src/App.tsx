@@ -23,21 +23,23 @@ import { NavigationHandler } from "./components/routing/NavigationHandler";
 import { ConnectionManager } from "./components/routing/ConnectionManager";
 import { ProtectedRoute } from "./components/routing/ProtectedRoute";
 
-// Criar uma instância do QueryClient fora do componente
-const queryClient = new QueryClient();
+// Criar uma instância do QueryClient
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutos
+      retry: 1,
+    },
+  },
+});
 
-// Componente App
 const App = () => {
-  // Para domínio personalizado no GitHub Pages, não usar basename
-  const basename = undefined;
-  
-  console.log('App iniciando com basename:', basename);
-  console.log('BASE_URL env:', import.meta.env.BASE_URL);
+  console.log('App iniciando...');
   console.log('Current location:', window.location.href);
   console.log('Hostname:', window.location.hostname);
   
   return (
-    <BrowserRouter basename={basename}>
+    <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <ConnectionManager />
@@ -46,11 +48,9 @@ const App = () => {
           <NavigationHandler>
             <AuthProvider>
               <Routes>
-                {/* Landing page agora é a rota principal diretamente */}
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/auth" element={<Auth />} />
                 
-                {/* Rotas protegidas com verificação de autenticação */}
                 <Route path="/app" element={<Navigate to="/tasks" replace />} />
                 <Route path="/tasks" element={<ProtectedRoute element={<Index />} />} />
                 <Route path="/calendar" element={<ProtectedRoute element={<Calendar />} />} />
@@ -59,7 +59,6 @@ const App = () => {
                 <Route path="/about" element={<ProtectedRoute element={<About />} />} />
                 <Route path="/subscription" element={<ProtectedRoute element={<SubscriptionPage />} />} />
 
-                {/* Rota para qualquer outra URL */}
                 <Route path="/404" element={<NotFound />} />
                 <Route path="*" element={<Navigate to="/404" replace />} />
               </Routes>

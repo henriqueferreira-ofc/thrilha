@@ -4,17 +4,17 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// Configuração do Vite para GitHub Pages
+// Configuração do Vite
 export default defineConfig(({ command, mode }) => {
-  const base = mode === 'production' ? '/' : '/';
-
   return {
-    base,
+    base: '/',
     server: {
       port: 8080,
+      host: true,
     },
     preview: {
       port: 8080,
+      host: true,
     },
     plugins: [
       react(),
