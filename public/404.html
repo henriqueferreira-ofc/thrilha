@@ -14,12 +14,12 @@
     <meta property="og:type" content="website" />
     
     <script type="text/javascript">
-      // GitHub Pages SPA redirect
-      var pathSegmentsToKeep = 1;
+      // GitHub Pages SPA redirect para domínio personalizado
+      var pathSegmentsToKeep = 0;
       var l = window.location;
       l.replace(
         l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        '/?/' +
         l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
         (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
         l.hash
@@ -32,7 +32,5 @@
     
     <!-- Script essencial do Lovable para funcionalidades Pick and Edit -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
-    
-    <!-- Durante o build, este arquivo será copiado e os scripts serão injetados -->
   </body>
 </html>

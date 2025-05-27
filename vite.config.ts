@@ -1,11 +1,12 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// Configuração do Vite
+// Configuração do Vite para GitHub Pages
 export default defineConfig(({ command, mode }) => {
-  const base = mode === 'production' ? '/' : '/';
+  const base = mode === 'production' ? '/thrilha/' : '/';
 
   return {
     base,
@@ -28,15 +29,10 @@ export default defineConfig(({ command, mode }) => {
       outDir: 'dist',
       assetsDir: 'assets',
       emptyOutDir: true,
-      sourcemap: true,
-      minify: 'terser',
+      sourcemap: false,
       rollupOptions: {
         output: {
-          format: 'es',
-          entryFileNames: `assets/[name].[hash].js`,
-          chunkFileNames: `assets/[name].[hash].js`,
-          assetFileNames: `assets/[name].[hash].[ext]`,
-          manualChunks: undefined
+          manualChunks: undefined,
         }
       }
     },
