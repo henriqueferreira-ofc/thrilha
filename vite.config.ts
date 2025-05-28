@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -7,7 +6,7 @@ import { componentTagger } from "lovable-tagger";
 // Configuração do Vite
 export default defineConfig(({ command, mode }) => {
   return {
-    base: '/',
+    base: '/thrilha/',
     server: {
       port: 8080,
       host: true,
