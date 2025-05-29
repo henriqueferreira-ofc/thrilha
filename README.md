@@ -19,7 +19,7 @@ Meu Projeto ainda está sendo desenvolvido e logo teremos boas novas<br/>
 
 <br>
 
-![ProjetoDev](https://github.com/henriqueferreira-ofc/trilha/blob/main/public/trilhacapas.jpg)
+![ProjetoDev](https://github.com/henriqueferreira-ofc/trilha/blob/main/public/trilhacapa.jpg)
 ## 🚀 Tecnologias
 
 Esse projeto foi desenvolvido com as seguintes tecnologias:
