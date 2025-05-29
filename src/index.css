@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -67,17 +66,10 @@
         transparent 25%
       );
     background-attachment: fixed;
-    min-height: 100vh;
   }
 
   html {
     @apply scroll-smooth;
-    min-height: 100vh;
-  }
-
-  #root {
-    min-height: 100vh;
-    background: transparent;
   }
 }
 
@@ -138,14 +130,6 @@
     .text-lg {
       @apply text-base;
     }
-  }
-
-  /* Debug para página preta */
-  .debug-visible {
-    background: red !important;
-    border: 2px solid yellow !important;
-    color: white !important;
-    min-height: 100px !important;
   }
 }
 

@@ -1,128 +1,124 @@
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Users, Calendar, BarChart3 } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
-import { useEffect } from "react";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Mountain } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log('LandingPage carregada');
-    console.log('Usuário:', user ? 'logado' : 'não logado');
-  }, [user]);
+  // Função para ir para a página de login
+  const goToLoginPage = () => {
+    navigate('/auth');
+  };
 
-  // Se o usuário estiver logado, redirecionar para as tarefas
-  if (user) {
-    console.log('Usuário logado, redirecionando para /tasks');
-    return <Link to="/tasks" replace />;
-  }
+  // Função para rolar suavemente até a seção de features
+  const scrollToFeatures = (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.getElementById('features')?.scrollIntoView({
+      behavior: 'smooth'
+    });
+  };
+
+  // Função para ir para o dashboard de tarefas
+  const goToTasks = () => {
+    navigate('/tasks');
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-purple-900/20 to-black">
-      {/* Header */}
-      <header className="container mx-auto px-4 py-6">
-        <nav className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-purple-600 rounded-lg"></div>
-            <span className="text-2xl font-bold text-white">Thrilha</span>
-          </div>
-          <div className="space-x-4">
-            <Button variant="ghost" asChild className="text-white hover:text-purple-300">
-              <Link to="/auth">Entrar</Link>
-            </Button>
-            <Button asChild className="bg-purple-600 hover:bg-purple-700">
-              <Link to="/auth">Começar Agora</Link>
-            </Button>
-          </div>
-        </nav>
-      </header>
+    <div className="min-h-screen flex flex-col bg-black text-white">
+      {/* Navigation */}
+      <nav className="py-5 px-6 md:px-12 flex justify-between items-center border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <Mountain className="h-6 w-6 text-purple-300" />
+          <span className="text-xl font-bold purple-gradient-text">Thrilha</span>
+        </div>
+        <div className="flex gap-4">
+          <Button 
+            variant="outline" 
+            className="border-purple-300 text-purple-300 hover:bg-purple-300/10" 
+            onClick={goToLoginPage}
+          >
+            Login
+          </Button>
+        </div>
+      </nav>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-          Organize suas tarefas com{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
-            Thrilha
-          </span>
-        </h1>
-        <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-          A plataforma completa para gerenciar projetos, organizar tarefas e colaborar com sua equipe de forma eficiente.
-        </p>
-        <div className="space-x-4">
-          <Button size="lg" asChild className="bg-purple-600 hover:bg-purple-700">
-            <Link to="/auth">Comece Gratuitamente</Link>
-          </Button>
-          <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-black">
-            Ver Demonstração
-          </Button>
+      <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 px-6 md:px-12 py-16 max-w-7xl mx-auto">
+        <div className="flex flex-col justify-center space-y-6">
+          <h1 className="text-4xl md:text-6xl font-bold purple-gradient-text">
+            Organize suas<br />
+            <span style={{ whiteSpace: 'nowrap', fontSize: '0.95em' }}>tarefas com o Thrilha</span>
+          </h1>
+          <p className="text-lg text-white/80">
+            Gerencie seus projetos e tarefas diárias com uma interface moderna e intuitiva. 
+            Aumente sua produtividade com o Thrilha.
+          </p>
+          <div className="flex flex-wrap gap-4 pt-4">
+            <Button 
+              className="purple-gradient-bg text-white px-8 py-6 text-lg" 
+              onClick={goToLoginPage}
+            >
+              Teste Grátis
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={scrollToFeatures} 
+              className="text-white border-white/20 bg-white/5 px-8 py-6 text-lg font-normal"
+            >
+              Saiba Mais
+            </Button>
+          </div>
         </div>
-      </section>
+
+        <div className="flex justify-center items-end">
+          <div className="relative">
+            <img 
+              src="/trilha1.png" 
+              alt="Trilha App" 
+              className="relative z-10 max-h-[500px] object-contain -mb-16" 
+              onError={e => {
+                e.currentTarget.src = "https://placehold.co/300x600/3a1c71/ffffff?text=Trilha+App";
+              }} 
+            />
+          </div>
+        </div>
+      </main>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-20">
-        <h2 className="text-3xl font-bold text-center text-white mb-12">
-          Recursos Poderosos para Sua Produtividade
-        </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {[
-            {
-              icon: CheckCircle,
-              title: "Gestão de Tarefas",
-              description: "Organize e priorize suas tarefas com facilidade"
-            },
-            {
-              icon: Users,
-              title: "Colaboração",
-              description: "Trabalhe em equipe de forma sincronizada"
-            },
-            {
-              icon: Calendar,
-              title: "Calendário",
-              description: "Visualize prazos e organize sua agenda"
-            },
-            {
-              icon: BarChart3,
-              title: "Relatórios",
-              description: "Acompanhe o progresso com relatórios detalhados"
-            }
-          ].map((feature, index) => (
-            <Card key={index} className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <CardHeader>
-                <feature.icon className="h-10 w-10 text-purple-400 mb-2" />
-                <CardTitle className="text-white">{feature.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-gray-300">
-                  {feature.description}
-                </CardDescription>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-12 border border-white/20">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Pronto para aumentar sua produtividade?
+      <section id="features" className="py-16 px-6 md:px-12 bg-black/40 border-t border-white/10">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-center purple-gradient-text mb-12">
+            Por que escolher o Thrilha?
           </h2>
-          <p className="text-gray-300 mb-8">
-            Junte-se a milhares de usuários que já organizaram suas vidas com o Thrilha.
-          </p>
-          <Button size="lg" asChild className="bg-purple-600 hover:bg-purple-700">
-            <Link to="/auth">Criar Conta Gratuita</Link>
-          </Button>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="glass-panel p-6 rounded-xl">
+              <h3 className="text-xl font-semibold mb-3">Interface Intuitiva</h3>
+              <p className="text-white/70">Design moderno e fácil de usar para gerenciar suas tarefas de forma eficiente.</p>
+            </div>
+            
+            <div className="glass-panel p-6 rounded-xl">
+              <h3 className="text-xl font-semibold mb-3">Organize por Status</h3>
+              <p className="text-white/70">Visualize suas tarefas por status: a fazer, em progresso e concluídas.</p>
+            </div>
+            
+            <div className="glass-panel p-6 rounded-xl">
+              <h3 className="text-xl font-semibold mb-3">Lembretes de Aniversários</h3>
+              <p className="text-white/70">Nunca mais esqueça um aniversário com nossos lembretes no WhatsApp.</p>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="container mx-auto px-4 py-8 border-t border-white/20">
-        <div className="text-center text-gray-400">
-          <p>&copy; 2024 Thrilha. Todos os direitos reservados.</p>
+      <footer className="py-8 px-6 md:px-12 border-t border-white/10">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+          <div className="flex items-center gap-2 mb-4 md:mb-0">
+            <Mountain className="h-5 w-5 text-purple-300" />
+            <span className="text-lg font-semibold purple-gradient-text">Thrilha</span>
+          </div>
+          <p className="text-sm text-white/60">© 2025 Thrilha. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
