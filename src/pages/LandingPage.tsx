@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Mountain } from 'lucide-react';
@@ -48,7 +47,8 @@ const LandingPage = () => {
       <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 px-6 md:px-12 py-16 max-w-7xl mx-auto">
         <div className="flex flex-col justify-center space-y-6">
           <h1 className="text-4xl md:text-6xl font-bold purple-gradient-text">
-            Organize suas tarefas com o Thrilha
+            Organize suas<br />
+            <span style={{ whiteSpace: 'nowrap', fontSize: '0.95em' }}>tarefas com o Thrilha</span>
           </h1>
           <p className="text-lg text-white/80">
             Gerencie seus projetos e tarefas diárias com uma interface moderna e intuitiva. 
