@@ -6,7 +6,6 @@ import { componentTagger } from "lovable-tagger";
 // Configuração do Vite
 export default defineConfig(({ command, mode }) => {
   return {
-    base: './',
     server: {
       port: 8080,
       host: true,
