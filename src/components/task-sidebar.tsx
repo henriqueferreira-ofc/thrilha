@@ -52,7 +52,7 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
 
   return (
     <>
-      <SidebarTrigger className="absolute top-4 left-4 z-40 md:hidden" />
+      <SidebarTrigger className="fixed top-4 left-4 z-40 md:hidden" />
       <Sidebar className="border-r border-white/10">
         <SidebarHeader className="flex flex-col items-center gap-2">
           <SidebarProfile 

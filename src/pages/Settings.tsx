@@ -8,15 +8,17 @@ const Settings = () => {
   return (
     <SettingsProvider>
       <SidebarProvider>
-        <div className="min-h-screen flex w-full">
+        <div className="page-wrapper">
           <TaskSidebar />
           
           <div className="flex-1 flex flex-col">
-            <header className="p-6 flex justify-between items-center border-b border-white/10">
+            <header className="page-header">
+              <div className="flex flex-col gap-2 w-full">
               <h1 className="text-xl font-bold">Configurações</h1>
+            </div>
             </header>
             
-            <main className="flex-1 p-6 overflow-auto">
+            <main className="page-main">
               <SettingsTabs />
             </main>
           </div>

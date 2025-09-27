@@ -19,21 +19,25 @@ const Birthdays = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="page-wrapper">
         <TaskSidebar />
         
         <div className="flex-1 flex flex-col">
-          <header className="p-6 flex justify-between items-center border-b border-white/10">
-            <h1 className="text-xl font-bold purple-gradient-text">Aniversários</h1>
-            <button 
-              onClick={() => setShowForm(!showForm)}
-              className="px-4 py-2 purple-gradient-bg rounded-md text-white"
-            >
-              {showForm ? 'Cancelar' : 'Adicionar Aniversário'}
-            </button>
+          <header className="page-header">
+            <div className="flex flex-col gap-2 w-full">
+              <h1 className="text-xl font-bold purple-gradient-text">Aniversários</h1>
+            </div>
+            <div className="page-header-actions">
+              <button 
+                onClick={() => setShowForm(!showForm)}
+                className="px-4 py-2 purple-gradient-bg rounded-md text-white w-full sm:w-auto"
+              >
+                {showForm ? 'Cancelar' : 'Adicionar Aniversário'}
+              </button>
+            </div>
           </header>
           
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="page-main">
             <div className="max-w-4xl mx-auto space-y-8">
               <div className="glass-panel p-6 rounded-xl">
                 <h2 className="text-xl font-semibold mb-4">Lista de Aniversários</h2>

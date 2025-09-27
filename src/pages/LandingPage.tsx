@@ -27,12 +27,12 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       {/* Navigation */}
-      <nav className="py-5 px-6 md:px-12 flex justify-between items-center border-b border-white/10">
+      <nav className="py-5 px-4 sm:px-6 md:px-12 flex flex-wrap items-center justify-between gap-4 border-b border-white/10">
         <div className="flex items-center gap-2">
           <Mountain className="h-6 w-6 text-purple-300" />
           <span className="text-xl font-bold purple-gradient-text">Thrilha</span>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-3 w-full sm:w-auto justify-end sm:justify-start">
           <Button 
             variant="outline" 
             className="border-purple-300 text-purple-300 hover:bg-purple-300/10" 
@@ -44,7 +44,7 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 px-6 md:px-12 py-16 max-w-7xl mx-auto">
+      <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 px-4 sm:px-6 md:px-12 py-12 sm:py-16 max-w-7xl mx-auto">
         <div className="flex flex-col justify-center space-y-6">
           <h1 className="text-4xl md:text-6xl font-bold purple-gradient-text">
             Organize suas<br />
@@ -76,7 +76,7 @@ const LandingPage = () => {
             <img 
               src="/trilha1.png" 
               alt="Trilha App" 
-              className="relative z-10 max-h-[500px] object-contain -mb-16" 
+              className="relative z-10 max-h-[360px] sm:max-h-[500px] object-contain -mb-8 sm:-mb-16" 
               onError={e => {
                 e.currentTarget.src = "https://placehold.co/300x600/3a1c71/ffffff?text=Trilha+App";
               }} 
@@ -86,7 +86,7 @@ const LandingPage = () => {
       </main>
 
       {/* Features Section */}
-      <section id="features" className="py-16 px-6 md:px-12 bg-black/40 border-t border-white/10">
+      <section id="features" className="py-16 px-4 sm:px-6 md:px-12 bg-black/40 border-t border-white/10">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-center purple-gradient-text mb-12">
             Por que escolher o Thrilha?
@@ -112,7 +112,7 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 md:px-12 border-t border-white/10">
+      <footer className="py-8 px-4 sm:px-6 md:px-12 border-t border-white/10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
             <Mountain className="h-5 w-5 text-purple-300" />

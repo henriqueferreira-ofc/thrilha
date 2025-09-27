@@ -28,13 +28,13 @@ export default function CalendarPage() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="page-wrapper">
         <TaskSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="p-6 flex justify-between items-center border-b border-white/10 bg-black">
+          <header className="page-header bg-black">
             <h1 className="text-xl font-bold purple-gradient-text">Calendário</h1>
           </header>
-          <main className="flex-1 p-6 bg-black flex flex-col">
+          <main className="page-main bg-black flex flex-col gap-4">
             <CalendarContainer 
               tasks={tasks} 
               loading={loading || !isInitialized}

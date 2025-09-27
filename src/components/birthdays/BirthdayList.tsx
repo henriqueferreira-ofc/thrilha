@@ -119,7 +119,8 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
       {birthdays.length === 0 ? (
         <BirthdayEmptyState />
       ) : (
-        <Table>
+        <div className="overflow-x-auto">
+          <Table className="min-w-[680px]">
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
@@ -145,7 +146,8 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
               );
             })}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       )}
 
       {/* Diálogo de edição */}

@@ -39,15 +39,15 @@ export function SettingsTabs() {
   return (
     <div className="rounded-lg border border-white/10">
       <div className="border-b border-white/10">
-        <nav className="flex">
+        <nav className="flex flex-wrap gap-2 overflow-x-auto">
           {menuItems.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => handleSectionChange(id as Section)}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${
+              className={`w-full sm:w-auto min-w-[12rem] sm:min-w-0 px-6 py-3 text-sm font-medium text-left sm:text-center transition-colors border-b-2 ${
                 activeSection === id
-                  ? 'text-purple-400 border-b-2 border-purple-400'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'text-purple-400 border-purple-400'
+                  : 'text-gray-400 border-transparent hover:text-white'
               }`}
             >
               {label}
