@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .page-wrapper {
+    @apply min-h-screen flex w-full;
+  }
+
+  .page-header {
+    @apply w-full flex flex-col gap-3 pl-14 pr-4 sm:px-6 py-4 sm:py-6 border-b border-white/10 sm:flex-row sm:items-center sm:justify-between;
+  }
+
+  .page-header-actions {
+    @apply flex flex-col sm:flex-row gap-3 w-full sm:w-auto;
+  }
+
+  .page-main {
+    @apply flex-1 w-full px-4 sm:px-6 py-4 sm:py-6 overflow-auto;
+  }
+}
+
 @layer base {
   :root {
     --background: #000000;

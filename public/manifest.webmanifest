@@ -1,0 +1,48 @@
+{
+  "name": "Thrilha",
+  "short_name": "Thrilha",
+  "description": "Gerencie suas tarefas, calendários e aniversários com o Thrilha.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05000c",
+  "theme_color": "#0b0519",
+  "id": "/",
+  "icons": [
+    {
+      "src": "/iconfavi.png",
+      "sizes": "64x64",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/LogoThrilhaOficial.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/LogoThrilhaOficial.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Abrir tarefas",
+      "short_name": "Tarefas",
+      "description": "Ir para o quadro de tarefas",
+      "url": "/tasks"
+    },
+    {
+      "name": "Ver calendário",
+      "short_name": "Calendário",
+      "description": "Consultar o calendário de tarefas",
+      "url": "/calendar"
+    }
+  ]
+}

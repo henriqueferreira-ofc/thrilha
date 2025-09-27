@@ -98,12 +98,12 @@ const Index = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full mountain-pattern">
+      <div className="page-wrapper mountain-pattern">
         <TaskSidebar onCreateTask={handleCreateTask} />
         
         <div className="flex-1 flex flex-col">
-          <header className="p-6 flex justify-between items-center border-b border-white/10 backdrop-blur-sm bg-black/20">
-            <div>
+          <header className="page-header backdrop-blur-sm bg-black/20">
+            <div className="flex flex-col gap-2 text-white w-full">
               <h1 className="text-xl font-bold text-white">
                 {getTitle()}
                 {loadingBoards && <span className="ml-2 text-sm text-purple-400">(Carregando quadros...)</span>}
@@ -111,7 +111,7 @@ const Index = () => {
               
               {/* Mostrar informações de limite apenas para usuários sem plano Pro */}
               {!isPro && (
-                <div className="mt-2 text-sm flex items-center gap-2">
+                <div className="mt-2 text-sm flex flex-wrap items-center gap-2">
                   {!limitReached ? (
                     <Badge variant="outline" className="bg-purple-500/20 text-purple-200 border-purple-500">
                       {totalTasks} de {totalLimit} tarefas
@@ -129,34 +129,36 @@ const Index = () => {
               )}
             </div>
             
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  className="purple-gradient-bg" 
-                  disabled={!isPro && limitReached}
-                  onClick={() => {
-                    // Forçar sincronização do contador antes de mostrar o diálogo
-                    syncCompletedTasksCount();
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Nova Tarefa
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="glass-panel sm:max-w-[425px]">
-                <DialogTitle>Criar Nova Tarefa</DialogTitle>
-                <DialogDescription id="create-task-description">
-                  Preencha os dados para criar uma nova tarefa.
-                </DialogDescription>
-                <TaskForm 
-                  onSubmit={handleCreateTask} 
-                  boardId={currentBoard?.id || 'default'} 
-                />
-              </DialogContent>
-            </Dialog>
+            <div className="page-header-actions">
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="purple-gradient-bg w-full sm:w-auto" 
+                    disabled={!isPro && limitReached}
+                    onClick={() => {
+                      // Forçar sincronização do contador antes de mostrar o diálogo
+                      syncCompletedTasksCount();
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Nova Tarefa
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="glass-panel sm:max-w-[425px]">
+                  <DialogTitle>Criar Nova Tarefa</DialogTitle>
+                  <DialogDescription id="create-task-description">
+                    Preencha os dados para criar uma nova tarefa.
+                  </DialogDescription>
+                  <TaskForm 
+                    onSubmit={handleCreateTask} 
+                    boardId={currentBoard?.id || 'default'} 
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
           </header>
           
-          <main className="flex-1 overflow-hidden p-4">
+          <main className="page-main overflow-hidden">
             {loading ? (
               <div className="flex justify-center items-center h-full">
                 <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full"></div>

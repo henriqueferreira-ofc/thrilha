@@ -21,3 +21,23 @@ ReactDOM.createRoot(rootElement).render(
 )
 
 console.log('main.tsx: Aplicação renderizada!');
+
+if ('serviceWorker' in navigator) {
+  const registerServiceWorker = async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('Service worker registrado:', registration.scope);
+    } catch (error) {
+      console.error('Falha ao registrar o service worker:', error);
+    }
+  };
+
+  if (import.meta.env.PROD) {
+    window.addEventListener('load', registerServiceWorker, { once: true });
+  } else {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => registration.unregister());
+    });
+  }
+}
+
