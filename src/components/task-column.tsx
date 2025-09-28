@@ -111,6 +111,7 @@ export function TaskColumn({ column, onDelete, onUpdate, onDrop }: TaskColumnPro
               onDelete={onDelete} 
               onUpdate={onUpdate}
               onToggleComplete={() => handleToggleComplete(task)}
+              onChangeStatus={(status) => onDrop(task.id, status)}
             />
           ))
         )}

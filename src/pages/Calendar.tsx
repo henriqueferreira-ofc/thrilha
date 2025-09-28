@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TaskSidebar } from "@/components/task-sidebar";
 import { useTasks } from "@/hooks/use-tasks";
 import { CalendarContainer } from "@/components/calendar/CalendarContainer";
@@ -29,10 +29,13 @@ export default function CalendarPage() {
   return (
     <SidebarProvider>
       <div className="page-wrapper">
-        <TaskSidebar />
+        <TaskSidebar hideDefaultTrigger />
         <div className="flex-1 flex flex-col">
           <header className="page-header bg-black">
-            <h1 className="text-xl font-bold purple-gradient-text">Calendário</h1>
+            <div className="flex items-center gap-3 text-white">
+              <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
+              <h1 className="text-xl font-bold purple-gradient-text truncate">Calendário</h1>
+            </div>
           </header>
           <main className="page-main bg-black flex flex-col gap-4">
             <CalendarContainer 

@@ -8,11 +8,11 @@
   }
 
   .page-header {
-    @apply w-full flex flex-col gap-3 pl-14 pr-4 sm:px-6 py-4 sm:py-6 border-b border-white/10 sm:flex-row sm:items-center sm:justify-between;
+    @apply w-full flex items-center gap-3 px-4 sm:px-6 py-4 sm:py-6 border-b border-white/10;
   }
 
   .page-header-actions {
-    @apply flex flex-col sm:flex-row gap-3 w-full sm:w-auto;
+    @apply flex items-center gap-3 ml-auto shrink-0;
   }
 
   .page-main {

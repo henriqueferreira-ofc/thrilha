@@ -1,4 +1,4 @@
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import { TaskBoard } from '@/components/task-board';
 import { Button } from '@/components/ui/button';
@@ -99,15 +99,18 @@ const Index = () => {
   return (
     <SidebarProvider>
       <div className="page-wrapper mountain-pattern">
-        <TaskSidebar onCreateTask={handleCreateTask} />
+        <TaskSidebar onCreateTask={handleCreateTask} hideDefaultTrigger />
         
         <div className="flex-1 flex flex-col">
           <header className="page-header backdrop-blur-sm bg-black/20">
-            <div className="flex flex-col gap-2 text-white w-full">
-              <h1 className="text-xl font-bold text-white">
-                {getTitle()}
-                {loadingBoards && <span className="ml-2 text-sm text-purple-400">(Carregando quadros...)</span>}
-              </h1>
+            <div className="flex flex-col gap-2 text-white flex-1 min-w-0">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
+                <h1 className="text-xl font-bold text-white truncate">
+                  {getTitle()}
+                  {loadingBoards && <span className="ml-2 text-sm text-purple-400">(Carregando quadros...)</span>}
+                </h1>
+              </div>
               
               {/* Mostrar informações de limite apenas para usuários sem plano Pro */}
               {!isPro && (
@@ -129,11 +132,12 @@ const Index = () => {
               )}
             </div>
             
-            <div className="page-header-actions">
+            <div className="page-header-actions items-center">
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
-                    className="purple-gradient-bg w-full sm:w-auto" 
+                    size="sm"
+                    className="purple-gradient-bg h-10 px-4 text-sm font-semibold shrink-0" 
                     disabled={!isPro && limitReached}
                     onClick={() => {
                       // Forçar sincronização do contador antes de mostrar o diálogo

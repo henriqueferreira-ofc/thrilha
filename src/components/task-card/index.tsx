@@ -1,7 +1,7 @@
 
 import { useDrag } from 'react-dnd';
 import { Card } from '@/components/ui/card';
-import { Task } from '@/types/task';
+import { Task, TaskStatus } from '@/types/task';
 import { TaskDueDate } from './task-due-date';
 import { TaskActionsMenu } from './task-actions-menu';
 import { TaskCollaboratorsButton } from './task-collaborators-button';
@@ -13,9 +13,10 @@ interface TaskCardProps {
   onDelete: (id: string) => void;
   onUpdate: (id: string, updatedData: Partial<Task>) => void;
   onToggleComplete?: () => void;
+  onChangeStatus?: (status: TaskStatus) => void;
 }
 
-export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCardProps) {
+export function TaskCard({ task, onDelete, onUpdate, onToggleComplete, onChangeStatus }: TaskCardProps) {
   const [{ isDragging }, drag] = useDrag({
     type: 'task',
     item: { id: task.id },
@@ -71,7 +72,12 @@ export function TaskCard({ task, onDelete, onUpdate, onToggleComplete }: TaskCar
           )}
         </div>
         
-        <TaskActionsMenu task={task} onDelete={onDelete} onUpdate={onUpdate} />
+        <TaskActionsMenu 
+          task={task} 
+          onDelete={onDelete} 
+          onUpdate={onUpdate}
+          onChangeStatus={onChangeStatus}
+        />
       </div>
       
       <div className="flex items-center justify-between mt-4">

@@ -1,16 +1,17 @@
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 
 export const About = () => {
   return (
     <SidebarProvider>
       <div className="page-wrapper">
-        <TaskSidebar />
+        <TaskSidebar hideDefaultTrigger />
         
         <div className="flex-1 flex flex-col">
           <header className="page-header">
-            <div className="flex flex-col gap-2 w-full">
-              <h1 className="text-xl font-bold">Sobre</h1>
+            <div className="flex items-center gap-3 text-white">
+              <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
+              <h1 className="text-xl font-bold truncate">Sobre</h1>
             </div>
           </header>
           

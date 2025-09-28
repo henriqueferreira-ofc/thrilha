@@ -6,8 +6,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Task } from '@/types/task';
+import { Task, TaskStatus } from '@/types/task';
 import { useState } from 'react';
 import { 
   Dialog, 
@@ -21,9 +22,16 @@ interface TaskActionsMenuProps {
   onEdit?: () => void;
   onDelete?: (id: string) => void;
   onUpdate?: (id: string, updatedData: Partial<Task>) => void;
+  onChangeStatus?: (status: TaskStatus) => void;
 }
 
-export function TaskActionsMenu({ task, onEdit, onDelete, onUpdate }: TaskActionsMenuProps) {
+const STATUS_LABELS: Record<TaskStatus, string> = {
+  'todo': 'A Fazer',
+  'in-progress': 'Em Progresso',
+  'done': 'Concluídas',
+};
+
+export function TaskActionsMenu({ task, onEdit, onDelete, onUpdate, onChangeStatus }: TaskActionsMenuProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleEdit = () => {
@@ -55,6 +63,21 @@ export function TaskActionsMenu({ task, onEdit, onDelete, onUpdate }: TaskAction
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {onChangeStatus && (
+            <>
+              <DropdownMenuLabel>Mover para</DropdownMenuLabel>
+              {(['todo', 'in-progress', 'done'] as TaskStatus[]).map((status) => (
+                <DropdownMenuItem
+                  key={status}
+                  disabled={status === task.status}
+                  onClick={() => handleChangeStatus(status)}
+                >
+                  {STATUS_LABELS[status]}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuItem onClick={handleEdit}>
             <Edit className="mr-2 h-4 w-4" />
             Editar
@@ -84,3 +107,7 @@ export function TaskActionsMenu({ task, onEdit, onDelete, onUpdate }: TaskAction
     </>
   );
 }
+  const handleChangeStatus = (status: TaskStatus) => {
+    if (status === task.status) return;
+    onChangeStatus?.(status);
+  };

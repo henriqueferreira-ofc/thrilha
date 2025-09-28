@@ -1,10 +1,11 @@
 
 import { useState, useRef } from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import BirthdayList from '@/components/birthdays/BirthdayList';
 import BirthdayForm from '@/components/birthdays/BirthdayForm';
 import ZapierIntegration from '@/components/birthdays/ZapierIntegration';
+import { Button } from '@/components/ui/button';
 
 const Birthdays = () => {
   const [showForm, setShowForm] = useState(false);
@@ -19,26 +20,30 @@ const Birthdays = () => {
 
   return (
     <SidebarProvider>
-      <div className="page-wrapper">
-        <TaskSidebar />
+      <div className="page-wrapper mountain-pattern">
+        <TaskSidebar hideDefaultTrigger />
         
         <div className="flex-1 flex flex-col">
-          <header className="page-header">
-            <div className="flex flex-col gap-2 w-full">
-              <h1 className="text-xl font-bold purple-gradient-text">Aniversários</h1>
+          <header className="page-header backdrop-blur-sm bg-black/20">
+            <div className="flex flex-col gap-2 text-white flex-1 min-w-0">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
+                <h1 className="text-xl font-bold purple-gradient-text truncate">Aniversários</h1>
+              </div>
             </div>
-            <div className="page-header-actions">
-              <button 
+            <div className="page-header-actions items-center">
+              <Button
+                size="sm"
+                className="purple-gradient-bg h-10 px-4 text-sm font-semibold shrink-0"
                 onClick={() => setShowForm(!showForm)}
-                className="px-4 py-2 purple-gradient-bg rounded-md text-white w-full sm:w-auto"
               >
                 {showForm ? 'Cancelar' : 'Adicionar Aniversário'}
-              </button>
+              </Button>
             </div>
           </header>
           
-          <main className="page-main">
-            <div className="max-w-4xl mx-auto space-y-8">
+          <main className="page-main space-y-6">
+            <div className="w-full space-y-8">
               <div className="glass-panel p-6 rounded-xl">
                 <h2 className="text-xl font-semibold mb-4">Lista de Aniversários</h2>
                 <BirthdayList ref={birthdayListRef} />

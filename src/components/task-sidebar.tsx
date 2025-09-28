@@ -11,9 +11,10 @@ import { useBoards } from '@/hooks/use-boards';
 
 interface TaskSidebarProps {
   onCreateTask?: (data: TaskFormData) => void;
+  hideDefaultTrigger?: boolean;
 }
 
-export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
+export function TaskSidebar({ onCreateTask, hideDefaultTrigger }: TaskSidebarProps) {
   const { user, signOut } = useAuth();
   const { avatarUrl, username, loading } = useSidebarProfile(user);
   const { currentBoard } = useBoards();
@@ -52,7 +53,9 @@ export function TaskSidebar({ onCreateTask }: TaskSidebarProps) {
 
   return (
     <>
-      <SidebarTrigger className="fixed top-4 left-4 z-40 md:hidden" />
+      {!hideDefaultTrigger && (
+        <SidebarTrigger className="fixed top-4 left-4 z-40 md:hidden" />
+      )}
       <Sidebar className="border-r border-white/10">
         <SidebarHeader className="flex flex-col items-center gap-2">
           <SidebarProfile 

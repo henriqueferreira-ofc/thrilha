@@ -10,6 +10,8 @@ import {
 } from '@/components/ui/table';
 import { supabase } from '@/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Edit2Icon, Trash2Icon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +22,8 @@ import BirthdayForm from './BirthdayForm';
 import { Birthday } from './types';
 import { BirthdayEmptyState } from './BirthdayEmptyState';
 import { BirthdayTableItem } from './BirthdayTableItem';
-import { calculateDaysUntilBirthday } from './utils';
+import { calculateDaysUntilBirthday, formatBirthdayDate, getDaysRemainingInfo, getRelationshipInfo } from './utils';
+import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 
 interface BirthdayListRef {
   fetchBirthdays: () => Promise<void>;
@@ -119,16 +122,38 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
       {birthdays.length === 0 ? (
         <BirthdayEmptyState />
       ) : (
-        <div className="overflow-x-auto">
-          <Table className="min-w-[680px]">
+        <>
+          <div className="space-y-4 md:hidden">
+            {birthdays.map((birthday) => {
+              const daysUntil = calculateDaysUntilBirthday(birthday.birthdate);
+              const formattedBirthdate = formatBirthdayDate(birthday.birthdate);
+              const relationshipInfo = getRelationshipInfo(birthday.relationship);
+              const daysInfo = getDaysRemainingInfo(daysUntil);
+
+              return (
+                <BirthdayMobileItem
+                  key={birthday.id}
+                  birthday={birthday}
+                  formattedBirthdate={formattedBirthdate}
+                  relationshipInfo={relationshipInfo}
+                  daysInfo={daysInfo}
+                  onEdit={() => handleEdit(birthday)}
+                  onDelete={() => deleteBirthday(birthday.id)}
+                />
+              );
+            })}
+          </div>
+
+          <div className="overflow-x-auto w-full hidden md:block">
+          <Table className="min-w-full">
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Relação</TableHead>
-              <TableHead>Dias Restantes</TableHead>
-              <TableHead>Observações</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead className="min-w-[180px]">Nome</TableHead>
+              <TableHead className="min-w-[160px]">Data</TableHead>
+              <TableHead className="min-w-[140px]">Relação</TableHead>
+              <TableHead className="min-w-[140px]">Dias Restantes</TableHead>
+              <TableHead className="min-w-[200px]">Observações</TableHead>
+              <TableHead className="text-right min-w-[110px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -147,7 +172,8 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
             })}
           </TableBody>
           </Table>
-        </div>
+          </div>
+        </>
       )}
 
       {/* Diálogo de edição */}
@@ -166,6 +192,68 @@ const BirthdayList = forwardRef<BirthdayListRef>((props, ref) => {
     </div>
   );
 });
+
+interface BirthdayMobileItemProps {
+  birthday: Birthday;
+  formattedBirthdate: string;
+  relationshipInfo: ReturnType<typeof getRelationshipInfo>;
+  daysInfo: ReturnType<typeof getDaysRemainingInfo>;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+const BirthdayMobileItem = ({
+  birthday,
+  formattedBirthdate,
+  relationshipInfo,
+  daysInfo,
+  onEdit,
+  onDelete
+}: BirthdayMobileItemProps) => {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/50 p-4 shadow-sm shadow-purple-500/10 space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1 min-w-0">
+          <h3 className="text-base font-semibold text-white break-words">{birthday.name}</h3>
+          <p className="text-sm text-zinc-400 break-words">{formattedBirthdate}</p>
+        </div>
+        <span className={`text-sm ${daysInfo.className ?? ''}`}>{daysInfo.label}</span>
+      </div>
+      <div className="text-sm text-zinc-200">
+        <span className="font-medium text-white">Relação: </span>
+        <span className={relationshipInfo.className}>{relationshipInfo.label}</span>
+      </div>
+      <div className="text-sm text-zinc-200 break-words">
+        <span className="font-medium text-white">Observações: </span>
+        {birthday.notes || '-'}
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={onEdit}
+          className="h-8 w-8 p-0 text-purple-400 hover:text-purple-300 hover:bg-purple-900/40"
+        >
+          <Edit2Icon className="h-4 w-4" />
+        </Button>
+        <DeleteConfirmationDialog
+          itemName={birthday.name}
+          itemLabel="aniversário"
+          onDelete={onDelete}
+          trigger={
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/40"
+            >
+              <Trash2Icon className="h-4 w-4" />
+            </Button>
+          }
+        />
+      </div>
+    </div>
+  );
+};
 
 BirthdayList.displayName = 'BirthdayList';
 
