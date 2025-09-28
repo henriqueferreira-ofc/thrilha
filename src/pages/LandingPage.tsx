@@ -27,20 +27,18 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       {/* Navigation */}
-      <nav className="py-5 px-4 sm:px-6 md:px-12 flex flex-wrap items-center justify-between gap-4 border-b border-white/10">
-        <div className="flex items-center gap-2">
+      <nav className="py-5 px-4 sm:px-6 md:px-12 flex items-center justify-between border-b border-white/10">
+        <div className="flex items-center gap-2" onClick={goToLoginPage} role="button" tabIndex={0}>
           <Mountain className="h-6 w-6 text-purple-300" />
           <span className="text-xl font-bold purple-gradient-text">Thrilha</span>
         </div>
-        <div className="flex gap-3 w-full sm:w-auto justify-end sm:justify-start">
-          <Button 
-            variant="outline" 
-            className="border-purple-300 text-purple-300 hover:bg-purple-300/10" 
-            onClick={goToLoginPage}
-          >
-            Login
-          </Button>
-        </div>
+        <Button 
+          variant="outline" 
+          className="border-purple-300 text-purple-300 hover:bg-purple-300/10" 
+          onClick={goToLoginPage}
+        >
+          Login
+        </Button>
       </nav>
 
       {/* Hero Section */}

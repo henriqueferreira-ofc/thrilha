@@ -11,7 +11,7 @@ export const About = () => {
           <header className="page-header">
             <div className="flex items-center gap-3 text-white">
               <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
-              <h1 className="text-xl font-bold truncate">Sobre</h1>
+              <h1 className="text-xl font-bold purple-gradient-text truncate">Sobre</h1>
             </div>
           </header>
           

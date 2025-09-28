@@ -14,10 +14,10 @@ const Settings = () => {
           <div className="flex-1 flex flex-col">
             <header className="page-header">
               <div className="flex items-center gap-3 text-white">
-                <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
-                <h1 className="text-xl font-bold truncate">Configurações</h1>
-              </div>
-            </header>
+              <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
+              <h1 className="text-xl font-bold purple-gradient-text truncate">Configurações</h1>
+            </div>
+          </header>
             
             <main className="page-main">
               <SettingsTabs />

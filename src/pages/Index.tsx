@@ -106,7 +106,7 @@ const Index = () => {
             <div className="flex flex-col gap-2 text-white flex-1 min-w-0">
               <div className="flex items-center gap-3">
                 <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
-                <h1 className="text-xl font-bold text-white truncate">
+                <h1 className="text-xl font-bold purple-gradient-text truncate">
                   {getTitle()}
                   {loadingBoards && <span className="ml-2 text-sm text-purple-400">(Carregando quadros...)</span>}
                 </h1>
