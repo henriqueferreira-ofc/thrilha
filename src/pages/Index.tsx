@@ -137,7 +137,7 @@ const Index = () => {
                 <DialogTrigger asChild>
                   <Button 
                     size="sm"
-                    className="purple-gradient-bg h-10 px-4 text-sm font-semibold shrink-0" 
+                    className="purple-gradient-bg h-10 px-4 text-sm font-semibold shrink-0 flex items-center gap-2" 
                     disabled={!isPro && limitReached}
                     onClick={() => {
                       // Forçar sincronização do contador antes de mostrar o diálogo
