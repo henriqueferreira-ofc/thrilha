@@ -4,7 +4,6 @@ import { TaskBoard } from '@/components/task-board';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/task-form';
-import { Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTasks } from '@/hooks/use-tasks';
@@ -137,14 +136,13 @@ const Index = () => {
                 <DialogTrigger asChild>
                   <Button 
                     size="sm"
-                    className="purple-gradient-bg h-10 px-4 text-sm font-semibold shrink-0 flex items-center gap-2" 
+                    className="purple-gradient-bg h-6 px-3 text-sm font-semibold shrink-0 flex items-center justify-center text-white/50" 
                     disabled={!isPro && limitReached}
                     onClick={() => {
                       // Forçar sincronização do contador antes de mostrar o diálogo
                       syncCompletedTasksCount();
                     }}
                   >
-                    <Plus className="mr-2 h-4 w-4" />
                     Nova Tarefa
                   </Button>
                 </DialogTrigger>

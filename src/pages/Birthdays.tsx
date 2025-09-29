@@ -34,11 +34,10 @@ const Birthdays = () => {
             <div className="page-header-actions items-center">
               <Button
                 size="sm"
-                className="purple-gradient-bg h-10 px-4 text-sm font-semibold shrink-0 flex items-center gap-2"
+                className="purple-gradient-bg h-6 px-3 text-sm font-semibold shrink-0 flex items-center justify-center text-white/50"
                 onClick={() => setShowForm(!showForm)}
               >
-                <span className="text-lg leading-none">+</span>
-                <span>{showForm ? 'Cancelar' : 'Adicionar'}</span>
+                <span>{showForm ? 'Cancelar' : 'Adicionar Aniversário'}</span>
               </Button>
             </div>
           </header>
