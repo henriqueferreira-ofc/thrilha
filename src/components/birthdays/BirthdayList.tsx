@@ -211,30 +211,32 @@ const BirthdayMobileItem = ({
   onDelete
 }: BirthdayMobileItemProps) => {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/50 p-4 shadow-sm shadow-purple-500/10 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1 min-w-0">
-          <h3 className="text-base font-semibold text-white break-words">{birthday.name}</h3>
-          <p className="text-sm text-zinc-400 break-words">{formattedBirthdate}</p>
+    <div className="rounded-lg border border-white/10 bg-black/50 p-3 sm:p-4 shadow-sm shadow-purple-500/10 space-y-2.5 sm:space-y-3">
+      <div className="flex items-start justify-between gap-2 sm:gap-3">
+        <div className="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
+          <h3 className="text-sm sm:text-base font-semibold text-white break-words">{birthday.name}</h3>
+          <p className="text-xs sm:text-sm text-zinc-400 break-words">{formattedBirthdate}</p>
         </div>
-        <span className={`text-sm ${daysInfo.className ?? ''}`}>{daysInfo.label}</span>
+        <span className={`text-xs sm:text-sm shrink-0 ${daysInfo.className ?? ''}`}>{daysInfo.label}</span>
       </div>
-      <div className="text-sm text-zinc-200">
+      <div className="text-xs sm:text-sm text-zinc-200">
         <span className="font-medium text-white">Relação: </span>
         <span className={relationshipInfo.className}>{relationshipInfo.label}</span>
       </div>
-      <div className="text-sm text-zinc-200 break-words">
-        <span className="font-medium text-white">Observações: </span>
-        {birthday.notes || '-'}
-      </div>
-      <div className="flex justify-end gap-2">
+      {birthday.notes && (
+        <div className="text-xs sm:text-sm text-zinc-200 break-words">
+          <span className="font-medium text-white">Obs: </span>
+          {birthday.notes}
+        </div>
+      )}
+      <div className="flex justify-end gap-1.5 sm:gap-2 pt-1">
         <Button
           size="sm"
           variant="ghost"
           onClick={onEdit}
-          className="h-8 w-8 p-0 text-purple-400 hover:text-purple-300 hover:bg-purple-900/40"
+          className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-purple-400 hover:text-purple-300 hover:bg-purple-900/40"
         >
-          <Edit2Icon className="h-4 w-4" />
+          <Edit2Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
         <DeleteConfirmationDialog
           itemName={birthday.name}
@@ -244,9 +246,9 @@ const BirthdayMobileItem = ({
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/40"
+              className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/40"
             >
-              <Trash2Icon className="h-4 w-4" />
+              <Trash2Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
           }
         />

@@ -64,34 +64,34 @@ export default function ZapierIntegration() {
   };
 
   return (
-    <div className="space-y-4">
-      <p className="text-gray-400 mb-4">
+    <div className="space-y-3 sm:space-y-4">
+      <p className="text-sm sm:text-base text-gray-400">
         Configure seu Zapier para receber lembretes de aniversário no WhatsApp
       </p>
       
       {!isConnected ? (
-        <form onSubmit={handleConnect} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="webhookUrl">URL do Webhook do Zapier</Label>
+        <form onSubmit={handleConnect} className="space-y-3 sm:space-y-4">
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="webhookUrl" className="text-sm">URL do Webhook do Zapier</Label>
             <Input
               id="webhookUrl"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
-              placeholder="https://hooks.zapier.com/hooks/catch/..."
+              placeholder="https://hooks.zapier.com/..."
               disabled={isLoading}
-              className="bg-black/50"
+              className="bg-black/50 text-sm sm:text-base"
             />
           </div>
           
-          <div className="bg-blue-900/20 border border-blue-800 rounded p-4 flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-300">
-              <p className="mb-1">Como configurar:</p>
-              <ol className="list-decimal ml-5 space-y-1">
+          <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
+            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mt-0.5 flex-shrink-0" />
+            <div className="text-xs sm:text-sm text-blue-300">
+              <p className="mb-1.5 font-medium">Como configurar:</p>
+              <ol className="list-decimal ml-4 sm:ml-5 space-y-1">
                 <li>Crie uma conta no <a href="https://zapier.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Zapier</a></li>
-                <li>Crie um novo Zap com trigger "Webhook by Zapier"</li>
-                <li>Selecione "Catch Hook" e copie a URL do webhook</li>
-                <li>Configure uma ação para enviar mensagem no WhatsApp</li>
+                <li>Crie um Zap com trigger "Webhook by Zapier"</li>
+                <li>Selecione "Catch Hook" e copie a URL</li>
+                <li>Configure ação para WhatsApp</li>
                 <li>Cole a URL do webhook aqui</li>
               </ol>
             </div>
@@ -99,24 +99,24 @@ export default function ZapierIntegration() {
           
           <Button 
             type="submit" 
-            className="w-full"
+            className="w-full text-sm sm:text-base"
             disabled={isLoading || !webhookUrl}
           >
             {isLoading ? "Conectando..." : "Conectar ao Zapier"}
           </Button>
         </form>
       ) : (
-        <div className="space-y-4">
-          <div className="bg-green-900/20 border border-green-800 rounded p-4">
-            <p className="text-green-400">✓ Integração com Zapier configurada com sucesso!</p>
-            <p className="text-sm text-green-500/80 mt-1">
-              Os lembretes de aniversário serão enviados para seu WhatsApp automaticamente.
+        <div className="space-y-3 sm:space-y-4">
+          <div className="bg-green-900/20 border border-green-800 rounded-lg p-3 sm:p-4">
+            <p className="text-sm sm:text-base text-green-400">✓ Integração configurada com sucesso!</p>
+            <p className="text-xs sm:text-sm text-green-500/80 mt-1">
+              Os lembretes serão enviados para seu WhatsApp automaticamente.
             </p>
           </div>
           
           <Button 
             variant="outline" 
-            className="w-full border-red-800 text-red-400 hover:bg-red-950"
+            className="w-full border-red-800 text-red-400 hover:bg-red-950 text-sm sm:text-base"
             onClick={handleDisconnect}
           >
             Desconectar Integração

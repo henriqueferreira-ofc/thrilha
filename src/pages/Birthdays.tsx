@@ -26,33 +26,34 @@ const Birthdays = () => {
         <div className="flex-1 flex flex-col">
           <header className="page-header backdrop-blur-sm bg-black/20">
             <div className="flex flex-col gap-2 text-white flex-1 min-w-0">
-              <div className="flex items-center gap-3">
-                <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
-                <h1 className="text-xl font-bold purple-gradient-text truncate">Aniversários</h1>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <SidebarTrigger className="md:hidden h-8 w-8 sm:h-9 sm:w-9 text-white/90" aria-label="Abrir menu" />
+                <h1 className="text-lg sm:text-xl font-bold purple-gradient-text truncate">Aniversários</h1>
               </div>
             </div>
             <div className="page-header-actions items-center">
               <Button
                 size="sm"
-                className="purple-gradient-bg h-10 px-4 text-sm font-semibold shrink-0 flex items-center gap-2"
+                className="purple-gradient-bg h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm font-semibold shrink-0 flex items-center gap-1.5 sm:gap-2"
                 onClick={() => setShowForm(!showForm)}
               >
-                <span className="text-lg leading-none">+</span>
-                {showForm ? 'Cancelar' : 'Adicionar Aniversário'}
+                <span className="text-base sm:text-lg leading-none">+</span>
+                <span className="hidden xs:inline">{showForm ? 'Cancelar' : 'Adicionar'}</span>
+                <span className="xs:hidden">+</span>
               </Button>
             </div>
           </header>
           
-          <main className="page-main space-y-6">
-            <div className="w-full space-y-8">
-              <div className="glass-panel p-6 rounded-xl">
-                <h2 className="text-xl font-semibold mb-4">Lista de Aniversários</h2>
+          <main className="page-main space-y-4 sm:space-y-6">
+            <div className="w-full space-y-4 sm:space-y-6 lg:space-y-8">
+              <div className="glass-panel p-4 sm:p-6 rounded-lg sm:rounded-xl">
+                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Lista de Aniversários</h2>
                 <BirthdayList ref={birthdayListRef} />
               </div>
               
               {showForm && (
-                <div className="glass-panel p-6 rounded-xl">
-                  <h2 className="text-xl font-semibold mb-4">Adicionar Novo Aniversário</h2>
+                <div className="glass-panel p-4 sm:p-6 rounded-lg sm:rounded-xl">
+                  <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Adicionar Novo Aniversário</h2>
                   <BirthdayForm 
                     onClose={() => setShowForm(false)} 
                     onSuccess={refreshList}
@@ -60,8 +61,8 @@ const Birthdays = () => {
                 </div>
               )}
               
-              <div className="glass-panel p-6 rounded-xl">
-                <h2 className="text-xl font-semibold mb-4">Configurar Lembretes no WhatsApp</h2>
+              <div className="glass-panel p-4 sm:p-6 rounded-lg sm:rounded-xl">
+                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Configurar Lembretes no WhatsApp</h2>
                 <ZapierIntegration />
               </div>
             </div>

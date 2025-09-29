@@ -118,62 +118,68 @@ export default function BirthdayForm({ onClose, onSuccess, initialData }: Birthd
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-2">
-        <Label htmlFor="name">Nome</Label>
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+      <div className="grid gap-1.5 sm:gap-2">
+        <Label htmlFor="name" className="text-sm">Nome</Label>
         <Input 
           id="name" 
           value={name} 
           onChange={(e) => setName(e.target.value)} 
-          required 
+          required
+          className="text-sm sm:text-base"
         />
       </div>
       
-      <div className="grid gap-2">
-        <Label htmlFor="birthdate">Data de Nascimento</Label>
+      <div className="grid gap-1.5 sm:gap-2">
+        <Label htmlFor="birthdate" className="text-sm">Data de Nascimento</Label>
         <Input 
           id="birthdate" 
           type="date" 
           value={birthdate} 
           onChange={(e) => setBirthdate(e.target.value)} 
-          required 
+          required
+          className="text-sm sm:text-base"
         />
       </div>
       
-      <div className="grid gap-2">
-        <Label htmlFor="relationship">Relação</Label>
+      <div className="grid gap-1.5 sm:gap-2">
+        <Label htmlFor="relationship" className="text-sm">Relação</Label>
         <Input 
           id="relationship" 
           value={relationship} 
           onChange={(e) => setRelationship(e.target.value)} 
           placeholder="Ex: Familiar, Amigo, Colega" 
-          required 
+          required
+          className="text-sm sm:text-base"
         />
       </div>
       
-      <div className="grid gap-2">
-        <Label htmlFor="notes">Observações (opcional)</Label>
+      <div className="grid gap-1.5 sm:gap-2">
+        <Label htmlFor="notes" className="text-sm">Observações (opcional)</Label>
         <Textarea 
           id="notes" 
           value={notes} 
           onChange={(e) => setNotes(e.target.value)} 
           placeholder="Adicione observações importantes como: presentes preferidos, etc." 
-          rows={3} 
+          rows={3}
+          className="text-sm sm:text-base resize-none"
         />
       </div>
       
-      <div className="flex justify-end gap-2 pt-2">
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
         <Button 
           type="button" 
           variant="outline" 
           onClick={onClose}
           disabled={isSubmitting}
+          className="w-full sm:w-auto text-sm"
         >
           Cancelar
         </Button>
         <Button 
           type="submit" 
           disabled={isSubmitting || !name || !birthdate || !relationship}
+          className="w-full sm:w-auto text-sm"
         >
           {isSubmitting ? "Salvando..." : initialData?.id ? "Atualizar" : "Salvar"}
         </Button>

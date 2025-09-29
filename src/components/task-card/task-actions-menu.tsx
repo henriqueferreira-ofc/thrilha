@@ -53,6 +53,11 @@ export function TaskActionsMenu({ task, onEdit, onDelete, onUpdate, onChangeStat
     }
   };
 
+  const handleChangeStatus = (status: TaskStatus) => {
+    if (status === task.status) return;
+    onChangeStatus?.(status);
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -107,7 +112,3 @@ export function TaskActionsMenu({ task, onEdit, onDelete, onUpdate, onChangeStat
     </>
   );
 }
-  const handleChangeStatus = (status: TaskStatus) => {
-    if (status === task.status) return;
-    onChangeStatus?.(status);
-  };
