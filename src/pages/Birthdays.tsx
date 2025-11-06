@@ -6,6 +6,7 @@ import BirthdayList from '@/components/birthdays/BirthdayList';
 import BirthdayForm from '@/components/birthdays/BirthdayForm';
 import ZapierIntegration from '@/components/birthdays/ZapierIntegration';
 import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
 const Birthdays = () => {
   const [showForm, setShowForm] = useState(false);
@@ -34,10 +35,11 @@ const Birthdays = () => {
             <div className="page-header-actions items-center">
               <Button
                 size="sm"
-                className="purple-gradient-bg h-6 px-3 text-sm font-semibold shrink-0 flex items-center justify-center text-white/50"
+                className="purple-gradient-bg h-10 px-4 text-sm font-semibold text-white shrink-0 flex items-center gap-2"
                 onClick={() => setShowForm(!showForm)}
               >
-                <span>{showForm ? 'Cancelar' : 'Adicionar Aniversário'}</span>
+                <Plus className="h-4 w-4" />
+                <span>{showForm ? 'Cancelar' : 'Adicionar'}</span>
               </Button>
             </div>
           </header>

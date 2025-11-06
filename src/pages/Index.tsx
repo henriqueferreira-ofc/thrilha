@@ -14,6 +14,7 @@ import { useBoards } from '@/hooks/use-boards';
 import { useTaskCounter } from '@/hooks/tasks/use-task-counter';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/hooks/use-subscription';
+import { Plus } from 'lucide-react';
 
 const Index = () => {
   const { user } = useAuth();
@@ -136,13 +137,14 @@ const Index = () => {
                 <DialogTrigger asChild>
                   <Button 
                     size="sm"
-                    className="purple-gradient-bg h-6 px-3 text-sm font-semibold shrink-0 flex items-center justify-center text-white/50" 
+                    className="purple-gradient-bg h-10 px-4 text-sm font-semibold text-white shrink-0 flex items-center gap-2" 
                     disabled={!isPro && limitReached}
                     onClick={() => {
                       // Forçar sincronização do contador antes de mostrar o diálogo
                       syncCompletedTasksCount();
                     }}
                   >
+                    <Plus className="h-4 w-4" />
                     Nova Tarefa
                   </Button>
                 </DialogTrigger>
