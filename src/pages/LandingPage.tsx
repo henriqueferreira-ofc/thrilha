@@ -69,7 +69,7 @@ const LandingPage = () => {
         </div>
 
         <div className="flex justify-center md:justify-end items-end">
-          <div className="relative w-full max-w-2xl md:max-w-3xl mt-16 md:mt-24 transform translate-y-8 md:translate-y-16">
+          <div className="relative w-full max-w-2xl md:max-w-3xl mt-8 md:mt-16 transform translate-y-2 md:translate-y-4">
             <div className="absolute -left-12 top-6 h-32 w-32 rounded-full bg-purple-500/15 blur-3xl" />
             <img 
               src={heroImage} 
@@ -84,7 +84,10 @@ const LandingPage = () => {
       </main>
 
       {/* Features Section */}
-      <section id="features" className="py-16 px-4 sm:px-6 md:px-12 bg-black/40 border-t border-white/10">
+      <section
+        id="features"
+        className="-mt-8 md:-mt-12 pt-6 md:pt-8 pb-16 px-4 sm:px-6 md:px-12 bg-black/40 border-t border-white/10"
+      >
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-center purple-gradient-text mb-12">
             Por que escolher o Thrilha?
