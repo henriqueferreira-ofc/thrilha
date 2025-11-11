@@ -69,9 +69,7 @@ const LandingPage = () => {
         </div>
 
         <div className="flex justify-center md:justify-end items-end">
-          <div className="relative w-full max-w-lg">
-            <div className="absolute -right-4 bottom-10 h-24 w-24 rounded-3xl bg-[#F6B73C] rotate-12 blur-sm opacity-80" />
-            <div className="absolute -right-12 bottom-0 h-28 w-28 rounded-3xl bg-[#7C3AED] rotate-[25deg] opacity-70" />
+          <div className="relative w-full max-w-2xl md:max-w-3xl mt-16 md:mt-24 transform translate-y-8 md:translate-y-16">
             <div className="absolute -left-12 top-6 h-32 w-32 rounded-full bg-purple-500/15 blur-3xl" />
             <img 
               src={heroImage} 
