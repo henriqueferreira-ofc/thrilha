@@ -28,6 +28,7 @@ const PRECACHE_ASSETS = [
   '/favicon.ico',
   '/iconfavi.png',
   '/LogoThrilhaOficial.png',
+  '/trilhacapa.jpg',
   'offline.html',
 ].map(withBase);
 

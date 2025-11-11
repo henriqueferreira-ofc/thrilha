@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { withBasePath } from '@/lib/assetPath';
-import { Mountain } from 'lucide-react';
+import { Mountain, ArrowBigUpDash } from 'lucide-react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
@@ -25,8 +26,17 @@ const LandingPage = () => {
     navigate('/tasks');
   };
 
-  const heroImage = withBasePath('trilha1.png');
-  const heroFallback = 'https://placehold.co/300x600/3a1c71/ffffff?text=Trilha+App';
+  const heroImage = withBasePath('trilhacapa.jpg');
+  const heroFallback = withBasePath('placeholder.svg');
+
+  const integrationBadges = useMemo(
+    () => [
+      { label: 'Slack', color: 'bg-[#511a99]' },
+      { label: 'Gmail', color: 'bg-[#ff725c]' },
+      { label: 'Notion', color: 'bg-[#1c1d21]' },
+    ],
+    []
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
@@ -74,15 +84,33 @@ const LandingPage = () => {
         </div>
 
         <div className="flex justify-center items-end">
-          <div className="relative">
+          <div className="relative w-full max-w-md lg:max-w-lg">
+            <div className="absolute -left-8 sm:-left-12 top-8 h-32 w-32 rounded-full blur-3xl bg-purple-500/20 animate-pulse" />
+            <div className="absolute right-0 bottom-10 h-24 w-24 rounded-2xl bg-yellow-400/30 blur-xl animate-pulse delay-150" />
+            <div className="absolute -right-6 top-4 hidden md:flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 shadow-lg backdrop-blur">
+              <ArrowBigUpDash className="h-4 w-4 text-purple-200" />
+              <span className="text-sm text-white/80">Workflow mais rápido</span>
+            </div>
+
             <img 
               src={heroImage} 
-              alt="Trilha App" 
-              className="relative z-10 max-h-[360px] sm:max-h-[500px] object-contain -mb-8 sm:-mb-16" 
+              alt="Trilha App em funcionamento" 
+              className="relative z-10 w-full rounded-[40px] border border-white/5 bg-gradient-to-b from-white/40 to-white/10 object-cover shadow-[0_40px_120px_rgba(124,58,237,0.35)]" 
               onError={e => {
                 e.currentTarget.src = heroFallback;
               }} 
             />
+
+            <div className="absolute -right-10 top-1/3 hidden lg:flex flex-col gap-4">
+              {integrationBadges.map((badge) => (
+                <div
+                  key={badge.label}
+                  className={`flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-sm text-white shadow-xl ${badge.color}`}
+                >
+                  <span className="font-semibold">{badge.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </main>
