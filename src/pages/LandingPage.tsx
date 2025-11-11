@@ -86,7 +86,7 @@ const LandingPage = () => {
       {/* Features Section */}
       <section
         id="features"
-        className="-mt-8 md:-mt-12 pt-6 md:pt-8 pb-16 px-4 sm:px-6 md:px-12 bg-black/40 border-t border-white/10"
+        className="-mt-10 md:-mt-12 pt-4 md:pt-8 pb-16 px-4 sm:px-6 md:px-12 bg-black/40 border-t border-white/10"
       >
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-center purple-gradient-text mb-12">
