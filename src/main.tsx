@@ -25,7 +25,7 @@ console.log('main.tsx: Aplicação renderizada!');
 if ('serviceWorker' in navigator) {
   const registerServiceWorker = async () => {
     try {
-      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      const registration = await navigator.serviceWorker.register(`${import.meta.env.BASE_URL}service-worker.js`);
       console.log('Service worker registrado:', registration.scope);
     } catch (error) {
       console.error('Falha ao registrar o service worker:', error);

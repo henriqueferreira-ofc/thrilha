@@ -32,6 +32,19 @@ const queryClient = new QueryClient({
     },
   },
 });
+function getBaseName() {
+  // Usa import.meta.env.BASE_URL quando definido; ajusta para GitHub Pages automaticamente
+  const base = import.meta.env.BASE_URL || '/';
+  if (base !== '/' && base !== './') return base;
+  // Detecta GitHub Pages: user.github.io/repo
+  const isGhPages = window.location.hostname.endsWith('github.io');
+  if (isGhPages) {
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    const repo = parts[0] || '';
+    return repo ? `/${repo}/` : '/';
+  }
+  return '/';
+}
 
 const App = () => {
   console.log('App iniciando...');
@@ -41,7 +54,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={getBaseName()}>
           <ConnectionManager />
           <Toaster />
           <Sonner />
