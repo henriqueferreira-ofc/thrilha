@@ -4,6 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // Configuração do Vite
+<<<<<<< HEAD
 export default defineConfig(({ command, mode }) => {
   // Para GitHub Pages, use o nome do repositório como base
   // Se o repo é username.github.io, deixe como '/'
@@ -14,6 +15,13 @@ export default defineConfig(({ command, mode }) => {
     
   return {
     base: mode === 'production' ? base : '/',
+=======
+export default defineConfig(({ command }) => {
+  const isDev = command === "serve";
+
+  return {
+    base: isDev ? "/" : "./",
+>>>>>>> 9440bc3 (updat no git hub)
     server: {
       port: 8080,
       host: true,
