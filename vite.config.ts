@@ -5,8 +5,15 @@ import { componentTagger } from "lovable-tagger";
 
 // Configuração do Vite
 export default defineConfig(({ command, mode }) => {
+  // Para GitHub Pages, use o nome do repositório como base
+  // Se o repo é username.github.io, deixe como '/'
+  // Se o repo é username.github.io/repo-name, use '/repo-name/'
+  const base = process.env.GITHUB_REPOSITORY 
+    ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/`
+    : '/';
+    
   return {
-    base: '/',
+    base: mode === 'production' ? base : '/',
     server: {
       port: 8080,
       host: true,
