@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { withBasePath } from '@/lib/assetPath';
 import { Mountain } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,6 +24,9 @@ const LandingPage = () => {
   const goToTasks = () => {
     navigate('/tasks');
   };
+
+  const heroImage = withBasePath('trilha1.png');
+  const heroFallback = 'https://placehold.co/300x600/3a1c71/ffffff?text=Trilha+App';
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
@@ -72,11 +76,11 @@ const LandingPage = () => {
         <div className="flex justify-center items-end">
           <div className="relative">
             <img 
-              src="/trilha1.png" 
+              src={heroImage} 
               alt="Trilha App" 
               className="relative z-10 max-h-[360px] sm:max-h-[500px] object-contain -mb-8 sm:-mb-16" 
               onError={e => {
-                e.currentTarget.src = "https://placehold.co/300x600/3a1c71/ffffff?text=Trilha+App";
+                e.currentTarget.src = heroFallback;
               }} 
             />
           </div>

@@ -1,5 +1,26 @@
 const CACHE_NAME = 'thrilha-pwa-v1';
-const OFFLINE_URL = '/offline.html';
+
+const BASE_PATH = (() => {
+  const scope = self.registration?.scope;
+  if (scope) {
+    const { pathname } = new URL(scope);
+    return pathname.endsWith('/') ? pathname : `${pathname}/`;
+  }
+  const path = self.location.pathname.replace(/service-worker\.js$/, '');
+  if (!path) return '/';
+  return path.endsWith('/') ? path : `${path}/`;
+})();
+
+const basePrefix = BASE_PATH === '/' ? '' : BASE_PATH.replace(/\/$/, '');
+const withBase = (path) => {
+  if (path === '/' || path === '') {
+    return BASE_PATH;
+  }
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return `${basePrefix}${normalized}`;
+};
+
+const OFFLINE_URL = withBase('offline.html');
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -7,8 +28,8 @@ const PRECACHE_ASSETS = [
   '/favicon.ico',
   '/iconfavi.png',
   '/LogoThrilhaOficial.png',
-  OFFLINE_URL,
-];
+  'offline.html',
+].map(withBase);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

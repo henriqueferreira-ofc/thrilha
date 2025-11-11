@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { withBasePath } from '@/lib/assetPath';
 
 interface UseImageLoaderOptions {
   fallbackSrc?: string;
@@ -21,7 +22,7 @@ export function useImageLoader(
   options: UseImageLoaderOptions = {}
 ): UseImageLoaderResult {
   const {
-    fallbackSrc = '/default-avatar.png',
+    fallbackSrc = withBasePath('placeholder.svg'),
     maxRetries = 2,
     retryDelay = 1000,
     preventCache = true,
