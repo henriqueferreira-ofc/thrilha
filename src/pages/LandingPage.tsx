@@ -26,7 +26,7 @@ const LandingPage = () => {
     navigate('/tasks');
   };
 
-  const heroImage = withBasePath('trilhacapa.jpg');
+  const heroImage = withBasePath('trilha1.jpg');
   const heroFallback = withBasePath('placeholder.svg');
 
   const integrationBadges = useMemo(
