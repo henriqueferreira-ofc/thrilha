@@ -5,6 +5,7 @@
 @layer components {
   .page-wrapper {
     @apply min-h-screen flex w-full;
+    contain: layout;
   }
 
   .page-header {

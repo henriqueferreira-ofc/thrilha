@@ -101,11 +101,11 @@ const Index = () => {
       <div className="page-wrapper mountain-pattern">
         <TaskSidebar onCreateTask={handleCreateTask} hideDefaultTrigger />
         
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col transition-all duration-200 ease-out">
           <header className="page-header backdrop-blur-sm bg-black/20">
             <div className="flex flex-col gap-2 text-white flex-1 min-w-0">
               <div className="flex items-center gap-3">
-                <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
+                <SidebarTrigger className="md:hidden h-10 w-10 text-white/90 [&>svg]:h-6 [&>svg]:w-6" aria-label="Abrir menu" />
                 <h1 className="text-xl font-bold purple-gradient-text truncate">
                   {getTitle()}
                   {loadingBoards && <span className="ml-2 text-sm text-purple-400">(Carregando quadros...)</span>}
