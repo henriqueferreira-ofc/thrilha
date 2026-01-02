@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  HomeIcon, 
-  GearIcon, 
-  CalendarIcon, 
-  PieChartIcon, 
+import { useSidebar } from '@/components/ui/sidebar';
+import {
+  HomeIcon,
+  GearIcon,
+  CalendarIcon,
+  PieChartIcon,
   PersonIcon,
   ExitIcon,
   EnvelopeClosedIcon,
@@ -23,9 +24,15 @@ export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
   const location = useLocation();
   const { user } = useAuth();
   const { setCurrentBoard } = useBoards();
+  const { isMobile, setOpenMobile } = useSidebar();
   const isActive = (path: string) => location.pathname === path;
 
   const handleNavigation = (path: string) => {
+    // Fecha o menu no mobile imediatamente para evitar “delay” de layout ao navegar
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+
     if (path === '/app') {
       setCurrentBoard(null);
     }
@@ -94,7 +101,10 @@ export function SidebarNavigation({ onLogout }: SidebarNavigationProps) {
           <Button
             variant="ghost"
             className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100/10"
-            onClick={onLogout}
+            onClick={() => {
+              if (isMobile) setOpenMobile(false);
+              onLogout();
+            }}
           >
             <ExitIcon className="h-4 w-4 mr-2" />
             Sair
