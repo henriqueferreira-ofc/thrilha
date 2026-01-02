@@ -101,7 +101,7 @@ const Index = () => {
       <div className="page-wrapper mountain-pattern">
         <TaskSidebar onCreateTask={handleCreateTask} hideDefaultTrigger />
         
-        <div className="flex-1 flex flex-col transition-all duration-200 ease-out">
+        <div className="flex-1 flex flex-col">
           <header className="page-header backdrop-blur-sm bg-black/20">
             <div className="flex flex-col gap-2 text-white flex-1 min-w-0">
               <div className="flex items-center gap-3">
