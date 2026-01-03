@@ -9,7 +9,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Configuração do Vite
 export default defineConfig(({ command }) => {
   const isDev = command === "serve";
-  const base = isDev ? "/" : "./"; // garante caminhos relativos no GitHub Pages e em domínios customizados
+  // Para domínio customizado (thrilha.com) e GitHub Pages com CNAME, usar "/"
+  // O base "./" só funciona bem para subdiretórios, não para domínios raiz
+  const base = "/";
 
   return {
     base,
