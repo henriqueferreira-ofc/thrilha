@@ -1,0 +1,29 @@
+* text=auto
+
+# Force line endings for source code
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.eot binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+
+# Ensure correct MIME types for dist files
+dist/**/*.js text eol=lf
+dist/**/*.mjs text eol=lf
+dist/**/*.css text eol=lf
+dist/**/*.json text eol=lf
