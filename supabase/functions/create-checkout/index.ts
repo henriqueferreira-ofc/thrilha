@@ -23,7 +23,7 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 });
 
 // Preço real do plano Pro
-const PRICE_ID = 'price_1ROJxKQovJyvXFNJCRpnp3gE';
+const PRICE_ID = 'price_1T4riR4qXSi52mWfsUyNMk82';
 
 // Logger aprimorado com timestamp
 const log = (level: string, message: string, data?: any) => {
