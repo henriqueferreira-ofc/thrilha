@@ -1,0 +1,1 @@
+UPDATE public.subscriptions SET stripe_customer_id = NULL, stripe_subscription_id = NULL, plan_type = 'free', status = 'active', end_date = NULL;
