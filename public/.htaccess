@@ -10,7 +10,7 @@ Options +FollowSymLinks
 # Reescrever URLs para SPA
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /thrilha/
+  RewriteBase /
   
   # Não reescrever arquivos existentes
   RewriteCond %{REQUEST_FILENAME} !-f

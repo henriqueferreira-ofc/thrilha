@@ -1,2 +1,10 @@
+# Netlify redirects
+# Cache assets with long-term caching
+/assets/* 200
 
-/* /index.html 200 
+# API redirects (if needed in future)
+# /api/* 200
+
+# SPA catch-all - redirect all other routes to index.html
+/* /index.html 200
+
