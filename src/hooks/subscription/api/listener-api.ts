@@ -5,7 +5,7 @@ import { supabase } from '@/supabase/client';
 // Configurar listener para atualizações em tempo real
 export function setupSubscriptionListener(userId: string, onUpdate: (data: SubscriptionPlan) => void, onDelete: () => void) {
   return supabase
-    .channel('public:subscriptions')
+    .channel(`subscriptions-${userId}-${Math.random().toString(36).slice(2)}`)
     .on('postgres_changes', { 
       event: '*', 
       schema: 'public',

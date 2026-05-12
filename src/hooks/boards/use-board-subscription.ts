@@ -16,7 +16,7 @@ export function useBoardSubscription(
 
     // Configurar listener para atualizações em tempo real
     const boardsSubscription = supabase
-      .channel('public:boards')
+      .channel(`boards-${user.id}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public',
