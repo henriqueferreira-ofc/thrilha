@@ -62,7 +62,7 @@ export function useTaskCounter(currentBoard: Board | null = null) {
 
       // Inscrever para atualizações em tempo real
       const tasksSubscription = supabase
-        .channel('tasks_counter')
+        .channel(`tasks_counter-${user.id}-${Math.random().toString(36).slice(2)}`)
         .on('postgres_changes', {
           event: '*', 
           schema: 'public',
