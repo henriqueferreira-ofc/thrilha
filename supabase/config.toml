@@ -32,3 +32,8 @@ verify_jwt = true
 path = "/check-subscription"
 method = "GET"
 verify_jwt = true
+
+[[edges.routes]]
+path = "/birthday-notifier"
+method = "POST"
+verify_jwt = false
