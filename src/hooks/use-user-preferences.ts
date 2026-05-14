@@ -103,11 +103,11 @@ export function useUserPreferences(userId: string | undefined) {
       };
       
       const { error } = await supabase
-        .from('profiles')
-        .update({
-          preferences: updatedPreferences
-        })
-        .eq('id', userId);
+        .from('user_settings')
+        .upsert({
+          user_id: userId,
+          preferences: updatedPreferences,
+        }, { onConflict: 'user_id' });
       
       if (error) {
         console.error('Erro ao salvar preferência:', error);
