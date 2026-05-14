@@ -28,55 +28,36 @@ export function useUserPreferences(userId: string | undefined) {
       setLoading(true);
       console.log('Iniciando carregamento das preferências para o usuário:', userId);
       
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('user_settings')
         .select('preferences')
-        .eq('id', userId)
-        .single();
+        .eq('user_id', userId)
+        .maybeSingle();
       
-      if (profileError) {
-        console.error('Erro ao buscar perfil:', profileError);
-        if (profileError.code === 'PGRST116') {
-          console.log('Perfil não encontrado, criando novo perfil');
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-              id: userId,
-              preferences: defaultPreferences,
-              username: '',
-              updated_at: new Date().toISOString()
-            });
-          
-          if (insertError) {
-            console.error('Erro ao criar perfil:', insertError);
-            throw new Error(`Erro ao criar perfil: ${insertError.message}`);
-          }
-          
-          setPreferences(defaultPreferences);
-          return;
-        }
-        throw new Error(`Erro ao buscar perfil: ${profileError.message}`);
+      if (settingsError) {
+        console.error('Erro ao buscar configurações:', settingsError);
+        throw new Error(`Erro ao buscar configurações: ${settingsError.message}`);
       }
       
-      if (!profileData) {
-        console.log('Nenhum dado de perfil encontrado, criando perfil padrão');
+      if (!settingsData) {
+        console.log('Nenhuma configuração encontrada, criando padrão');
         const { error: insertError } = await supabase
-          .from('profiles')
+          .from('user_settings')
           .insert({
-            id: userId,
+            user_id: userId,
             preferences: defaultPreferences,
-            username: '',
-            updated_at: new Date().toISOString()
           });
         
         if (insertError) {
-          console.error('Erro ao criar perfil:', insertError);
-          throw new Error(`Erro ao criar perfil: ${insertError.message}`);
+          console.error('Erro ao criar configurações:', insertError);
+          throw new Error(`Erro ao criar configurações: ${insertError.message}`);
         }
         
         setPreferences(defaultPreferences);
         return;
       }
+      
+      const profileData = settingsData;
       
       console.log('Dados do perfil carregados:', profileData);
       
