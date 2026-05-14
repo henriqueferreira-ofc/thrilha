@@ -18,10 +18,10 @@ export default function ZapierIntegration() {
       if (!user) return;
       setUserId(user.id);
       const { data } = await supabase
-        .from('profiles')
+        .from('user_settings')
         .select('birthday_zapier_webhook')
-        .eq('id', user.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
       const saved = (data as any)?.birthday_zapier_webhook;
       if (saved) {
         setWebhookUrl(saved);
