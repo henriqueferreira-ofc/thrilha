@@ -74,9 +74,9 @@ Deno.serve(async (req) => {
             }),
           });
           if (res.ok || res.type === "opaque") sent++;
-          else failures.push({ user: profile.id, status: res.status });
+          else failures.push({ user: setting.user_id, status: res.status });
         } catch (e) {
-          failures.push({ user: profile.id, error: String(e) });
+          failures.push({ user: setting.user_id, error: String(e) });
         }
       }
     }
