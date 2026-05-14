@@ -18,10 +18,10 @@ export default function ZapierIntegration() {
       if (!user) return;
       setUserId(user.id);
       const { data } = await supabase
-        .from('profiles')
+        .from('user_settings')
         .select('birthday_zapier_webhook')
-        .eq('id', user.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
       const saved = (data as any)?.birthday_zapier_webhook;
       if (saved) {
         setWebhookUrl(saved);
@@ -56,9 +56,8 @@ export default function ZapierIntegration() {
       });
 
       const { error } = await supabase
-        .from('profiles')
-        .update({ birthday_zapier_webhook: webhookUrl } as any)
-        .eq('id', userId);
+        .from('user_settings')
+        .upsert({ user_id: userId, birthday_zapier_webhook: webhookUrl } as any, { onConflict: 'user_id' });
 
       if (error) throw error;
 
@@ -75,9 +74,8 @@ export default function ZapierIntegration() {
   const handleDisconnect = async () => {
     if (!userId) return;
     await supabase
-      .from('profiles')
-      .update({ birthday_zapier_webhook: null } as any)
-      .eq('id', userId);
+      .from('user_settings')
+      .upsert({ user_id: userId, birthday_zapier_webhook: null } as any, { onConflict: 'user_id' });
     setIsConnected(false);
     setWebhookUrl('');
     toast('Desconectado', { description: 'A integração com o Zapier foi removida.' });

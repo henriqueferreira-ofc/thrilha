@@ -193,28 +193,22 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
-          birthday_zapier_webhook: string | null
           created_at: string
           id: string
-          preferences: Json | null
           updated_at: string
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
-          birthday_zapier_webhook?: string | null
           created_at?: string
           id: string
-          preferences?: Json | null
           updated_at?: string
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
-          birthday_zapier_webhook?: string | null
           created_at?: string
           id?: string
-          preferences?: Json | null
           updated_at?: string
           username?: string | null
         }
@@ -371,6 +365,30 @@ export type Database = {
           },
         ]
       }
+      user_settings: {
+        Row: {
+          birthday_zapier_webhook: string | null
+          created_at: string
+          preferences: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birthday_zapier_webhook?: string | null
+          created_at?: string
+          preferences?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birthday_zapier_webhook?: string | null
+          created_at?: string
+          preferences?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       work_groups: {
         Row: {
           created_at: string | null
@@ -421,10 +439,8 @@ export type Database = {
         Args: { user_id: string; user_name: string }
         Returns: {
           avatar_url: string | null
-          birthday_zapier_webhook: string | null
           created_at: string
           id: string
-          preferences: Json | null
           updated_at: string
           username: string | null
         }
@@ -436,6 +452,10 @@ export type Database = {
         }
       }
       criar_politicas_avatar: { Args: never; Returns: undefined }
+      find_user_id_by_username: {
+        Args: { p_username: string }
+        Returns: string
+      }
       generate_invite_token: { Args: never; Returns: string }
       get_task_collaborators: {
         Args: { p_task_id: string }

@@ -15,19 +15,18 @@ export function useTaskCollaborators() {
     }
 
     try {
-      // Buscar o ID do usuário pelo email
-      const { data: userData, error: userError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', userEmail.split('@')[0])
-        .single();
+      // Buscar o ID do usuário pelo username (via RPC para não expor profiles)
+      const { data: foundId, error: userError } = await supabase.rpc(
+        'find_user_id_by_username',
+        { p_username: userEmail.split('@')[0] }
+      );
 
-      if (userError || !userData) {
+      if (userError || !foundId) {
         toast.error('Usuário não encontrado');
         return false;
       }
 
-      const collaboratorId = userData.id;
+      const collaboratorId = foundId as string;
 
       // Verificar se o usuário já é colaborador usando a RPC
       const { data: existingCollaborator, error: checkError } = await supabase.rpc(
