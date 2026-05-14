@@ -74,9 +74,8 @@ export default function ZapierIntegration() {
   const handleDisconnect = async () => {
     if (!userId) return;
     await supabase
-      .from('profiles')
-      .update({ birthday_zapier_webhook: null } as any)
-      .eq('id', userId);
+      .from('user_settings')
+      .upsert({ user_id: userId, birthday_zapier_webhook: null } as any, { onConflict: 'user_id' });
     setIsConnected(false);
     setWebhookUrl('');
     toast('Desconectado', { description: 'A integração com o Zapier foi removida.' });
