@@ -60,10 +60,6 @@ const Birthdays = () => {
                   />
                 </div>
               )}
-              
-              <div className="glass-panel p-4 sm:p-6 rounded-lg sm:rounded-xl">
-                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Configurar Lembretes no WhatsApp</h2>
-                <ZapierIntegration />
               </div>
             </div>
           </main>
