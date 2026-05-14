@@ -44,19 +44,19 @@ Deno.serve(async (req) => {
     }
 
     const userIds = Object.keys(byUser);
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, username, birthday_zapier_webhook")
-      .in("id", userIds);
+    const { data: settings } = await supabase
+      .from("user_settings")
+      .select("user_id, birthday_zapier_webhook")
+      .in("user_id", userIds);
 
     let sent = 0;
     const failures: any[] = [];
 
-    for (const profile of profiles ?? []) {
-      const webhook = (profile as any).birthday_zapier_webhook;
+    for (const setting of settings ?? []) {
+      const webhook = (setting as any).birthday_zapier_webhook;
       if (!webhook) continue;
 
-      for (const b of byUser[profile.id]) {
+      for (const b of byUser[setting.user_id]) {
         const ageYears = today.getUTCFullYear() - parseInt(String(b.birthdate).split("-")[0], 10);
         try {
           const res = await fetch(webhook, {
