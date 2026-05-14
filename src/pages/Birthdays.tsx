@@ -4,7 +4,6 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { TaskSidebar } from '@/components/task-sidebar';
 import BirthdayList from '@/components/birthdays/BirthdayList';
 import BirthdayForm from '@/components/birthdays/BirthdayForm';
-import ZapierIntegration from '@/components/birthdays/ZapierIntegration';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
