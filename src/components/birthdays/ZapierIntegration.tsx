@@ -56,9 +56,8 @@ export default function ZapierIntegration() {
       });
 
       const { error } = await supabase
-        .from('profiles')
-        .update({ birthday_zapier_webhook: webhookUrl } as any)
-        .eq('id', userId);
+        .from('user_settings')
+        .upsert({ user_id: userId, birthday_zapier_webhook: webhookUrl } as any, { onConflict: 'user_id' });
 
       if (error) throw error;
 
