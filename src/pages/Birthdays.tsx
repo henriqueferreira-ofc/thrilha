@@ -60,7 +60,6 @@ const Birthdays = () => {
                   />
                 </div>
               )}
-              </div>
             </div>
           </main>
         </div>
