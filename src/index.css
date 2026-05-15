@@ -4,7 +4,7 @@
 
 @layer components {
   .page-wrapper {
-    @apply min-h-screen flex w-full;
+    @apply h-screen flex w-full overflow-hidden;
     contain: layout;
   }
 
