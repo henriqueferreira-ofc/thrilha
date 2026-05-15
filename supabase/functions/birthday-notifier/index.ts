@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "Trilha <onboarding@resend.dev>",
+            from: "Trilha <lembretes@thrilha.com>",
             to: [email],
             subject,
             html: buildEmailHtml(userName, enriched),
