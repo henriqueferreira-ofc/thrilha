@@ -95,8 +95,8 @@ Deno.serve(async (req) => {
       }));
 
       const subject = enriched.length === 1
-        ? `🎂 Hoje é aniversário de ${enriched[0].name}!`
-        : `🎂 ${enriched.length} aniversariantes hoje!`;
+        ? `Aniversário de ${enriched[0].name} hoje`
+        : `${enriched.length} aniversariantes hoje`;
 
       try {
         const res = await fetch("https://api.resend.com/emails", {
@@ -108,8 +108,14 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             from: "Trilha <lembretes@thrilha.com>",
             to: [email],
+            reply_to: "contato@thrilha.com",
             subject,
             html: buildEmailHtml(userName, enriched),
+            text: buildEmailText(userName, enriched),
+            headers: {
+              "List-Unsubscribe": "<mailto:contato@thrilha.com?subject=unsubscribe>, <https://www.thrilha.com/configuracoes>",
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            },
           }),
         });
         const payload = await res.json();
