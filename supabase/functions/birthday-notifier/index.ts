@@ -96,8 +96,8 @@ Deno.serve(async (req) => {
       }));
 
       const subject = enriched.length === 1
-        ? `Aniversário de ${enriched[0].name} hoje`
-        : `${enriched.length} aniversariantes hoje`;
+        ? `🎂 Hoje é aniversário de ${enriched[0].name}!`
+        : `🎂 ${enriched.length} aniversariantes hoje!`;
 
       try {
         const res = await fetch("https://api.resend.com/emails", {
