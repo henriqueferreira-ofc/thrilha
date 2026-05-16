@@ -10,22 +10,23 @@ function buildEmailHtml(userName: string, birthdays: Array<{ name: string; relat
     .map(
       (b) => `
       <li style="margin-bottom:12px;padding:12px;background:#f5f3ff;border-left:4px solid #8b5cf6;border-radius:6px;">
-        <strong style="font-size:16px;color:#1f2937;">${b.name}</strong>
+        <strong style="font-size:16px;color:#1f2937;">🎂 ${b.name}</strong>
         ${b.relationship ? `<span style="color:#6b7280;"> — ${b.relationship}</span>` : ""}
-        <div style="color:#374151;margin-top:4px;">Faz <strong>${b.age} anos</strong> hoje.</div>
+        <div style="color:#374151;margin-top:4px;">Faz <strong>${b.age} anos</strong> hoje!</div>
         ${b.notes ? `<div style="color:#6b7280;font-style:italic;margin-top:4px;">"${b.notes}"</div>` : ""}
       </li>`
     )
     .join("");
 
   return `<!DOCTYPE html>
-  <html lang="pt-BR"><head><meta charset="utf-8"><title>Lembrete de aniversário</title></head>
+  <html lang="pt-BR"><head><meta charset="utf-8"><title>Lembrete de Aniversário</title></head>
   <body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#f9fafb;padding:24px;">
     <div style="max-width:560px;margin:0 auto;background:white;border-radius:12px;padding:32px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-      <h1 style="color:#7c3aed;margin:0 0 8px 0;font-size:22px;">Lembrete de aniversário</h1>
-      <p style="color:#4b5563;margin:0 0 24px 0;">Olá${userName ? `, ${userName}` : ""}. Hoje tem aniversariante na sua lista:</p>
+      <h1 style="color:#7c3aed;margin:0 0 8px 0;">🎉 Lembrete de Aniversário</h1>
+      <p style="color:#4b5563;margin:0 0 24px 0;">Olá${userName ? `, ${userName}` : ""}! Hoje tem aniversariante na sua lista:</p>
       <ul style="list-style:none;padding:0;margin:0;">${items}</ul>
-      <p style="color:#9ca3af;font-size:13px;margin-top:24px;">Você está recebendo este e-mail porque cadastrou aniversários no Trilha. Para parar de receber, acesse seu perfil em https://www.thrilha.com e remova ou desative os lembretes.</p>
+      <p style="color:#9ca3af;font-size:13px;margin-top:24px;text-align:center;">Não se esqueça de mandar um carinho! 💜</p>
+      <p style="color:#9ca3af;font-size:11px;margin-top:16px;text-align:center;">Você recebe este e-mail porque cadastrou aniversários no Trilha (https://www.thrilha.com).</p>
     </div>
   </body></html>`;
 }
@@ -95,8 +96,8 @@ Deno.serve(async (req) => {
       }));
 
       const subject = enriched.length === 1
-        ? `Aniversário de ${enriched[0].name} hoje`
-        : `${enriched.length} aniversariantes hoje`;
+        ? `🎂 Hoje é aniversário de ${enriched[0].name}!`
+        : `🎂 ${enriched.length} aniversariantes hoje!`;
 
       try {
         const res = await fetch("https://api.resend.com/emails", {
