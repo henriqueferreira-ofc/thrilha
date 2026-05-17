@@ -46,7 +46,17 @@ export function TaskCreateDialog({ onCreateTask }: TaskCreateDialogProps) {
   };
   
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(open) => {
+        if (open && !isPro && limitReached) {
+          toast.info('Você atingiu o limite do plano gratuito. Faça upgrade para criar mais tarefas.');
+          navigate('/subscription');
+          return;
+        }
+        setIsDialogOpen(open);
+      }}
+    >
       <DialogTrigger asChild>
         <Button 
           className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 mt-4" 
