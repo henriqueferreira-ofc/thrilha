@@ -133,12 +133,21 @@ const Index = () => {
             </div>
             
             <div className="page-header-actions items-center">
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <Dialog
+                open={isCreateDialogOpen}
+                onOpenChange={(open) => {
+                  if (open && !isPro && limitReached) {
+                    toast.info('Você atingiu o limite do plano gratuito. Faça upgrade para criar mais tarefas.');
+                    navigate('/subscription');
+                    return;
+                  }
+                  setIsCreateDialogOpen(open);
+                }}
+              >
                 <DialogTrigger asChild>
-                  <Button 
+                  <Button
                     size="sm"
-                    className="purple-gradient-bg h-10 px-4 text-sm font-semibold text-white shrink-0 flex items-center gap-2" 
-                    disabled={!isPro && limitReached}
+                    className="purple-gradient-bg h-10 px-4 text-sm font-semibold text-white shrink-0 flex items-center gap-2"
                     onClick={() => {
                       // Forçar sincronização do contador antes de mostrar o diálogo
                       syncCompletedTasksCount();
