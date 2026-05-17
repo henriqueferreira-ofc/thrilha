@@ -6,6 +6,9 @@ import { PlusCircle } from 'lucide-react';
 import { TaskFormData } from '@/types/task';
 import { useBoards } from '@/hooks/use-boards';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { useTaskCounter } from '@/hooks/tasks/use-task-counter';
+import { useSubscription } from '@/hooks/use-subscription';
 
 interface TaskCreateDialogProps {
   onCreateTask: (data: TaskFormData) => void;
@@ -14,6 +17,9 @@ interface TaskCreateDialogProps {
 export function TaskCreateDialog({ onCreateTask }: TaskCreateDialogProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { currentBoard, getOrCreateDefaultBoard } = useBoards();
+  const { limitReached } = useTaskCounter(currentBoard);
+  const { isPro } = useSubscription();
+  const navigate = useNavigate();
   
   const handleCreateTask = async (data: TaskFormData) => {
     try {
