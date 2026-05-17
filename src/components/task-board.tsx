@@ -54,7 +54,7 @@ export function TaskBoard({ tasks = [], onDelete, onUpdate, onChangeStatus }: Ta
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 flex-1 p-4 sm:p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 flex-1 p-4 sm:p-6">
         {columns.map((column) => (
           <TaskColumn
             key={column.id}
