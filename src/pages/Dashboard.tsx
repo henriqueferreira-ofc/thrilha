@@ -13,14 +13,14 @@ const Dashboard = () => {
       <div className="page-wrapper">
         <TaskSidebar />
         
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <header className="page-header">
             <div className="flex flex-col gap-2 w-full">
               <h1 className="text-xl font-bold">Dashboard</h1>
             </div>
           </header>
           
-          <main className="page-main overflow-hidden">
+          <main className="page-main">
             <TaskBoard 
               tasks={tasks || []}
               onDelete={deleteTask}

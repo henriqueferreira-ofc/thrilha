@@ -23,7 +23,7 @@ const Birthdays = () => {
       <div className="page-wrapper mountain-pattern">
         <TaskSidebar hideDefaultTrigger />
         
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <header className="page-header backdrop-blur-sm bg-black/20">
             <div className="flex flex-col gap-2 text-white flex-1 min-w-0">
               <div className="flex items-center gap-2 sm:gap-3">

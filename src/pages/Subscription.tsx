@@ -18,15 +18,7 @@ const SubscriptionPage = () => {
     manageSubscription
   } = useSubscription();
 
-  // Verificar status da assinatura ao carregar a página ou quando sucesso=true na URL
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const success = urlParams.get('success');
-    
-    if (success === 'true' || !subscription) {
-      checkSubscriptionStatus();
-    }
-  }, []);
+
 
   return (
     <SidebarProvider>

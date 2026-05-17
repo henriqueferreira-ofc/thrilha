@@ -101,7 +101,7 @@ const Index = () => {
       <div className="page-wrapper mountain-pattern">
         <TaskSidebar onCreateTask={handleCreateTask} hideDefaultTrigger />
         
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <header className="page-header backdrop-blur-sm bg-black/20">
             <div className="flex flex-col gap-2 text-white flex-1 min-w-0">
               <div className="flex items-center gap-3">
@@ -171,7 +171,7 @@ const Index = () => {
             </div>
           </header>
           
-          <main className="page-main overflow-hidden">
+          <main className="page-main">
             {loading ? (
               <div className="flex justify-center items-center h-full">
                 <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full"></div>

@@ -4,7 +4,7 @@
 
 @layer components {
   .page-wrapper {
-    @apply h-screen flex w-full overflow-hidden;
+    @apply h-screen flex w-full max-w-full min-w-0 overflow-hidden;
     contain: layout;
   }
 
@@ -17,7 +17,7 @@
   }
 
   .page-main {
-    @apply flex-1 w-full px-4 sm:px-6 py-4 sm:py-6 overflow-auto;
+    @apply flex-1 w-full px-4 sm:px-6 py-4 sm:py-6 overflow-auto min-w-0;
   }
 }
 
@@ -70,7 +70,7 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased max-w-[100vw] overflow-x-hidden;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
     background-color: var(--background);
     color: var(--foreground);
@@ -88,7 +88,11 @@
   }
 
   html {
-    @apply scroll-smooth;
+    @apply scroll-smooth max-w-[100vw] overflow-x-hidden;
+  }
+
+  #root {
+    @apply w-full max-w-full overflow-x-hidden flex flex-col min-h-screen;
   }
 }
 
