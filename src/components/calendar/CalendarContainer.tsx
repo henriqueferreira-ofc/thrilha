@@ -81,18 +81,18 @@ export const CalendarContainer = ({
   };
 
   return (
-    <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-6`}>
-      <div className="bg-black p-4 rounded-lg border border-white/5 shadow-md">
+    <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-4 sm:gap-6`}>
+      <div className="bg-black p-3 sm:p-4 rounded-lg border border-white/5 shadow-md min-w-0">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">Calendário de Tarefas</h2>
+          <h2 className="text-base sm:text-lg font-semibold text-white">Calendário de Tarefas</h2>
           <Sheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen}>
             <SheetTrigger asChild>
-              <Button className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
-                <CalendarPlus className="h-4 w-4 mr-2" />
+              <Button className="purple-gradient-bg h-10 px-4 text-sm font-semibold text-white w-full sm:w-auto flex items-center gap-2">
+                <CalendarPlus className="h-4 w-4" />
                 Nova Tarefa
               </Button>
             </SheetTrigger>
-            <SheetContent className="bg-[#1a1c23] border-white/10 text-white">
+            <SheetContent className="bg-[#1a1c23] border-white/10 text-white w-full sm:max-w-md overflow-y-auto">
               <h3 className="text-lg font-semibold mb-4">Criar Nova Tarefa</h3>
               <TaskForm 
                 onSubmit={handleCreateTask}
