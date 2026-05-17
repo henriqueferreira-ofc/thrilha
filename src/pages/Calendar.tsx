@@ -28,16 +28,16 @@ export default function CalendarPage() {
 
   return (
     <SidebarProvider>
-      <div className="page-wrapper">
+      <div className="page-wrapper mountain-pattern">
         <TaskSidebar hideDefaultTrigger />
-        <div className="flex-1 flex flex-col">
-          <header className="page-header bg-black">
-            <div className="flex items-center gap-3 text-white">
-              <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="page-header backdrop-blur-sm bg-black/20">
+            <div className="flex items-center gap-3 text-white min-w-0 flex-1">
+              <SidebarTrigger className="md:hidden h-10 w-10 text-white/90 [&>svg]:h-6 [&>svg]:w-6" aria-label="Abrir menu" />
               <h1 className="text-xl font-bold purple-gradient-text truncate">Calendário</h1>
             </div>
           </header>
-          <main className="page-main bg-black flex flex-col gap-4">
+          <main className="page-main flex flex-col gap-4">
             <CalendarContainer 
               tasks={tasks} 
               loading={loading || !isInitialized}

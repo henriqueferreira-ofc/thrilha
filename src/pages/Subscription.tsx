@@ -30,22 +30,22 @@ const SubscriptionPage = () => {
 
   return (
     <SidebarProvider>
-      <div className="page-wrapper">
+      <div className="page-wrapper mountain-pattern">
         <TaskSidebar hideDefaultTrigger />
         
-        <div className="flex-1 flex flex-col">
-          <header className="page-header">
-            <div className="flex items-center gap-3 text-white">
-              <SidebarTrigger className="md:hidden h-9 w-9 text-white/90" aria-label="Abrir menu" />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="page-header backdrop-blur-sm bg-black/20">
+            <div className="flex items-center gap-3 text-white min-w-0 flex-1">
+              <SidebarTrigger className="md:hidden h-10 w-10 text-white/90 [&>svg]:h-6 [&>svg]:w-6" aria-label="Abrir menu" />
               <h1 className="text-xl font-bold purple-gradient-text truncate">Assinatura</h1>
             </div>
           </header>
           
           <main className="page-main">
             {loading ? (
-              <div className="flex justify-center items-center h-full">
+              <div className="flex flex-col sm:flex-row justify-center items-center h-full gap-2 text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-2">Carregando informações de assinatura...</span>
+                <span>Carregando informações de assinatura...</span>
               </div>
             ) : (
               <SubscriptionPlans 
