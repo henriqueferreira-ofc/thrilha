@@ -112,7 +112,7 @@ export const CalendarContainer = ({
         />
       </div>
 
-      <div className="bg-black p-4 rounded-lg border border-white/5 shadow-md">
+      <div className="bg-black p-3 sm:p-4 rounded-lg border border-white/5 shadow-md min-w-0">
         <CalendarHeader 
           selectedDate={selectedDate} 
           holidayName={holidayForSelectedDate?.name}
