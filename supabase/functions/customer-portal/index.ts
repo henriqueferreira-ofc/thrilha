@@ -11,6 +11,47 @@ const corsHeaders = {
   "Access-Control-Max-Age": "86400",
 };
 
+const DEFAULT_SITE_URL = "https://www.thrilha.com";
+const TRUSTED_ORIGINS = [
+  DEFAULT_SITE_URL,
+  "https://thrilha.com",
+  "https://trilha.lovable.app",
+];
+
+const getAllowedOrigins = () => {
+  const configuredSiteUrl = Deno.env.get("SITE_URL") || DEFAULT_SITE_URL;
+  return Array.from(
+    new Set(
+      [configuredSiteUrl, ...TRUSTED_ORIGINS]
+        .map((origin) => {
+          try {
+            return new URL(origin).origin;
+          } catch {
+            return null;
+          }
+        })
+        .filter((origin): origin is string => Boolean(origin))
+    )
+  );
+};
+
+const safeReturnUrl = (url?: unknown) => {
+  const allowedOrigins = getAllowedOrigins();
+  const fallbackOrigin = allowedOrigins[0] ?? DEFAULT_SITE_URL;
+  const fallbackUrl = `${fallbackOrigin}/subscription`;
+
+  if (typeof url !== "string" || !url.trim()) {
+    return fallbackUrl;
+  }
+
+  try {
+    const parsed = new URL(url);
+    return allowedOrigins.includes(parsed.origin) ? `${parsed.origin}/subscription` : fallbackUrl;
+  } catch {
+    return fallbackUrl;
+  }
+};
+
 // Função para log com prefixo
 const log = (message: string, data?: any) => {
   const logMessage = data 
@@ -92,15 +133,6 @@ serve(async (req) => {
       log("Corpo da requisição vazio ou inválido");
     }
     
-    const SITE_URL = Deno.env.get("SITE_URL") || "https://www.thrilha.com";
-    const ALLOWED_ORIGINS = [SITE_URL, "https://www.thrilha.com", "https://thrilha.com", "https://trilha.lovable.app", "http://localhost:3000", "http://localhost:8080"];
-    const safeReturnUrl = (url?: string) => {
-      if (!url) return `${SITE_URL}/subscription`;
-      try {
-        const parsed = new URL(url);
-        return ALLOWED_ORIGINS.some((o) => { try { return new URL(o).origin === parsed.origin; } catch { return false; } }) ? url : `${SITE_URL}/subscription`;
-      } catch { return `${SITE_URL}/subscription`; }
-    };
     const returnUrl = safeReturnUrl((requestBody as any).returnUrl);
     log("URL para retorno após portal:", returnUrl);
     

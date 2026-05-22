@@ -25,6 +25,46 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 // Preço real do plano Pro
 const PRICE_ID = 'price_1T4riR4qXSi52mWfsUyNMk82';
 
+const DEFAULT_SITE_URL = 'https://www.thrilha.com';
+const TRUSTED_ORIGINS = [
+  DEFAULT_SITE_URL,
+  'https://thrilha.com',
+  'https://trilha.lovable.app',
+];
+
+const getAllowedOrigins = () => {
+  const configuredSiteUrl = Deno.env.get('SITE_URL') || DEFAULT_SITE_URL;
+  return Array.from(
+    new Set(
+      [configuredSiteUrl, ...TRUSTED_ORIGINS]
+        .map((origin) => {
+          try {
+            return new URL(origin).origin;
+          } catch {
+            return null;
+          }
+        })
+        .filter((origin): origin is string => Boolean(origin))
+    )
+  );
+};
+
+const safeReturnOrigin = (url?: unknown) => {
+  const allowedOrigins = getAllowedOrigins();
+  const fallbackOrigin = allowedOrigins[0] ?? DEFAULT_SITE_URL;
+
+  if (typeof url !== 'string' || !url.trim()) {
+    return fallbackOrigin;
+  }
+
+  try {
+    const parsed = new URL(url);
+    return allowedOrigins.includes(parsed.origin) ? parsed.origin : fallbackOrigin;
+  } catch {
+    return fallbackOrigin;
+  }
+};
+
 // Logger aprimorado com timestamp
 const log = (level: string, message: string, data?: any) => {
   const timestamp = new Date().toISOString();
@@ -100,17 +140,8 @@ serve(async (req) => {
     }
     
     // URL para onde o usuário será redirecionado após o checkout
-    const SITE_URL = Deno.env.get('SITE_URL') || 'https://www.thrilha.com';
-    const ALLOWED_ORIGINS = [SITE_URL, 'https://www.thrilha.com', 'https://thrilha.com', 'https://trilha.lovable.app', 'http://localhost:3000', 'http://localhost:8080'];
-    const safeReturnUrl = (url?: string) => {
-      if (!url) return SITE_URL;
-      try {
-        const parsed = new URL(url);
-        return ALLOWED_ORIGINS.some((o) => { try { return new URL(o).origin === parsed.origin; } catch { return false; } }) ? url : SITE_URL;
-      } catch { return SITE_URL; }
-    };
-    const returnUrl = safeReturnUrl(params?.returnUrl);
-    log('info', 'URL de retorno definida', { returnUrl });
+    const returnOrigin = safeReturnOrigin(params?.returnUrl);
+    log('info', 'Origem de retorno validada', { returnOrigin });
     
     // Primeiro verificar se o cliente já existe no Stripe
     log('info', 'Verificando cliente existente', { email: user.email });
@@ -152,8 +183,8 @@ serve(async (req) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${returnUrl}/tasks?success=true`,
-      cancel_url: `${returnUrl}/subscription?canceled=true`,
+      success_url: `${returnOrigin}/tasks?success=true`,
+      cancel_url: `${returnOrigin}/subscription?canceled=true`,
       customer_update: {
         address: 'auto',
         name: 'auto',
