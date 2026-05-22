@@ -100,7 +100,16 @@ serve(async (req) => {
     }
     
     // URL para onde o usuário será redirecionado após o checkout
-    const returnUrl = params?.returnUrl || Deno.env.get('SITE_URL') || 'http://localhost:3000';
+    const SITE_URL = Deno.env.get('SITE_URL') || 'https://www.thrilha.com';
+    const ALLOWED_ORIGINS = [SITE_URL, 'https://www.thrilha.com', 'https://thrilha.com', 'https://trilha.lovable.app', 'http://localhost:3000', 'http://localhost:8080'];
+    const safeReturnUrl = (url?: string) => {
+      if (!url) return SITE_URL;
+      try {
+        const parsed = new URL(url);
+        return ALLOWED_ORIGINS.some((o) => { try { return new URL(o).origin === parsed.origin; } catch { return false; } }) ? url : SITE_URL;
+      } catch { return SITE_URL; }
+    };
+    const returnUrl = safeReturnUrl(params?.returnUrl);
     log('info', 'URL de retorno definida', { returnUrl });
     
     // Primeiro verificar se o cliente já existe no Stripe
