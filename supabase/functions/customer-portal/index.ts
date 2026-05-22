@@ -92,11 +92,16 @@ serve(async (req) => {
       log("Corpo da requisição vazio ou inválido");
     }
     
-    const returnUrl = (requestBody as any).returnUrl || 
-                      Deno.env.get("SITE_URL") || 
-                      req.headers.get("origin") || 
-                      "http://localhost:8080/subscription";
-                      
+    const SITE_URL = Deno.env.get("SITE_URL") || "https://www.thrilha.com";
+    const ALLOWED_ORIGINS = [SITE_URL, "https://www.thrilha.com", "https://thrilha.com", "https://trilha.lovable.app", "http://localhost:3000", "http://localhost:8080"];
+    const safeReturnUrl = (url?: string) => {
+      if (!url) return `${SITE_URL}/subscription`;
+      try {
+        const parsed = new URL(url);
+        return ALLOWED_ORIGINS.some((o) => { try { return new URL(o).origin === parsed.origin; } catch { return false; } }) ? url : `${SITE_URL}/subscription`;
+      } catch { return `${SITE_URL}/subscription`; }
+    };
+    const returnUrl = safeReturnUrl((requestBody as any).returnUrl);
     log("URL para retorno após portal:", returnUrl);
     
     // Criar sessão do portal do cliente
