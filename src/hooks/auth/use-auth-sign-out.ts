@@ -4,6 +4,7 @@ import { supabase } from '../../supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { clearAuthData } from '../../utils/auth';
+import { withBasePath } from '../../lib/assetPath';
 
 export function useAuthSignOut() {
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +40,7 @@ export function useAuthSignOut() {
       setLastError(error instanceof Error ? error : new Error('Erro desconhecido'));
       // Forçar logout mesmo em caso de erro
       clearAuthData();
-      window.location.href = '/';
+      window.location.href = withBasePath('');
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +57,7 @@ export function useAuthSignOut() {
     
     clearAuthData();
     localStorage.removeItem('vo-tasks');
-    window.location.href = '/';
+    window.location.href = withBasePath('');
   };
 
   return {
