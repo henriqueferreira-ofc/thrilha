@@ -25,13 +25,19 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 // Preço real do plano Pro
 const PRICE_ID = 'price_1T4riR4qXSi52mWfsUyNMk82';
 
-const DEFAULT_SITE_URL = 'https://www.thrilha.com';
+const DEFAULT_SITE_URL = 'https://henriqueferreira-ofc.github.io';
 const TRUSTED_ORIGINS = [
   DEFAULT_SITE_URL,
+  'https://www.thrilha.com',
   'https://thrilha.com',
   'https://trilha.lovable.app',
-  'https://henriqueferreira-ofc.github.io',
 ];
+
+const isLocalOrigin = (origin: string) =>
+  origin.startsWith('http://localhost') ||
+  origin.startsWith('https://localhost') ||
+  origin.startsWith('http://127.0.0.1') ||
+  origin.startsWith('https://127.0.0.1');
 
 const getAllowedOrigins = () => {
   const configuredSiteUrl = Deno.env.get('SITE_URL') || DEFAULT_SITE_URL;
@@ -45,7 +51,7 @@ const getAllowedOrigins = () => {
             return null;
           }
         })
-        .filter((origin): origin is string => Boolean(origin))
+        .filter((origin): origin is string => Boolean(origin) && !isLocalOrigin(origin))
     )
   );
 };
