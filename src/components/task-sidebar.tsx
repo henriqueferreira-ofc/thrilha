@@ -20,24 +20,7 @@ export function TaskSidebar({ onCreateTask, hideDefaultTrigger }: TaskSidebarPro
   const { currentBoard } = useBoards();
 
   const handleLogout = () => {
-    try {
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('supabase.auth.refreshToken');
-      localStorage.removeItem('sb-yieihrvcbshzmxieflsv-auth-token');
-      sessionStorage.clear();
-      
-      document.cookie.split(';').forEach(cookie => {
-        const [name] = cookie.split('=').map(c => c.trim());
-        if (name.includes('supabase') || name.includes('sb-')) {
-          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        }
-      });
-      
-      window.location.href = "/";
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      window.location.href = "/";
-    }
+    void signOut();
   };
 
   const handleCreateTask = (data: TaskFormData) => {
