@@ -33,16 +33,9 @@ const queryClient = new QueryClient({
   },
 });
 function getBaseName() {
-  // Usa import.meta.env.BASE_URL quando definido; ajusta para GitHub Pages automaticamente
+  // O app é publicado na raiz do GitHub Pages/domínio customizado.
   const base = import.meta.env.BASE_URL || '/';
   if (base !== '/' && base !== './') return base;
-  // Detecta GitHub Pages: user.github.io/repo
-  const isGhPages = window.location.hostname.endsWith('github.io');
-  if (isGhPages) {
-    const parts = window.location.pathname.split('/').filter(Boolean);
-    const repo = parts[0] || '';
-    return repo ? `/${repo}/` : '/';
-  }
   return '/';
 }
 
