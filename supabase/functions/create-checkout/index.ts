@@ -25,7 +25,7 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 // Preço real do plano Pro
 const PRICE_ID = 'price_1T4riR4qXSi52mWfsUyNMk82';
 
-const DEFAULT_SITE_URL = 'https://henriqueferreira-ofc.github.io';
+const DEFAULT_SITE_URL = 'https://henriqueferreira-ofc.github.io/thrilha';
 const TRUSTED_ORIGINS = [
   DEFAULT_SITE_URL,
   'https://www.thrilha.com',
@@ -56,19 +56,34 @@ const getAllowedOrigins = () => {
   );
 };
 
-const safeReturnOrigin = (url?: unknown) => {
+const stripTrailingSlash = (url: string) => url.replace(/\/$/, '');
+
+const getReturnBasePath = (pathname: string) => {
+  const firstSegment = pathname.split('/').filter(Boolean)[0];
+  return firstSegment === 'thrilha' ? '/thrilha' : '';
+};
+
+const safeReturnBaseUrl = (url?: unknown) => {
   const allowedOrigins = getAllowedOrigins();
-  const fallbackOrigin = allowedOrigins[0] ?? DEFAULT_SITE_URL;
+  const fallbackUrl = stripTrailingSlash(DEFAULT_SITE_URL);
 
   if (typeof url !== 'string' || !url.trim()) {
-    return fallbackOrigin;
+    return fallbackUrl;
   }
 
   try {
     const parsed = new URL(url);
-    return allowedOrigins.includes(parsed.origin) ? parsed.origin : fallbackOrigin;
+    if (!allowedOrigins.includes(parsed.origin)) {
+      return fallbackUrl;
+    }
+
+    const basePath = parsed.hostname.endsWith('github.io')
+      ? getReturnBasePath(parsed.pathname) || '/thrilha'
+      : '';
+
+    return `${parsed.origin}${basePath}`;
   } catch {
-    return fallbackOrigin;
+    return fallbackUrl;
   }
 };
 

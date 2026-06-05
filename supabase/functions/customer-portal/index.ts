@@ -11,7 +11,7 @@ const corsHeaders = {
   "Access-Control-Max-Age": "86400",
 };
 
-const DEFAULT_SITE_URL = "https://henriqueferreira-ofc.github.io";
+const DEFAULT_SITE_URL = "https://henriqueferreira-ofc.github.io/thrilha";
 const TRUSTED_ORIGINS = [
   DEFAULT_SITE_URL,
   "https://www.thrilha.com",
@@ -42,10 +42,16 @@ const getAllowedOrigins = () => {
   );
 };
 
+const stripTrailingSlash = (url: string) => url.replace(/\/$/, "");
+
+const getReturnBasePath = (pathname: string) => {
+  const firstSegment = pathname.split("/").filter(Boolean)[0];
+  return firstSegment === "thrilha" ? "/thrilha" : "";
+};
+
 const safeReturnUrl = (url?: unknown) => {
   const allowedOrigins = getAllowedOrigins();
-  const fallbackOrigin = allowedOrigins[0] ?? DEFAULT_SITE_URL;
-  const fallbackUrl = `${fallbackOrigin}/subscription`;
+  const fallbackUrl = `${stripTrailingSlash(DEFAULT_SITE_URL)}/subscription`;
 
   if (typeof url !== "string" || !url.trim()) {
     return fallbackUrl;
@@ -53,7 +59,15 @@ const safeReturnUrl = (url?: unknown) => {
 
   try {
     const parsed = new URL(url);
-    return allowedOrigins.includes(parsed.origin) ? `${parsed.origin}/subscription` : fallbackUrl;
+    if (!allowedOrigins.includes(parsed.origin)) {
+      return fallbackUrl;
+    }
+
+    const basePath = parsed.hostname.endsWith("github.io")
+      ? getReturnBasePath(parsed.pathname) || "/thrilha"
+      : "";
+
+    return `${parsed.origin}${basePath}/subscription`;
   } catch {
     return fallbackUrl;
   }
