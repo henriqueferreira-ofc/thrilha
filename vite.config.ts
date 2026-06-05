@@ -8,7 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Configuração do Vite
 export default defineConfig(({ command }) => {
-  const base = "/";
+  const isGitHubPages = process.env.GITHUB_ACTIONS === "true";
+  const base = command === "serve" ? "/" : isGitHubPages ? "/thrilha/" : "/";
 
   return {
     base,
