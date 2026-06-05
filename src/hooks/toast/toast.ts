@@ -17,6 +17,7 @@ export const toast = (({ ...props }: Toast) => {
   dispatch({
     type: actionTypes.ADD_TOAST,
     toast: {
+      duration: 2500,
       ...props,
       id,
       open: true,
