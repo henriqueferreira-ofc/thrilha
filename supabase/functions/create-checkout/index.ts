@@ -30,6 +30,7 @@ const TRUSTED_ORIGINS = [
   DEFAULT_SITE_URL,
   'https://thrilha.com',
   'https://trilha.lovable.app',
+  'https://henriqueferreira-ofc.github.io',
 ];
 
 const getAllowedOrigins = () => {
