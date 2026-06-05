@@ -162,8 +162,8 @@ serve(async (req) => {
     }
     
     // URL para onde o usuário será redirecionado após o checkout
-    const returnOrigin = safeReturnOrigin(params?.returnUrl);
-    log('info', 'Origem de retorno validada', { returnOrigin });
+    const returnBaseUrl = safeReturnBaseUrl(params?.returnUrl);
+    log('info', 'URL base de retorno validada', { returnBaseUrl });
     
     // Primeiro verificar se o cliente já existe no Stripe
     log('info', 'Verificando cliente existente', { email: user.email });
@@ -205,8 +205,8 @@ serve(async (req) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${returnOrigin}/tasks?success=true`,
-      cancel_url: `${returnOrigin}/subscription?canceled=true`,
+      success_url: `${returnBaseUrl}/tasks?success=true`,
+      cancel_url: `${returnBaseUrl}/subscription?canceled=true`,
       customer_update: {
         address: 'auto',
         name: 'auto',

@@ -11,7 +11,8 @@ export async function createCustomerPortalSessionAPI(): Promise<{success: boolea
     console.log("Iniciando criação de sessão do portal do cliente");
     
     // Obter a origem para redirecionamento após o gerenciamento
-    const origin = window.location.origin;
+    const basePath = window.location.hostname.endsWith('github.io') ? '/thrilha' : '';
+    const origin = `${window.location.origin}${basePath}`;
     const returnPath = '/subscription';
     console.log(`URL de retorno para o portal: ${origin}${returnPath}`);
     

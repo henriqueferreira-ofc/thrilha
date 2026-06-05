@@ -11,13 +11,14 @@ export async function createCheckoutSessionAPI(): Promise<{success: boolean, url
     console.log("Iniciando criação de sessão de checkout");
     
     // Obter a origem para redirecionamento após o checkout
-    const origin = window.location.origin;
-    console.log(`URL de origem para redirecionamento: ${origin}`);
+    const basePath = window.location.hostname.endsWith('github.io') ? '/thrilha' : '';
+    const returnBaseUrl = `${window.location.origin}${basePath}`;
+    console.log(`URL de origem para redirecionamento: ${returnBaseUrl}`);
     
     // Invocar a função edge para criar uma sessão de checkout
     const { data, error } = await supabase.functions.invoke("create-checkout", {
       body: { 
-        returnUrl: `${origin}/subscription?success=true` 
+        returnUrl: `${returnBaseUrl}/subscription?success=true` 
       }
     });
     
