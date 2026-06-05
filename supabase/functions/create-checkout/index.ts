@@ -25,7 +25,7 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 // Preço real do plano Pro
 const PRICE_ID = 'price_1T4riR4qXSi52mWfsUyNMk82';
 
-const DEFAULT_SITE_URL = 'https://henriqueferreira-ofc.github.io';
+const DEFAULT_SITE_URL = 'https://henriqueferreira-ofc.github.io/thrilha';
 const TRUSTED_ORIGINS = [
   DEFAULT_SITE_URL,
   'https://www.thrilha.com',
@@ -56,19 +56,34 @@ const getAllowedOrigins = () => {
   );
 };
 
-const safeReturnOrigin = (url?: unknown) => {
+const stripTrailingSlash = (url: string) => url.replace(/\/$/, '');
+
+const getReturnBasePath = (pathname: string) => {
+  const firstSegment = pathname.split('/').filter(Boolean)[0];
+  return firstSegment === 'thrilha' ? '/thrilha' : '';
+};
+
+const safeReturnBaseUrl = (url?: unknown) => {
   const allowedOrigins = getAllowedOrigins();
-  const fallbackOrigin = allowedOrigins[0] ?? DEFAULT_SITE_URL;
+  const fallbackUrl = stripTrailingSlash(DEFAULT_SITE_URL);
 
   if (typeof url !== 'string' || !url.trim()) {
-    return fallbackOrigin;
+    return fallbackUrl;
   }
 
   try {
     const parsed = new URL(url);
-    return allowedOrigins.includes(parsed.origin) ? parsed.origin : fallbackOrigin;
+    if (!allowedOrigins.includes(parsed.origin)) {
+      return fallbackUrl;
+    }
+
+    const basePath = parsed.hostname.endsWith('github.io')
+      ? getReturnBasePath(parsed.pathname) || '/thrilha'
+      : '';
+
+    return `${parsed.origin}${basePath}`;
   } catch {
-    return fallbackOrigin;
+    return fallbackUrl;
   }
 };
 
@@ -147,8 +162,8 @@ serve(async (req) => {
     }
     
     // URL para onde o usuário será redirecionado após o checkout
-    const returnOrigin = safeReturnOrigin(params?.returnUrl);
-    log('info', 'Origem de retorno validada', { returnOrigin });
+    const returnBaseUrl = safeReturnBaseUrl(params?.returnUrl);
+    log('info', 'URL base de retorno validada', { returnBaseUrl });
     
     // Primeiro verificar se o cliente já existe no Stripe
     log('info', 'Verificando cliente existente', { email: user.email });
@@ -190,8 +205,8 @@ serve(async (req) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${returnOrigin}/tasks?success=true`,
-      cancel_url: `${returnOrigin}/subscription?canceled=true`,
+      success_url: `${returnBaseUrl}/tasks?success=true`,
+      cancel_url: `${returnBaseUrl}/subscription?canceled=true`,
       customer_update: {
         address: 'auto',
         name: 'auto',
